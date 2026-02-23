@@ -4,8 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('SpeciesService', () => {
   let service: SpeciesService;
-  let prisma: PrismaService;
-
   const mockPrisma = {
     species: {
       findMany: jest.fn(),
@@ -21,7 +19,6 @@ describe('SpeciesService', () => {
     }).compile();
 
     service = module.get<SpeciesService>(SpeciesService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

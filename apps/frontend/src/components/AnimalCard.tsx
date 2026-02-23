@@ -21,7 +21,6 @@ const AnimalCard = ({
   shelter,
 }: AnimalWithDetails) => {
   const navigate = useNavigate();
-  console.log(`DEBUG [Animal: ${name}]:`, { species, shelter });
 
   // On extrait l'image une seule fois de manière sécurisée
   const mainPhoto = Array.isArray(photos) && photos.length > 0 

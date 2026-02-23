@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const response = await api.get("/auth/me", { withCredentials: true });
         setUser(response.data);
         setIsLoggedIn(true);
-      } catch (_error) {
+      } catch {
         setUser(null);
         setIsLoggedIn(false);
       } finally {
