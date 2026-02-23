@@ -113,7 +113,6 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   getProfile(@Param("id") id: string) {
-    console.log("Getting profile for user ID:", id);
     return this.usersService.getProfile(Number(id));
   }
 

@@ -53,7 +53,6 @@ export default function AnimalDetail() {
         if (data.photos?.length > 0) setSelectedPhoto(data.photos[0]);
         setLoading(false);
       } catch (error) {
-        console.error("Erreur chargement animal:", error);
         setError("Impossible de charger les détails de l'animal.");
         setLoading(false);
       }

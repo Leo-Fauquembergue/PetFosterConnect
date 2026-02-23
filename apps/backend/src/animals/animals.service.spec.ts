@@ -1,8 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { AnimalsService } from './animals.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 
 describe('AnimalsService', () => {
     let service: AnimalsService;

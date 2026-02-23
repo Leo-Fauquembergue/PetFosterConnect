@@ -1,6 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { BookMarksService } from './bookmarks.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('BookMarksService', () => {

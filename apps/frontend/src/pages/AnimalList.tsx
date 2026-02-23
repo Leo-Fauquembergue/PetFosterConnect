@@ -22,7 +22,6 @@ const AnimalList = () => {
         setAnimals(data);
         setFilteredAnimals(data); // Initialise aussi la liste filtrée
       } catch (error) {
-        console.error("Erreur lors de la récupération :", error);
         setError(true);
       } finally {
         setLoading(false);

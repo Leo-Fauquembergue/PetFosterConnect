@@ -46,7 +46,6 @@ export class EmailController {
   async sendTestEmail(
     @Body() body: { to: string; subject: string; text: string; html: string }
   ) {
-    console.log("📨 [EmailController] Route /emails/send appelée");
     const result = await this.emailService.sendMail(
       body.to,
       body.subject,

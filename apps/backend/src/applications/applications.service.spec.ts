@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('ApplicationsService', () => {
   let service: ApplicationsService;
-  let prisma: PrismaService;
 
   const mockPrisma = {
     application: {
@@ -23,7 +22,6 @@ describe('ApplicationsService', () => {
     }).compile();
 
     service = module.get<ApplicationsService>(ApplicationsService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('create : doit créer une candidature avec le statut PENDING par défaut', async () => {
