@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { AuthProvider } from "./auth/authContext";
+import { AuthProvider } from "./auth/AuthContext.tsx";
 import "react-toastify/dist/ReactToastify.css";
 // Layouts
 import AdminLayout from "./components/layout/AdminLayout";
@@ -18,7 +18,7 @@ import DashboardPage from "./pages/admin/DashboardPage";
 import Forbidden from "./pages/Forbidden";
 import Home from "./pages/Home.tsx";
 import Legal from "./pages/Legal";
-import NotFound from "./pages/Notfound.tsx";
+import NotFound from "./pages/NotFound.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import AnimalForm from "./pages/profile/AnimalForm";
@@ -30,7 +30,7 @@ import SheltersPage from "./pages/ShelterList";
 import Unauthorized from "./pages/Unauthorized";
 import ApplicationsSent from "./pages/profile/ApplicationSent.tsx";
 import ApplicationsReceived from "./pages/profile/ApplicationsReceived.tsx";
-import BookmarksPage from "./pages/profile/bookmark.tsx";
+import BookmarksPage from "./pages/profile/Bookmarks.tsx";
 
 function App() {
   return (

@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import SiteLogo from "../assets/Logo.png";
-import { useAuth } from "../auth/authContext"; // pour récupérer user
+import { useAuth } from "../auth/AuthContext"; // pour récupérer user
 import BackBanner from "../components/ui/BackBanner";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";

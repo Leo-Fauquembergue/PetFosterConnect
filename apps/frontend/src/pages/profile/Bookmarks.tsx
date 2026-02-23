@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../api/api"; // ton instance Axios
-import { useAuth } from "../../auth/authContext";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function BookmarksPage() {
   const { user } = useAuth();

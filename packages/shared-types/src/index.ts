@@ -3,5 +3,5 @@ export * from "./application.schema";
 export * from "./bookmark.schema";
 export * from "./profile.schema";
 export * from "./user.schema";
-export * from "./UpdateUserWithProfilUser.shema";
-export * from "./AnimalWithRelationShema";
+export * from "./update-user-with-profil-user.schema.ts.ts";
+export * from "./animal-with-relation.schema.ts";

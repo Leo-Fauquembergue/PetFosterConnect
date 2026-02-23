@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { Home, LogOut, UserCircle, PawPrint } from "lucide-react";
-import { useAuth } from "../../auth/authContext";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function UserLayout() {
   const { user, logout } = useAuth();

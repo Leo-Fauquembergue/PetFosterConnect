@@ -5,7 +5,7 @@ import {
   archiveApplication,
   acceptApplication, 
   rejectApplication 
-} from "../profile/components/ApplicationsApi";
+} from "../../api/applicationsApi";
 import type { Application as BaseApplication, Animal } from "@projet/shared-types";
 
 

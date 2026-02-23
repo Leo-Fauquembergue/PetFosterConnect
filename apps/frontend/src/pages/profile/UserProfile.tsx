@@ -4,7 +4,7 @@ import api from "../../api/api";
 import IndividualProfileForm from "../profile/components/IndividualProfilForm";
 import PasswordForm from "../profile/components/PasswordForm";
 import ShelterProfileForm from "../profile/components/ShelterProfilForm";
-import UserCard from "../profile/components/UserCard";
+import UserCard from "../../components/ui/UserCard";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

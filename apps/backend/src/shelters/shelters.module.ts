@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { ShelterService } from "./shelter.service";
-import { ShelterController } from "./shelter.controller";
+import { ShelterService } from "./shelters.service";
+import { ShelterController } from "./shelters.controller";
 import { PrismaService } from "../prisma/prisma.service";
 import { AnimalsModule } from '../animals/animals.module';
 
