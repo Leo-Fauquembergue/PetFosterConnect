@@ -28,7 +28,7 @@ import ShelterAnimalPage from "./pages/ShelterAnimal";
 import ShelterDetailPage from "./pages/ShelterDetail";
 import SheltersPage from "./pages/ShelterList";
 import Unauthorized from "./pages/Unauthorized";
-import ApplicationsSent from "./pages/profile/ApplicationSent.tsx";
+import ApplicationsSent from "./pages/profile/ApplicationsSent.tsx";
 import ApplicationsReceived from "./pages/profile/ApplicationsReceived.tsx";
 import BookmarksPage from "./pages/profile/Bookmarks.tsx";
 

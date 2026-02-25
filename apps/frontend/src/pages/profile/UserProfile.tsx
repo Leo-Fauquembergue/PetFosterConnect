@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../../api/api";
-import IndividualProfileForm from "../profile/components/IndividualProfilForm";
-import PasswordForm from "../profile/components/PasswordForm";
-import ShelterProfileForm from "../profile/components/ShelterProfilForm";
+import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
+import PasswordForm from "../../components/profile/PasswordForm";
+import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
 import UserCard from "../../components/ui/UserCard";
 import { toast } from "react-toastify";
 
