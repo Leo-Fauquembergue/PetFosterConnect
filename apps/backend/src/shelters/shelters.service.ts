@@ -3,7 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { CreateShelterProfileDto, UpdateShelterProfileDto } from "@projet/shared-types";
 
 @Injectable()
-export class ShelterService {
+export class SheltersService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateShelterProfileDto) {

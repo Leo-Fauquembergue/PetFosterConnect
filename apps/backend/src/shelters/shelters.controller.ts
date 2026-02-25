@@ -19,13 +19,13 @@ import {
 import * as sharedTypes from "@projet/shared-types";
 import { AnimalsService } from "../animals/animals.service";
 import { ZodPipe } from "../common/pipes/zod.pipe";
-import { ShelterService } from "./shelters.service";
+import { SheltersService } from "./shelters.service";
 
 @ApiTags("shelters")
 @Controller("shelters")
-export class ShelterController {
+export class SheltersController {
   constructor(
-    private readonly shelterService: ShelterService,
+    private readonly sheltersService: SheltersService,
     private readonly animalsService: AnimalsService
   ) {}
 
@@ -35,7 +35,7 @@ export class ShelterController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @UsePipes(new ZodPipe(sharedTypes.CreateShelterProfileSchema))
   create(@Body() body: sharedTypes.CreateShelterProfileDto) {
-    return this.shelterService.create(body);
+    return this.sheltersService.create(body);
   }
 
   @Get()
@@ -52,7 +52,7 @@ export class ShelterController {
   })
   findAll(@Query("limit") limit?: string) {
     const numericLimit = limit ? parseInt(limit, 10) : undefined;
-    return this.shelterService.findAll(numericLimit);
+    return this.sheltersService.findAll(numericLimit);
   }
 
   @Get(":id")
@@ -61,7 +61,7 @@ export class ShelterController {
   @ApiResponse({ status: 200, description: "Refuge trouvé" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
   findOne(@Param("id") id: string) {
-    return this.shelterService.findOne(Number(id));
+    return this.sheltersService.findOne(Number(id));
   }
 
   @Get(":id/animals")
@@ -87,7 +87,7 @@ export class ShelterController {
     @Param("id") id: string,
     @Body() body: sharedTypes.UpdateShelterProfileDto
   ) {
-    return this.shelterService.update(Number(id), body);
+    return this.sheltersService.update(Number(id), body);
   }
 
   @Delete(":id")
@@ -96,6 +96,6 @@ export class ShelterController {
   @ApiResponse({ status: 200, description: "Refuge supprimé avec succès" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
   remove(@Param("id") id: string) {
-    return this.shelterService.remove(Number(id));
+    return this.sheltersService.remove(Number(id));
   }
 }

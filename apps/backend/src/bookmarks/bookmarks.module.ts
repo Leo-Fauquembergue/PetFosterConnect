@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../prisma/prisma.module";
 import { BookmarksController } from "./bookmarks.controller";
-import { BookMarksService } from "./bookmarks.service";
+import { BookmarksService } from "./bookmarks.service";
 
 @Module({
   imports: [PrismaModule],
   controllers: [BookmarksController],
-  providers: [BookMarksService],
+  providers: [BookmarksService],
 })
 export class BookmarksModule {}
