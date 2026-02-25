@@ -20,7 +20,7 @@ import Home from "./pages/Home.tsx";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import ProtectedRoute from "./pages/ProtectedRoute";
+import ProtectedRoute from "./auth/ProtectedRoute.tsx";
 import AnimalForm from "./pages/profile/AnimalForm";
 import ShelterAnimalList from "./pages/profile/ShelterAnimalList";
 import UserProfilePage from "./pages/profile/UserProfile";

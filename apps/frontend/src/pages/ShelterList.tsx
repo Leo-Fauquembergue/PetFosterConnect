@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import ShelterCard from "../components/ShelterCard";
 import Loader from "../components/ui/Loader";
 import { Home } from "lucide-react";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { api } from "../api/api";
 
 const SheltersPage = () => {
   const [shelters, setShelters] = useState<any[]>([]);
@@ -13,10 +12,8 @@ const SheltersPage = () => {
   useEffect(() => {
     const fetchShelters = async () => {
       try {
-        const res = await fetch(`${API_URL}/shelters`);
-        if (!res.ok) throw new Error("Erreur HTTP " + res.status);
-        const data = await res.json();
-        setShelters(data);
+        const response = await api.get("/shelters");
+        setShelters(response.data);
       } catch (err) {
         console.error("Erreur API:", err);
         setError(true);

@@ -3,33 +3,31 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import BackBanner from "../components/ui/BackBanner";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { api } from "../api/api";
 
 const RefugeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
 
   const [shelter, setShelter] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchShelter = async () => {
       try {
-        if (!id) return; // évite l'appel avec undefined
-        const res = await fetch(`${API_URL}/shelters/${id}`);
-        if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
-        const data = await res.json();
-        setShelter(data);
+        const response = await api.get(`/shelters/${id}`);
+        setShelter(response.data);
       } catch (err) {
-        console.error("Erreur API:", err);
+        setError(true);
       } finally {
         setLoading(false);
       }
     };
-    fetchShelter();
+    if (id) fetchShelter();
   }, [id]);
 
   if (loading) return <p>Chargement...</p>;
+  if (error) return <p>Erreur !</p>;
   if (!shelter) return <p>Refuge introuvable</p>;
 
   return (

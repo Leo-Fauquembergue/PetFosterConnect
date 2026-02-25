@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AnimalCard from "../components/AnimalCard";
 import Loader from "../components/ui/Loader";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { api } from "../api/api";
 
 const AnimalList = () => {
   const [animals, setAnimals] = useState<any[]>([]);
@@ -16,11 +15,9 @@ const AnimalList = () => {
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
-        const response = await fetch(`${API_URL}/animals`);
-        if (!response.ok) throw new Error("Erreur réseau");
-        const data = await response.json();
-        setAnimals(data);
-        setFilteredAnimals(data); // Initialise aussi la liste filtrée
+        const response = await api.get("/animals");
+        setAnimals(response.data);
+        setFilteredAnimals(response.data); 
       } catch (error) {
         setError(true);
       } finally {

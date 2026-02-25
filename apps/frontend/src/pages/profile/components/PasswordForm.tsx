@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { toast } from "react-toastify";
+import { api } from "../../../api/api";
 
 type Props = {
   userId: number;
 };
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 export default function PasswordForm({ userId }: Props) {
   const [formData, setFormData] = useState({
@@ -19,21 +18,12 @@ export default function PasswordForm({ userId }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${API_URL}/users/${userId}/password`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (res.ok) {
-        toast.success("Mot de passe modifié avec succès !");
-        setFormData({ oldPassword: "", newPassword: "" });
-      } else {
-        toast.error("Erreur lors de la modification du mot de passe");
-      }
-    } catch (error) {
+      await api.put(`/users/${userId}/password`, formData);
+      toast.success("Mot de passe modifié avec succès !");
+      setFormData({ oldPassword: "", newPassword: "" });
+    } catch (error: any) {
       console.error(error);
-      toast.error("Erreur de connexion au serveur");
+      toast.error(error.response?.data?.message || "Erreur lors de la modification du mot de passe");
     }
   };
 
