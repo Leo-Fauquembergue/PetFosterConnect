@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSentApplications } from "../../api/applicationsApi";
+import { getSentApplications } from "../../api/applicationApi";
 import { toast } from "react-toastify";
 import type { Application as BaseApplication, Animal } from "@projet/shared-types";
 

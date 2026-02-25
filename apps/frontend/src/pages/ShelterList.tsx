@@ -2,21 +2,23 @@ import { useEffect, useState } from "react";
 import ShelterCard from "../components/ShelterCard";
 import Loader from "../components/ui/Loader";
 import { Home } from "lucide-react";
-import { api } from "../api/api";
+import { toast } from "react-toastify";
+import { shelterApi, type ShelterWithRelations } from "../api/shelterApi";
 
 const SheltersPage = () => {
-  const [shelters, setShelters] = useState<any[]>([]);
+  const [shelters, setShelters] = useState<ShelterWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchShelters = async () => {
       try {
-        const response = await api.get("/shelters");
-        setShelters(response.data);
-      } catch (err) {
-        console.error("Erreur API:", err);
+        const data = await shelterApi.getAllShelters();
+        setShelters(data);
+      } catch (err: any) {
         setError(true);
+        const errorMessage = err.response?.data?.message || "Impossible de charger les refuges.";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
