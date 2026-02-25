@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AnimalCard from "../components/AnimalCard";
 import Loader from "../components/ui/Loader";
-import { api } from "../api/api";
+import { toast } from "react-toastify";
+import { animalApi } from "../api/animalApi";
+import type { AnimalWithRelations } from "@projet/shared-types";
 
 const AnimalList = () => {
-  const [animals, setAnimals] = useState<any[]>([]);
-  const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
+  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
+  const [filteredAnimals, setFilteredAnimals] = useState<AnimalWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,11 +17,13 @@ const AnimalList = () => {
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
-        const response = await api.get("/animals");
-        setAnimals(response.data);
-        setFilteredAnimals(response.data); 
-      } catch (error) {
+        const data = await animalApi.getAllAnimals();
+        setAnimals(data);
+        setFilteredAnimals(data);
+      } catch (err: any) {
         setError(true);
+        const errorMessage = err.response?.data?.message || "Impossible de charger les animaux.";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
