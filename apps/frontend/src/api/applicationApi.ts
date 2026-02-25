@@ -63,3 +63,8 @@ export async function rejectApplication(candidateId: number, animalId: number) {
   const res = await api.post(`/applications/${candidateId}/${animalId}/reject`);
   return res.data;
 }
+
+export async function createApplication(data: { animalId: number; applicationType: string; message: string }) {
+  const res = await api.post("/applications", data);
+  return res.data;
+}

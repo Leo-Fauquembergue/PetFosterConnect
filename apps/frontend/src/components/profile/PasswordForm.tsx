@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { toast } from "react-toastify";
-import { api } from "../../../api/api";
+import { api } from "../../api/api";
 
 type Props = {
   userId: number;

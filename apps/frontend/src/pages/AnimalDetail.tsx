@@ -13,7 +13,9 @@ import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
 import { toast } from "react-toastify";
-import { api } from "../api/api";
+import { animalApi } from "../api/animalApi";
+import { createApplication } from "../api/applicationApi";
+import { bookmarkApi } from "../api/bookmarkApi";
 
 export default function AnimalDetail() {
   const { userId, id } = useParams<{ userId: string; id: string }>();
@@ -31,8 +33,8 @@ export default function AnimalDetail() {
   useEffect(() => {
     const fetchAnimal = async () => {
       try {
-        const response = await api.get(`/animals/${id}`);
-        const data = response.data;
+
+        const data = await animalApi.getAnimalById(Number(id));
         
         setAnimal(data);
         if (data.isBookmarked !== undefined) setIsFavorite(data.isBookmarked);
@@ -49,7 +51,7 @@ export default function AnimalDetail() {
   const handleAdopt = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/applications", {
+      await createApplication({
         animalId: Number(id),
         applicationType: "adoption",
         message: adoptMessage,
@@ -64,7 +66,7 @@ export default function AnimalDetail() {
   const handleFoster = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/applications", {
+      await createApplication({
         animalId: Number(id),
         applicationType: "foster",
         message: fosterMessage,
@@ -80,9 +82,9 @@ export default function AnimalDetail() {
     e.preventDefault();
     e.stopPropagation();
     try {
-      const response = await api.post("/bookmarks/toggle", { animalId: Number(id) });
-      setIsFavorite(response.data.bookmarked);
-      toast.success(response.data.message);
+      const responseData = await bookmarkApi.toggleBookmark(Number(id));
+      setIsFavorite(responseData.bookmarked);
+      toast.success(responseData.message);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Erreur réseau");
     }

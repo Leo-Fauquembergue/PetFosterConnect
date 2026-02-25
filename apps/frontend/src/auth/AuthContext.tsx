@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { api } from "../api/api";
+import { authApi } from "../api/authApi";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -13,7 +13,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   user: any | null;
   setUser: (user: any | null) => void;
-  isLoading: boolean; // ✅ Ajout
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,20 +21,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // ✅ true au départ
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Vérifier l'auth au chargement
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.get("/auth/me", { withCredentials: true });
-        setUser(response.data);
+        const data = await authApi.getMe();
+        setUser(data);
         setIsLoggedIn(true);
       } catch {
         setUser(null);
         setIsLoggedIn(false);
       } finally {
-        setIsLoading(false); // ✅ Fin du chargement
+        setIsLoading(false);
       }
     };
 
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = async () => {
-    await api.post("/auth/logout", {}, { withCredentials: true });
+    await authApi.logout();
     setIsLoggedIn(false);
     setUser(null);
   };
