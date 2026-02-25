@@ -19,7 +19,7 @@ import {
 import * as sharedTypes from "@projet/shared-types";
 import { AnimalsService } from "../animals/animals.service";
 import { ZodPipe } from "../common/pipes/zod.pipe";
-import { ShelterService } from "./shelter.service";
+import { ShelterService } from "./shelters.service";
 
 @ApiTags("shelters")
 @Controller("shelters")

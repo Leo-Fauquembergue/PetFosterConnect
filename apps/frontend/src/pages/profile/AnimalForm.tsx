@@ -1,13 +1,10 @@
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { CreateAnimalSchema } from "@projet/shared-types";
 import { api } from "../../api/api";
 import { toast } from "react-toastify";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 export default function AnimalForm() {
-  const { id } = useParams<{ id: string }>(); // id du refuge (userId)
   const navigate = useNavigate();
   const location = useLocation();
   const animal = location.state?.animal; // si on vient de "Modifier", on récupère l’animal
@@ -30,16 +27,15 @@ export default function AnimalForm() {
     speciesId: animal?.species?.id ?? "",
   });
 
-  // Charger les espèces
+  // Charger les espèces via Axios
   useEffect(() => {
     const fetchSpecies = async () => {
       try {
-        const res = await fetch(`${API_URL}/species`);
-        const data = await res.json();
-        setSpecies(data);
-      } catch (err) {
-        console.error("Erreur chargement espèces:", err);
-        toast.error("Impossible de charger les espèces.");
+        const response = await api.get("/species");
+        setSpecies(response.data);
+      } catch (error) {
+        console.error("Impossible de charger les espèces", error);
+        toast.error("Erreur lors du chargement des espèces.");
       }
     };
     fetchSpecies();
@@ -60,29 +56,35 @@ export default function AnimalForm() {
     };
 
     try {
+      // 1. Validation des données avec Zod partagé
       const parsed = CreateAnimalSchema.parse(parsedData);
 
       if (animal) {
-        // Mode édition → PATCH
+        // Mode édition → PATCH via Axios
         await api.patch(`/animals/${animal.id}`, parsed);
         toast.success("Animal modifié avec succès 🎉");
       } else {
-        // Mode création → POST
-        const payload = { ...parsed, pfcUserId: Number(id) };
-        await api.post(`/animals`, payload);
+        // Mode création → POST via Axios
+        // Note: Pas besoin de rajouter pfcUserId manuellement, le backend 
+        // le récupère directement depuis ton token JWT (req.user.id)
+        await api.post(`/animals`, parsed);
         toast.success("Animal créé avec succès 🎉");
       }
 
       navigate(-1);
     } catch (err: any) {
       console.error(err);
-      // Gestion d'erreur Zod ou API
+      
+      // Gestion d'erreur Axios (venant du backend NestJS)
       if (err.response) {
-        toast.error(`Erreur serveur: ${err.response.statusText}`);
-      } else if (err.issues) {
-        // Erreur Zod
-        toast.error("Formulaire invalide : vérifiez les champs.");
-      } else {
+        toast.error(err.response.data?.message || "Erreur serveur.");
+      } 
+      // Gestion d'erreur Zod (problème dans le formulaire frontend)
+      else if (err.issues || err.errors) {
+        toast.error("Formulaire invalide : veuillez vérifier les champs.");
+      } 
+      // Autre erreur
+      else {
         toast.error("Erreur lors de l'enregistrement.");
       }
     }

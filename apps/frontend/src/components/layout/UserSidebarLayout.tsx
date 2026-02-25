@@ -2,7 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { UserCircle, PawPrint, Home, LogOut } from "lucide-react";
 import { CiFolderOn } from "react-icons/ci"; 
 import { LuPlus } from "react-icons/lu";
-import { useAuth } from "../../auth/authContext";
+import { useAuth } from "../../auth/AuthContext";
 import BurgerMenu from "../ui/BurgerMenu";
 import { useState } from "react";
 

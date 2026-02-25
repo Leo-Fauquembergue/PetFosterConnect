@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ShelterService } from './shelter.service';
+import { ShelterService } from './shelters.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('ShelterService (integration)', () => {

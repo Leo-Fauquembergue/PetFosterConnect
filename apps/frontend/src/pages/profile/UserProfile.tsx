@@ -4,9 +4,8 @@ import api from "../../api/api";
 import IndividualProfileForm from "../profile/components/IndividualProfilForm";
 import PasswordForm from "../profile/components/PasswordForm";
 import ShelterProfileForm from "../profile/components/ShelterProfilForm";
-import UserCard from "../profile/components/UserCard";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import UserCard from "../../components/ui/UserCard";
+import { toast } from "react-toastify";
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -68,31 +67,21 @@ export default function UserProfilePage() {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let endpoint = "";
-
-    if (user.role === "individual") {
-      endpoint = `${API_URL}/users/${user.id}/individual-profile`;
-    } else {
-      endpoint = `${API_URL}/users/${user.id}/shelter-profile`;
-    }
+    const endpoint = user.role === "individual" 
+        ? `/users/${user.id}/individual-profile` 
+        : `/users/${user.id}/shelter-profile`;
 
     const { password, ...profileData } = formData;
-
-    const res = await fetch(endpoint, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profileData),
-    });
-
-    if (!res.ok) {
-      console.error("Erreur API:", await res.text());
-      return;
+    
+    try {
+        const response = await api.put(endpoint, profileData);
+        setUser({ ...user, ...response.data });
+        setIsEditing(false);
+        toast.success("Profil mis à jour avec succès !");
+    } catch (error: any) {
+        console.error("Erreur API:", error);
+        toast.error("Impossible de mettre à jour le profil.");
     }
-
-    const updated = await res.json();
-
-    setUser({ ...user, ...updated });
-    setIsEditing(false);
   };
 
   return (

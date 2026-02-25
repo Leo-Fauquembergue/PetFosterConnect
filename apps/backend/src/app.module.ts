@@ -7,7 +7,7 @@ import { AuthModule } from "./auth/auth.module";
 import { HealthController } from "./health.controller";
 import { PrismaModule } from "./prisma/prisma.module";
 import { UsersModule } from "./users/users.module";
-import { ShelterModule } from "./shelters/shelter.module";
+import { ShelterModule } from "./shelters/shelters.module";
 import { ApplicationsModule } from "./applications/applications.module";
 import { SpeciesModule } from './species/species.module';
 import { BookmarksModule } from "./bookmarks/bookmarks.module";

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ShelterController } from './shelter.controller';
-import { ShelterService } from './shelter.service';
+import { ShelterController } from './shelters.controller';
+import { ShelterService } from './shelters.service';
 import { AnimalsService } from '../animals/animals.service';
 import { PrismaService } from '../prisma/prisma.service';
 

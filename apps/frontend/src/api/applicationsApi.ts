@@ -1,5 +1,5 @@
 import type { Application, Animal } from "@projet/shared-types";
-import api from "../../../api/api"; // On utilise uniquement 'api'
+import api from "./api"; // On utilise uniquement 'api'
 
 type CandidateUser = {
   id: number;

@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { api } from "../api/api";
-import { useAuth } from "../auth/authContext";
+import { useAuth } from "../auth/AuthContext";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import InputPassword from "../components/ui/InputPassword";
