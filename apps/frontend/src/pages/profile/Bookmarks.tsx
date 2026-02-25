@@ -13,11 +13,9 @@ export default function BookmarksPage() {
     if (!user) return;
     api.get("/bookmarks/me")
       .then(res => setBookmarks(res.data))
-      .catch(err => {
-        console.error(err);
-        toast.error("Impossible de charger vos favoris ❌", {
-          position: "top-right",
-        });
+      .catch((err: any) => {
+        const errorMessage = err.response?.data?.message || "Impossible de charger vos favoris ❌";
+        toast.error(errorMessage, { position: "top-right" });
       })
       .finally(() => setLoading(false));
   }, [user]);
@@ -33,11 +31,9 @@ export default function BookmarksPage() {
         position: "top-right",
         autoClose: 2000,
       });
-    } catch (err) {
-      console.error(err);
-      toast.error("Erreur lors de la mise à jour du favori ❌", {
-        position: "top-right",
-      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || "Erreur lors de la mise à jour du favori ❌";
+      toast.error(errorMessage, { position: "top-right" });
     }
   };
 

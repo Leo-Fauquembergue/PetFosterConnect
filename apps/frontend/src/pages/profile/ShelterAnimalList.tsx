@@ -33,9 +33,9 @@ export default function ShelterAnimalList() {
           `/shelters/${Number(id)}/animals`
         );
         setAnimals(res.data);
-      } catch (error) {
-        console.error("ERREUR DÉTAILLÉE ICI :", error);
-        toast.error("Erreur de chargement des animaux");
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || "Erreur de chargement des animaux.";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }

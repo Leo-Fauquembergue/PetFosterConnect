@@ -13,7 +13,7 @@ import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
 import { toast } from "react-toastify";
-import { api } from "../api/api"; // L'import magique
+import { api } from "../api/api";
 
 export default function AnimalDetail() {
   const { userId, id } = useParams<{ userId: string; id: string }>();

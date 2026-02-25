@@ -22,8 +22,8 @@ export default function PasswordForm({ userId }: Props) {
       toast.success("Mot de passe modifié avec succès !");
       setFormData({ oldPassword: "", newPassword: "" });
     } catch (error: any) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Erreur lors de la modification du mot de passe");
+      const errorMessage = error.response?.data?.message || "Erreur lors de la modification du mot de passe.";
+      toast.error(errorMessage);
     }
   };
 

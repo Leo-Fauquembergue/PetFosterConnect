@@ -31,9 +31,9 @@ export default function AdminAnimals() {
       try {
         const res = await api.get<AnimalWithRelations[]>("/animals/admin/all");
         setAnimals(res.data);
-      } catch (error) {
-        console.error("Erreur chargement animaux:", error);
-        toast.error("Impossible de charger la liste des animaux.");
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || "Impossible de charger la liste des animaux.";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }

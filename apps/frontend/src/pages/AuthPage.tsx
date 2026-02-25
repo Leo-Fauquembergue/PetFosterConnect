@@ -108,14 +108,10 @@ function LoginForm() {
       navigate("/");
     } catch (error: any) {
       if (error.response?.status === 401) {
-        toast.error("Email ou mot de passe incorrect !", {
-          position: "top-right",
-        });
+        toast.error("Email ou mot de passe incorrect !", { position: "top-right" });
       } else {
-        toast.error("Erreur serveur. Veuillez réessayer.", {
-          position: "top-right",
-        });
-        console.error(error);
+        const errorMessage = error.response?.data?.message || "Erreur serveur. Veuillez réessayer.";
+        toast.error(errorMessage, { position: "top-right" });
       }
     }
   };
@@ -184,21 +180,12 @@ function RegisterForm() {
 
       navigate("/");
     } catch (err: any) {
-      // Gestion d'erreur plus détaillée
       if (err.response?.status === 409) {
-        toast.error("Cet email est déjà utilisé", {
-          position: "top-right",
-        });
-      } else if (err.response?.data?.message) {
-        toast.error(err.response.data.message, {
-          position: "top-right",
-        });
+        toast.error("Cet email est déjà utilisé", { position: "top-right" });
       } else {
-        toast.error("Erreur lors de l'inscription. Veuillez réessayer.", {
-          position: "top-right",
-        });
+        const errorMessage = err.response?.data?.message || "Erreur lors de l'inscription. Veuillez réessayer.";
+        toast.error(errorMessage, { position: "top-right" });
       }
-      console.error(err);
     }
   };
 

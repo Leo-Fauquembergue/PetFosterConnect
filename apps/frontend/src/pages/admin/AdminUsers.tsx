@@ -25,9 +25,9 @@ export default function AdminUsers() {
       try {
         const res = await api.get<User[]>("/users");
         setUsers(res.data);
-      } catch (error) {
-        console.error("Erreur chargement users:", error);
-        toast.error("Impossible de charger les utilisateurs.");
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || "Impossible de charger les utilisateurs.";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
