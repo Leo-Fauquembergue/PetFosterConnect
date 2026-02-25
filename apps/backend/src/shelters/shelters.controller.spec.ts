@@ -1,21 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ShelterController } from './shelters.controller';
-import { ShelterService } from './shelters.service';
+import { SheltersController } from './shelters.controller';
+import { SheltersService } from './shelters.service';
 import { AnimalsService } from '../animals/animals.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('ShelterController (integration)', () => {
-  let controller: ShelterController;
+  let controller: SheltersController;
   let prisma: PrismaService;
   let testUserId: number; // accessible dans tous les tests
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [ShelterController],
-      providers: [ShelterService, AnimalsService, PrismaService],
+      controllers: [SheltersController],
+      providers: [SheltersService, AnimalsService, PrismaService],
     }).compile();
 
-    controller = module.get<ShelterController>(ShelterController);
+    controller = module.get<SheltersController>(SheltersController);
     prisma = module.get<PrismaService>(PrismaService);
   });
 

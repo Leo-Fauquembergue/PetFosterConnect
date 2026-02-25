@@ -68,10 +68,10 @@ export default function ApplicationsReceived() {
         )
       );
     } catch (err: any) {
-      toast.error(`⚠️ Erreur: ${err.message || "Impossible de mettre à jour la candidature"}`, {
+      const errorMessage = err.response?.data?.message || "Impossible de mettre à jour la candidature.";
+      toast.error(`⚠️ Erreur: ${errorMessage}`, {
         autoClose: 5000,
       });
-      console.error("Erreur handleStatus:", err);
     }
   };
   

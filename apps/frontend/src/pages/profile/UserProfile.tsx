@@ -51,8 +51,9 @@ export default function UserProfilePage() {
         }
 
         setLoading(false);
-      } catch (err) {
-        console.error("Erreur API fetchUser:", err);
+      } catch (err: any) {
+        const errorMessage = err.response?.data?.message || "Impossible de charger le profil.";
+        toast.error(errorMessage);
         setLoading(false);
       }
     };
@@ -79,8 +80,8 @@ export default function UserProfilePage() {
         setIsEditing(false);
         toast.success("Profil mis à jour avec succès !");
     } catch (error: any) {
-        console.error("Erreur API:", error);
-        toast.error("Impossible de mettre à jour le profil.");
+      const errorMessage = error.response?.data?.message || "Impossible de mettre à jour le profil.";
+      toast.error(errorMessage);
     }
   };
 

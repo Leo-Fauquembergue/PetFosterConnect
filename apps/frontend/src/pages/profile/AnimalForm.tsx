@@ -33,9 +33,9 @@ export default function AnimalForm() {
       try {
         const response = await api.get("/species");
         setSpecies(response.data);
-      } catch (error) {
-        console.error("Impossible de charger les espèces", error);
-        toast.error("Erreur lors du chargement des espèces.");
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || "Erreur lors du chargement des espèces.";
+        toast.error(errorMessage);
       }
     };
     fetchSpecies();
@@ -73,19 +73,11 @@ export default function AnimalForm() {
 
       navigate(-1);
     } catch (err: any) {
-      console.error(err);
-      
-      // Gestion d'erreur Axios (venant du backend NestJS)
-      if (err.response) {
-        toast.error(err.response.data?.message || "Erreur serveur.");
-      } 
-      // Gestion d'erreur Zod (problème dans le formulaire frontend)
-      else if (err.issues || err.errors) {
+      if (err.issues || err.errors) {
         toast.error("Formulaire invalide : veuillez vérifier les champs.");
-      } 
-      // Autre erreur
-      else {
-        toast.error("Erreur lors de l'enregistrement.");
+      } else {
+        const errorMessage = err.response?.data?.message || "Erreur lors de l'enregistrement.";
+        toast.error(errorMessage);
       }
     }
   };

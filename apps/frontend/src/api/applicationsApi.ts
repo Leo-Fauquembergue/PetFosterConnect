@@ -9,10 +9,6 @@ type CandidateUser = {
   };
 };
 
-export type ApplicationWithAnimal = Application & {
-  animal: Animal;
-};
-
 export type ApplicationWithRelations = Application & {
   animal: Animal;
   user: CandidateUser;

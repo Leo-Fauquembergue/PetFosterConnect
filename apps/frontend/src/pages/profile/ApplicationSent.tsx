@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getSentApplications } from "../../api/applicationsApi";
-//import type { Application } from "@projet/shared-types";
 import { toast } from "react-toastify";
 import type { Application as BaseApplication, Animal } from "@projet/shared-types";
 
@@ -19,12 +18,12 @@ export default function ApplicationsSent() {
       .then((data) => {
         setApplications(data);
       })
-      .catch((error) => {
-        console.error(error);
-        toast.error("Erreur lors du chargement de vos candidatures.");
+      .catch((error: any) => {
+        const errorMessage = error.response?.data?.message || "Erreur lors du chargement de vos candidatures.";
+        toast.error(errorMessage);
       })
       .finally(() => setLoading(false));
-  }, [])
+  }, []);
 
   if (loading) {
     return <p className="text-center text-gray-500">Chargement…</p>;

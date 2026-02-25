@@ -1,8 +1,8 @@
-import { BookMarksService } from './bookmarks.service';
+import { BookmarksService } from './bookmarks.service';
 import { NotFoundException } from '@nestjs/common';
 
-describe('BookMarksService', () => {
-  let service: BookMarksService;
+describe('BookmarksService', () => {
+  let service: BookmarksService;
   let mockPrisma: any;
 
   beforeEach(async () => {
@@ -20,7 +20,7 @@ describe('BookMarksService', () => {
 
     // 2. On instancie le service normalement
     // On passe le mock directement au constructeur pour être SÛR qu'il soit utilisé
-    service = new BookMarksService(mockPrisma as any);
+    service = new BookmarksService(mockPrisma as any);
   });
 
   it('devrait lever une erreur si animal inexistant', async () => {

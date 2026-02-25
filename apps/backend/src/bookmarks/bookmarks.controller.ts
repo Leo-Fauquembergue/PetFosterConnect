@@ -20,14 +20,14 @@ import {
 } from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
-import { BookMarksService } from "./bookmarks.service";
+import { BookmarksService } from "./bookmarks.service";
 
 @ApiTags("bookmarks")
 @Controller("bookmarks")
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class BookmarksController {
-  constructor(private readonly bookmarksService: BookMarksService) {}
+  constructor(private readonly bookmarksService: BookmarksService) {}
 
   @Post("toggle")
   @ApiOperation({ summary: "Ajouter ou retirer un animal des favoris" })

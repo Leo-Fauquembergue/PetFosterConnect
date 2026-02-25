@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
-export class BookMarksService {
+export class BookmarksService {
   constructor(private readonly prisma: PrismaService){}
 
   async toggle(userId: number, animalId: number){

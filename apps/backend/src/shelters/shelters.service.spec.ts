@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ShelterService } from './shelters.service';
+import { SheltersService } from './shelters.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('ShelterService (integration)', () => {
-  let service: ShelterService;
+  let service: SheltersService;
   let prisma: PrismaService;
   let testUserId: number;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ShelterService, PrismaService],
+      providers: [SheltersService, PrismaService],
     }).compile();
 
-    service = module.get<ShelterService>(ShelterService);
+    service = module.get<SheltersService>(SheltersService);
     prisma = module.get<PrismaService>(PrismaService);
   });
 
