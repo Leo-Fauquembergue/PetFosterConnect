@@ -1,12 +1,19 @@
-import { api } from "./api";
+import api from "./api";
+import type { LoginDto, RegisterDto, User } from "@projet/shared-types";
 
 export const authApi = {
-  getMe: async () => {
-    const response = await api.get("/auth/me", { withCredentials: true });
+  login: async (credentials: LoginDto) => {
+    const response = await api.post<{ access_token: string; user: User }>("/auth/login", credentials);
     return response.data;
   },
-  logout: async () => {
-    const response = await api.post("/auth/logout", {}, { withCredentials: true });
+
+  register: async (data: RegisterDto) => {
+    const response = await api.post<{ access_token: string; user: User }>("/auth/register", data);
+    return response.data;
+  },
+
+  getMe: async () => {
+    const response = await api.get<User>("/auth/me");
     return response.data;
   },
 };

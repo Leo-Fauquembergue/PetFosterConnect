@@ -2,10 +2,10 @@ import type { Animal } from "@projet/shared-types";
 import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { api } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+import { animalApi } from "../../api/animalApi";
 
 // Type étendu pour matcher le retour API (Relations Prisma)
 type AnimalWithRelations = Animal & {
@@ -29,8 +29,8 @@ export default function AdminAnimals() {
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
-        const res = await api.get<AnimalWithRelations[]>("/animals/admin/all");
-        setAnimals(res.data);
+        const data = await animalApi.getAllAdmin(); 
+        setAnimals(data as AnimalWithRelations[]);
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || "Impossible de charger la liste des animaux.";
         toast.error(errorMessage);
@@ -65,18 +65,12 @@ export default function AdminAnimals() {
 
     try {
       if (type === "delete") {
-        await api.delete(`/animals/${id}`);
-        setAnimals(
-          animals.map((a) =>
-            a.id === id ? { ...a, deletedAt: new Date() } : a
-          )
-        );
+        await animalApi.deleteAnimalAdmin(id); 
+        setAnimals(animals.map((a) => a.id === id ? { ...a, deletedAt: new Date() } : a));
         toast.success("Animal supprimé avec succès");
       } else {
-        await api.patch(`/animals/${id}`, { deletedAt: null });
-        setAnimals(
-          animals.map((a) => (a.id === id ? { ...a, deletedAt: null } : a))
-        );
+        await animalApi.updateAnimalAdmin(id, { deletedAt: null }); 
+        setAnimals(animals.map((a) => (a.id === id ? { ...a, deletedAt: null } : a)));
         toast.success("Animal restauré avec succès");
       }
     } catch (_error) {
