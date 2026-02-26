@@ -97,7 +97,7 @@ export class UsersController {
 
   // --- Profils enrichis ---
 
-  @Get(":id/profil")
+  @Get(":id/profile")
   @UseGuards(JwtAuthGuard, ProfileAccessGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Récupérer le profil complet d'un utilisateur" })

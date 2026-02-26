@@ -1,4 +1,4 @@
-import type { ShelterProfile } from "../../../../packages/shared-types/src/profile.schema";
+import type { ShelterProfile } from "@projet/shared-types";
 import { Link } from "react-router-dom"; 
 
 

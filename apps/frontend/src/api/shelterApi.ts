@@ -1,7 +1,6 @@
-import { api } from "./api";
-import type { ShelterProfile, User } from "@projet/shared-types";
+import api from "./api";
+import type { ShelterProfile, User, AnimalWithRelations } from "@projet/shared-types";
 
-// Type déduit de la réponse du backend (ShelterProfile + User)
 export type ShelterWithRelations = ShelterProfile & {
   user?: User;
 };
@@ -15,5 +14,10 @@ export const shelterApi = {
   getFeaturedShelters: async (): Promise<ShelterWithRelations[]> => {
     const response = await api.get<ShelterWithRelations[]>("/shelters?limit=3");
     return response.data;
-  }
+  },
+
+  getShelterAnimals: async (id: number): Promise<AnimalWithRelations[]> => {
+    const response = await api.get<AnimalWithRelations[]>(`/shelters/${id}/animals`);
+    return response.data;
+  },
 };

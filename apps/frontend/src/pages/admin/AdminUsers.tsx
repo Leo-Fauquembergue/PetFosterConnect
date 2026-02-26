@@ -2,10 +2,10 @@ import type { User } from "@projet/shared-types";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { api } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+import { userApi } from "../../api/userApi";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -23,8 +23,8 @@ export default function AdminUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await api.get<User[]>("/users");
-        setUsers(res.data);
+        const data = await userApi.getAllUsers();
+        setUsers(data);
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || "Impossible de charger les utilisateurs.";
         toast.error(errorMessage);
@@ -51,16 +51,12 @@ export default function AdminUsers() {
 
     try {
       if (type === "delete") {
-        await api.delete(`/users/${id}`);
-        setUsers(
-          users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u))
-        );
+        await userApi.deleteUser(id);
+        setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u)));
         toast.success("Utilisateur banni");
       } else {
-        await api.patch(`/users/${id}`, { deletedAt: null });
-        setUsers(
-          users.map((u) => (u.id === id ? { ...u, deletedAt: null } : u))
-        );
+        await userApi.updateUser(id, { deletedAt: null });
+        setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: null } : u)));
         toast.success("Utilisateur restauré");
       }
     } catch (_error) {

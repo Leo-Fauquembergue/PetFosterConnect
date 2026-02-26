@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   UseGuards,
   Request,
+  Logger
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -22,7 +23,7 @@ import { ApplicationStatus } from "@prisma/client";
 import * as sharedTypes from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
-import { EmailService } from "../email/email.service";
+import { EmailsService } from "../emails/emails.service";
 import { ApplicationsService } from "./applications.service";
 
 @ApiTags("applications")
@@ -31,9 +32,12 @@ import { ApplicationsService } from "./applications.service";
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ApplicationsController {
+  // Instanciation du Logger
+  private readonly logger = new Logger(ApplicationsController.name);
+
   constructor(
     private readonly applicationsService: ApplicationsService,
-    private readonly emailService: EmailService
+    private readonly emailsService: EmailsService
   ) {}
 
   // CANDIDAT
@@ -166,17 +170,16 @@ export class ApplicationsController {
         const firstname =
           (application.user.individualProfile as any)?.firstname || "Candidat";
 
-        await this.emailService.sendAcceptanceEmail(
+        await this.emailsService.sendAcceptanceEmail(
           application.user.email,
           firstname,
           application.animal.name
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       // Si l'email plante (ex: pas de SMTP), on loggue l'erreur mais on ne casse pas la requête
-      console.error(
-        "⚠️ [Email Error] Impossible d'envoyer l'email d'acceptation :",
-        error.message
+      this.logger.error(
+        `⚠️ [Email Error] Impossible d'envoyer l'email d'acceptation : ${error.message}`
       );
     }
 
@@ -220,16 +223,15 @@ export class ApplicationsController {
         const firstname =
           (application.user.individualProfile as any)?.firstname || "Candidat";
 
-        await this.emailService.sendRejectionEmail(
+        await this.emailsService.sendRejectionEmail(
           application.user.email,
           firstname,
           application.animal.name
         );
       }
-    } catch (error) {
-      console.error(
-        "⚠️ [Email Error] Impossible d'envoyer l'email de refus :",
-        error.message
+    } catch (error: any) {
+      this.logger.error(
+        `⚠️ [Email Error] Impossible d'envoyer l'email de refus : ${error.message}`
       );
     }
 

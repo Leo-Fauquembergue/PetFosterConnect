@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import type { Animal, Species } from "../../../../packages/shared-types/src/animal.schema";
+import type { Animal, Species } from "@projet/shared-types";
 
 type AnimalWithDetails = Animal & {
   species: Species;

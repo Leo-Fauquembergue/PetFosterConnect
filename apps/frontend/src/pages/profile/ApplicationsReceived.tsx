@@ -1,11 +1,6 @@
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
-import {
-  getReceivedApplications,
-  archiveApplication,
-  acceptApplication, 
-  rejectApplication 
-} from "../../api/applicationApi";
+import { applicationApi } from "../../api/applicationApi";
 import type { Application as BaseApplication, Animal } from "@projet/shared-types";
 
 
@@ -29,14 +24,11 @@ export default function ApplicationsReceived() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getReceivedApplications()
+    applicationApi.getReceivedApplications()
       .then((data: ApplicationWithRelations[]) => setApplications(data))
       .finally(() => setLoading(false));
   }, []);
 
-
-
-  
   const handleStatus = async (
     candidateId: number,
     animalId: number,
@@ -44,14 +36,14 @@ export default function ApplicationsReceived() {
   ) => {
     try {
       if (status === "approved") {
-        const res = await acceptApplication(candidateId, animalId);
+        const res = await applicationApi.acceptApplication(candidateId, animalId);
         toast.success(
           `✅ Candidature acceptée pour ${res.application?.user?.individualProfile?.firstname ?? ""} ${res.application?.user?.individualProfile?.lastname ?? ""}.
           Un email de confirmation a été envoyé !`,
           { autoClose: 4000 }
         );
       } else {
-        const res = await rejectApplication(candidateId, animalId);
+        const res = await applicationApi.rejectApplication(candidateId, animalId);
         toast.error(
           `❌ Candidature refusée pour ${res.application?.user?.individualProfile?.firstname ?? ""} ${res.application?.user?.individualProfile?.lastname ?? ""}.
           Un email de notification a été envoyé.`,
@@ -75,10 +67,8 @@ export default function ApplicationsReceived() {
     }
   };
   
-
   const handleArchive = async (candidateId: number, animalId: number) => {
-    await archiveApplication(candidateId, animalId);
-
+    await applicationApi.archiveApplication(candidateId, animalId);
     setApplications((prev) =>
       prev.filter(
         (app) =>
@@ -163,6 +153,7 @@ export default function ApplicationsReceived() {
               {app.applicationStatus === "pending" && (
                 <>
                   <button
+                    type="button"
                     onClick={() =>
                       handleStatus(app.pfcUserId, app.animalId, "approved")
                     }
@@ -172,6 +163,7 @@ export default function ApplicationsReceived() {
                   </button>
 
                   <button
+                    type="button"
                     onClick={() =>
                       handleStatus(app.pfcUserId, app.animalId, "rejected")
                     }
@@ -183,6 +175,7 @@ export default function ApplicationsReceived() {
               )}
 
               <button
+                type="button"
                 onClick={() => handleArchive(app.pfcUserId, app.animalId)}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded"
               >

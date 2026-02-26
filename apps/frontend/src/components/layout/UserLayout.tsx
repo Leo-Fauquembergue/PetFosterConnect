@@ -17,13 +17,13 @@ export default function UserLayout() {
           </div>
 
           <nav className="p-4 space-y-2">
-            <NavLink to={`/user/${user?.id}/profil`} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100">
+            <NavLink to={`/utilisateur/${user?.id}/profil`} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100">
               <UserCircle className="w-5 h-5" />
               Mon Profil
             </NavLink>
 
             {user?.role === "shelter" && (
-              <NavLink to={`/user/${user?.id}/animaux`} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100">
+              <NavLink to={`/utilisateur/${user?.id}/animaux`} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100">
                 <PawPrint className="w-5 h-5" />
                 Mes Animaux
               </NavLink>

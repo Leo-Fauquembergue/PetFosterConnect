@@ -35,7 +35,7 @@ export default function ProtectedRoute({
 
   // ✅ Vérifier les rôles
   if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/non-autorise" replace />;
   }
 
   return <>{children}</>;

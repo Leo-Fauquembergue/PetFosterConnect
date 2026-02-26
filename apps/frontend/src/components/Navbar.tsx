@@ -13,7 +13,7 @@ const Navbar = () => {
   ];
 
   if (isLoggedIn && user) {
-    links.push({ to: `/user/${user.id}/profil`, label: "Profil" });
+    links.push({ to: `/utilisateur/${user.id}/profil`, label: "Profil" });
   }
 
   if (isLoggedIn && user?.role === "admin") {

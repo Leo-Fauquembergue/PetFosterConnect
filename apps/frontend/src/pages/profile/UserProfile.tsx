@@ -20,7 +20,7 @@ export default function UserProfilePage() {
       if (!id) return;
 
       try {
-        const res = await api.get(`/users/${id}/profil`);
+        const res = await api.get(`/users/${id}/profile`);
         const data = res.data;
 
         setUser(data);

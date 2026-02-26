@@ -9,7 +9,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { api } from "../api/api";
+
+import { authApi } from "../api/authApi";
+
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -88,16 +90,14 @@ function LoginForm() {
 
   const onSubmit = async (data: LoginDto) => {
     try {
-      // ⚡ 1. Connexion
-      const res = await api.post("/auth/login", data, {
-        withCredentials: true,
-      });
+      // ⚡ 1. Connexion via l'API encapsulée
+      const res = await authApi.login(data);
 
       // ⚡ 2. Met à jour l'état de connexion
       setIsLoggedIn(true);
 
       // ⚡ 3. Récupère l'utilisateur immédiatement
-      setUser(res.data.user);
+      setUser(res.user); // On utilise res.user car authApi renvoie { access_token, user }
 
       // ⚡ 4. Feedback + redirection
       toast.success("Connexion réussie !", {
@@ -162,15 +162,15 @@ function RegisterForm() {
 
   const onSubmit = async (data: RegisterDto) => {
     try {
-      // ⚡ 1. Création du compte
-      await api.post("/auth/register", data, { withCredentials: true });
+      // ⚡ 1. Création du compte via l'API encapsulée
+      await authApi.register(data);
 
       // ⚡ 2. Met à jour l'état
       setIsLoggedIn(true);
 
       // ⚡ 3. Récupère l'utilisateur immédiatement
-      const me = await api.get("/auth/me", { withCredentials: true });
-      setUser(me.data);
+      const me = await authApi.getMe();
+      setUser(me);
 
       // ⚡ 4. Feedback + redirection
       toast.success("Compte créé avec succès 🎉", {

@@ -3,10 +3,12 @@ import { Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { api } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+
+import { shelterApi } from "../../api/shelterApi";
+import { animalApi } from "../../api/animalApi";
 
 // Dictionnaire pour la traduction des statuts
 const statusLabels: Record<string, string> = {
@@ -29,10 +31,8 @@ export default function ShelterAnimalList() {
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
-        const res = await api.get<AnimalWithRelations[]>(
-          `/shelters/${Number(id)}/animals`
-        );
-        setAnimals(res.data);
+        const data = await shelterApi.getShelterAnimals(Number(id));
+        setAnimals(data);
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || "Erreur de chargement des animaux.";
         toast.error(errorMessage);
@@ -49,7 +49,7 @@ export default function ShelterAnimalList() {
 
     try {
       if (type === "delete") {
-        await api.delete(`/animals/${animalId}`);
+        await animalApi.deleteAnimal(animalId);
         setAnimals(
           animals.map((a) =>
             a.id === animalId ? { ...a, deletedAt: new Date() } : a
@@ -57,7 +57,7 @@ export default function ShelterAnimalList() {
         );
         toast.success("Animal supprimé");
       } else {
-        await api.patch(`/animals/${animalId}`, { deletedAt: null });
+        await animalApi.updateAnimal(animalId, { deletedAt: null });
         setAnimals(
           animals.map((a) =>
             a.id === animalId ? { ...a, deletedAt: null } : a
@@ -128,7 +128,7 @@ export default function ShelterAnimalList() {
 
                   <td className="px-6 py-4 text-right flex gap-2 justify-end">
                     <Link
-                      to={`/user/${id}/animaux/${animal.id}`}
+                      to={`/utilisateur/${id}/animaux/${animal.id}`}
                       className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors"
                       title="Voir / Modifier"
                     >

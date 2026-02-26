@@ -49,7 +49,7 @@ export default function UserSidebarLayout() {
           <nav className="p-4 space-y-2">
             {/* Profil */}
             <NavLink
-              to={`/user/${user?.id}/profil`}
+              to={`/utilisateur/${user?.id}/profil`}
               className={({ isActive }) =>
                 `flex items-center gap-2 px-3 py-2 rounded-lg transition 
                 ${isActive 
@@ -67,7 +67,7 @@ export default function UserSidebarLayout() {
             {user?.role === "shelter" && (
               <div className="space-y-1">
                 <NavLink
-                  to={`/user/${user?.id}/animaux`}
+                  to={`/utilisateur/${user?.id}/animaux`}
                   className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg transition 
                       ${isActive 
@@ -82,7 +82,7 @@ export default function UserSidebarLayout() {
 
                 <div className="ml-8">
                   <NavLink
-                    to={`/user/${user?.id}/profil/animaux/creer`}
+                    to={`/utilisateur/${user?.id}/profil/animaux/creer`}
                     className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg transition 
                         ${isActive 
@@ -97,7 +97,7 @@ export default function UserSidebarLayout() {
                 </div>
 
                 <NavLink
-                  to={`/user/${user?.id}/demandes-recus`}
+                  to={`/utilisateur/${user?.id}/demandes-recues`}
                   className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg transition 
                       ${isActive 
@@ -115,7 +115,7 @@ export default function UserSidebarLayout() {
             {/* Particulier : Mes Favoris */}
             {user?.role === "individual" && (
             <NavLink
-              to={`/user/${user?.id}/favoris`}
+              to={`/utilisateur/${user?.id}/favoris`}
               className={({ isActive }) =>
                 `flex items-center gap-2 px-3 py-2 rounded-lg transition 
                 ${isActive 
@@ -132,7 +132,7 @@ export default function UserSidebarLayout() {
               {/* Particulier : Mes Demandes */}
             {user?.role === "individual" && (
               <NavLink
-                to={`/user/${user?.id}/demandes`}
+                to={`/utilisateur/${user?.id}/demandes`}
                 className={({ isActive }) =>
                     `flex items-center gap-2 px-3 py-2 rounded-lg transition 
                     ${isActive 

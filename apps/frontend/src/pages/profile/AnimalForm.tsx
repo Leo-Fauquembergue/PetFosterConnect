@@ -1,8 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { CreateAnimalSchema } from "@projet/shared-types";
-import { api } from "../../api/api";
 import { toast } from "react-toastify";
+
+import { animalApi } from "../../api/animalApi";
+import { speciesApi } from "../../api/speciesApi";
 
 export default function AnimalForm() {
   const navigate = useNavigate();
@@ -27,12 +29,12 @@ export default function AnimalForm() {
     speciesId: animal?.species?.id ?? "",
   });
 
-  // Charger les espèces via Axios
+  // Charger les espèces via l'API encapsulée
   useEffect(() => {
     const fetchSpecies = async () => {
       try {
-        const response = await api.get("/species");
-        setSpecies(response.data);
+        const data = await speciesApi.getAllSpecies();
+        setSpecies(data);
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || "Erreur lors du chargement des espèces.";
         toast.error(errorMessage);
@@ -60,14 +62,12 @@ export default function AnimalForm() {
       const parsed = CreateAnimalSchema.parse(parsedData);
 
       if (animal) {
-        // Mode édition → PATCH via Axios
-        await api.patch(`/animals/${animal.id}`, parsed);
+        // ⚡ Mode édition → PATCH via API
+        await animalApi.updateAnimal(animal.id, parsed);
         toast.success("Animal modifié avec succès 🎉");
       } else {
-        // Mode création → POST via Axios
-        // Note: Pas besoin de rajouter pfcUserId manuellement, le backend 
-        // le récupère directement depuis ton token JWT (req.user.id)
-        await api.post(`/animals`, parsed);
+        // ⚡ Mode création → POST via API
+        await animalApi.createAnimal(parsed);
         toast.success("Animal créé avec succès 🎉");
       }
 

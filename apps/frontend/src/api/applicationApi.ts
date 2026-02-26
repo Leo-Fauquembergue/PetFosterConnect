@@ -1,5 +1,5 @@
 import type { Application, Animal } from "@projet/shared-types";
-import api from "./api"; // On utilise uniquement 'api'
+import api from "./api";
 
 type CandidateUser = {
   id: number;
@@ -14,57 +14,46 @@ export type ApplicationWithRelations = Application & {
   user: CandidateUser;
 };
 
-// GETTERS (Candidat & Refuge)
+export const applicationApi = {
+  getSentApplications: async (): Promise<ApplicationWithRelations[]> => {
+    const res = await api.get<ApplicationWithRelations[]>("/applications/sent");
+    return res.data;
+  },
 
-export async function getSentApplications(): Promise<ApplicationWithRelations[]> {
-  const res = await api.get("/applications/sent");
-  return res.data;
-}
+  getReceivedApplications: async (): Promise<ApplicationWithRelations[]> => {
+    const res = await api.get<ApplicationWithRelations[]>("/applications/received");
+    return res.data;
+  },
 
-export async function getReceivedApplications(): Promise<ApplicationWithRelations[]> {
-  const res = await api.get("/applications/received");
-  return res.data;
-}
+  updateApplicationStatus: async (
+    candidateId: number,
+    animalId: number,
+    status: "approved" | "rejected"
+  ): Promise<Application> => {
+    const res = await api.patch<Application>(
+      `/applications/${animalId}/${candidateId}`,
+      { applicationStatus: status }
+    );
+    return res.data;
+  },
 
-// ACTIONS (Refuge)
+  archiveApplication: async (candidateId: number, animalId: number): Promise<Application> => {
+    const res = await api.delete<Application>(`/applications/${animalId}/${candidateId}`);
+    return res.data;
+  },
 
-export async function updateApplicationStatus(
-  candidateId: number,
-  animalId: number,
-  status: "approved" | "rejected"
-): Promise<Application> {
-  // ✅ Remplacement de axios.patch par api.patch
-  const res = await api.patch(
-    `/applications/${animalId}/${candidateId}`,
-    { applicationStatus: status }
-  );
-  return res.data;
-}
+  acceptApplication: async (candidateId: number, animalId: number) => {
+    const res = await api.post(`/applications/${candidateId}/${animalId}/accept`);
+    return res.data;
+  },
 
-export async function archiveApplication(
-  candidateId: number,
-  animalId: number
-): Promise<Application> {
-  // ✅ Remplacement de axios.delete par api.delete
-  const res = await api.delete(
-    `/applications/${animalId}/${candidateId}`
-  );
-  return res.data;
-}
+  rejectApplication: async (candidateId: number, animalId: number) => {
+    const res = await api.post(`/applications/${candidateId}/${animalId}/reject`);
+    return res.data;
+  },
 
-// ACTIONS RAPIDES (Boutons Accepter / Refuser)
-
-export async function acceptApplication(candidateId: number, animalId: number) {
-  const res = await api.post(`/applications/${candidateId}/${animalId}/accept`);
-  return res.data;
-}
-
-export async function rejectApplication(candidateId: number, animalId: number) {
-  const res = await api.post(`/applications/${candidateId}/${animalId}/reject`);
-  return res.data;
-}
-
-export async function createApplication(data: { animalId: number; applicationType: string; message: string }) {
-  const res = await api.post("/applications", data);
-  return res.data;
-}
+  createApplication: async (data: { animalId: number; applicationType: string; message: string }) => {
+    const res = await api.post("/applications", data);
+    return res.data;
+  },
+};

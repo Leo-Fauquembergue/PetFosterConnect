@@ -53,7 +53,7 @@ function App() {
           {/* ESPACE UTILISATEUR */}
           <Route element={<UserSidebarLayout />}>
             <Route
-              path="/user/:id/profil"
+              path="/utilisateur/:id/profil"
               element={
                 <ProtectedRoute>
                   <UserProfilePage />
@@ -61,48 +61,46 @@ function App() {
               }
             />
             <Route
-              path="/user/:id/profil/animaux/creer"
+              path="/utilisateur/:id/profil/animaux/creer"
               element={
                 <ProtectedRoute>
                   <AnimalForm />
                 </ProtectedRoute>
               }
             />
-            <Route path="/user/:id/animaux" element={<ShelterAnimalList />} />
+            <Route path="/utilisateur/:id/animaux" element={<ShelterAnimalList />} />
             <Route
-              path="/user/:userId/animaux/:id"
+              path="/utilisateur/:userId/animaux/:id"
               element={
                 <ProtectedRoute>
                   <AnimalDetail />
                 </ProtectedRoute>
               }
             />
-            <Route path="/user/:id/demandes" element={
+            <Route path="/utilisateur/:id/demandes" element={
               <ProtectedRoute>
-              <ApplicationsSent />
+                <ApplicationsSent />
               </ProtectedRoute>
             }
             />
-            <Route path="/user/:id/demandes-recus" element={
+            <Route path="/utilisateur/:id/demandes-recues" element={
               <ProtectedRoute>
-              <ApplicationsReceived />
+                <ApplicationsReceived />
               </ProtectedRoute>} 
               />
 
-            <Route path="/user/:id/favoris" element={
+            <Route path="/utilisateur/:id/favoris" element={
               <ProtectedRoute>
-              <BookmarksPage />
+                <BookmarksPage />
               </ProtectedRoute>
-              } />
-
+            } />
           </Route>
 
           {/* Route 404 */}
           <Route path="*" element={<NotFound />} />
-          {/* Route Unauthorized */}
-          <Route path="/unauthorized" element={<Unauthorized />} />
-          {/* Route Forbidden */}
-          <Route path="/forbidden" element={<Forbidden />} />
+          {/* Routes d'erreurs */}
+          <Route path="/non-autorise" element={<Unauthorized />} />
+          <Route path="/interdit" element={<Forbidden />} />
         </Route>
 
         {/* ZONE ADMIN */}
