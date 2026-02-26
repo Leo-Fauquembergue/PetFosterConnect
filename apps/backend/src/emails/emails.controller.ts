@@ -1,11 +1,11 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { EmailService } from "./email.service";
+import { EmailsService } from "./emails.service";
 
 @ApiTags("emails")
 @Controller("emails")
-export class EmailController {
-  constructor(private readonly emailService: EmailService) {}
+export class EmailsController {
+  constructor(private readonly emailsService: EmailsService) {}
 
   @Post("send")
   @ApiOperation({ summary: "Envoyer un email" })
@@ -46,7 +46,7 @@ export class EmailController {
   async sendTestEmail(
     @Body() body: { to: string; subject: string; text: string; html: string }
   ) {
-    const result = await this.emailService.sendMail(
+    const result = await this.emailsService.sendMail(
       body.to,
       body.subject,
       body.text,

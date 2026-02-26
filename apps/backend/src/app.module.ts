@@ -11,7 +11,7 @@ import { SheltersModule } from "./shelters/shelters.module";
 import { ApplicationsModule } from "./applications/applications.module";
 import { SpeciesModule } from './species/species.module';
 import { BookmarksModule } from "./bookmarks/bookmarks.module";
-import { EmailModule } from "./email/email.module";
+import { EmailsModule } from "./emails/emails.module";
 /**
  * MODULE RACINE (ROOT MODULE)
  * * Ce module est le chef d'orchestre de l'application NestJS.
@@ -33,7 +33,7 @@ import { EmailModule } from "./email/email.module";
     ApplicationsModule,
     SpeciesModule,
     BookmarksModule,
-    EmailModule
+    EmailsModule
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

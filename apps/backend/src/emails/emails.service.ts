@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
-export class EmailService {
+export class EmailsService {
   private transporter;
+  private readonly logger = new Logger(EmailsService.name);
 
   constructor() {
     // Si on a des variables d'env (Prod/Docker), on les utilise
@@ -17,11 +18,10 @@ export class EmailService {
                 pass: process.env.SMTP_PASS,
             },
         });
-        console.log("📧 [EmailService] Configuration SMTP chargée depuis .env");
+        this.logger.log("📧 Configuration SMTP chargée depuis .env");
     } else {
         // SINON : On crée un compte de test Ethereal
-        console.log("👻 [EmailService] Pas de config SMTP détectée, création d'un compte Ethereal...");
-        
+        this.logger.log("👻 Pas de config SMTP détectée, création d'un compte Ethereal...");
         nodemailer.createTestAccount().then((account) => {
             this.transporter = nodemailer.createTransport({
                 host: account.smtp.host,
@@ -32,16 +32,15 @@ export class EmailService {
                     pass: account.pass,
                 },
             });
-            console.log(`✨ [EmailService] Prêt ! Les emails seront visibles sur : https://ethereal.email/login`);
-            console.log(`   User: ${account.user}`);
-            console.log(`   Pass: ${account.pass}`);
+            this.logger.log(`✨ Prêt ! Les emails seront visibles sur : https://ethereal.email/login`);
+            this.logger.log(`   User: ${account.user}`);
+            this.logger.log(`   Pass: ${account.pass}`);
         });
     }
   }
 
   async sendMail(to: string, subject: string, text: string, html: string) {
-    console.log("📨 [EmailService] Envoi d’un mail à :", to);
-
+    this.logger.log(`📨 Envoi d’un mail à : ${to}`);
     const info = await this.transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to,
@@ -49,12 +48,11 @@ export class EmailService {
       text,
       html,
     });
-
-    console.log("✅ [EmailService] Email envoyé, Message ID:", info.messageId);
+    this.logger.log(`✅ Email envoyé, Message ID: ${info.messageId}`);
 
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) {
-      console.log("🔗 Aperçu Ethereal:", previewUrl);
+      this.logger.log(`🔗 Aperçu Ethereal: ${previewUrl}`);
     }
 
     return info;
@@ -68,12 +66,10 @@ export class EmailService {
     return `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
           
-          <!-- Header -->
           <header style="width:100%; background-color:#2D6A4F; padding:15px; text-align:center; color:#fff;">
             <h2 style="margin:0;">🐾 Pet Foster Connect</h2>
           </header>
       
-          <!-- Body -->
           <div style="padding:20px;">
             <p>Bonjour <b>${firstname}</b>,</p>
             <p>
@@ -89,7 +85,6 @@ export class EmailService {
             </div>
           </div>
       
-          <!-- Footer -->
           <footer style="width:100%; background-color:#2D6A4F; padding:10px; text-align:center; color:#fff; font-size:12px;">
             Merci de contribuer au bien-être animal 🐶🐱<br/>
             Cet email est généré automatiquement par Pet Foster Connect.
@@ -102,12 +97,10 @@ export class EmailService {
     return `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
           
-          <!-- Header -->
           <header style="width:100%; background-color:#2D6A4F; padding:15px; text-align:center; color:#fff;">
             <h2 style="margin:0;">🐾 Pet Foster Connect</h2>
           </header>
       
-          <!-- Body -->
           <div style="padding:20px;">
             <p>Bonjour <b>${firstname}</b>,</p>
             <p>
@@ -125,14 +118,12 @@ export class EmailService {
             </div>
           </div>
       
-          <!-- Footer -->
           <footer style="width:100%; background-color:#2D6A4F; padding:10px; text-align:center; color:#fff; font-size:12px;">
             Merci de votre intérêt et de votre engagement 🐾<br/>
             Cet email est généré automatiquement par Pet Foster Connect.
           </footer>
         </div>
       `;
-      
   }
 
   // -------------------------------

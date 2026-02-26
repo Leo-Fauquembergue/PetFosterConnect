@@ -23,7 +23,7 @@ import { ApplicationStatus } from "@prisma/client";
 import * as sharedTypes from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
-import { EmailService } from "../email/email.service";
+import { EmailsService } from "../emails/emails.service";
 import { ApplicationsService } from "./applications.service";
 
 @ApiTags("applications")
@@ -37,7 +37,7 @@ export class ApplicationsController {
 
   constructor(
     private readonly applicationsService: ApplicationsService,
-    private readonly emailService: EmailService
+    private readonly emailsService: EmailsService
   ) {}
 
   // CANDIDAT
@@ -170,7 +170,7 @@ export class ApplicationsController {
         const firstname =
           (application.user.individualProfile as any)?.firstname || "Candidat";
 
-        await this.emailService.sendAcceptanceEmail(
+        await this.emailsService.sendAcceptanceEmail(
           application.user.email,
           firstname,
           application.animal.name
@@ -223,7 +223,7 @@ export class ApplicationsController {
         const firstname =
           (application.user.individualProfile as any)?.firstname || "Candidat";
 
-        await this.emailService.sendRejectionEmail(
+        await this.emailsService.sendRejectionEmail(
           application.user.email,
           firstname,
           application.animal.name

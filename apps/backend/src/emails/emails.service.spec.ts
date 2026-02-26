@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EmailService } from './email.service';
+import { EmailsService } from './emails.service';
 
 // On définit le faux comportement ici
 jest.mock('nodemailer', () => ({
@@ -10,15 +10,15 @@ jest.mock('nodemailer', () => ({
   getTestMessageUrl: jest.fn().mockReturnValue('https://fake-ethereal-url.com'),
 }));
 
-describe('EmailService', () => {
-  let service: EmailService;
+describe('EmailsService', () => {
+  let service: EmailsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EmailService],
+      providers: [EmailsService],
     }).compile();
 
-    service = module.get<EmailService>(EmailService);
+    service = module.get<EmailsService>(EmailsService);
   });
 
   it('doit envoyer un email (simulation)', async () => {
