@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   UseGuards,
   Request,
+  Logger
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -31,6 +32,9 @@ import { ApplicationsService } from "./applications.service";
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ApplicationsController {
+  // Instanciation du Logger
+  private readonly logger = new Logger(ApplicationsController.name);
+
   constructor(
     private readonly applicationsService: ApplicationsService,
     private readonly emailService: EmailService
@@ -172,11 +176,10 @@ export class ApplicationsController {
           application.animal.name
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       // Si l'email plante (ex: pas de SMTP), on loggue l'erreur mais on ne casse pas la requête
-      console.error(
-        "⚠️ [Email Error] Impossible d'envoyer l'email d'acceptation :",
-        error.message
+      this.logger.error(
+        `⚠️ [Email Error] Impossible d'envoyer l'email d'acceptation : ${error.message}`
       );
     }
 
@@ -226,10 +229,9 @@ export class ApplicationsController {
           application.animal.name
         );
       }
-    } catch (error) {
-      console.error(
-        "⚠️ [Email Error] Impossible d'envoyer l'email de refus :",
-        error.message
+    } catch (error: any) {
+      this.logger.error(
+        `⚠️ [Email Error] Impossible d'envoyer l'email de refus : ${error.message}`
       );
     }
 

@@ -128,7 +128,7 @@ export default function ShelterAnimalList() {
 
                   <td className="px-6 py-4 text-right flex gap-2 justify-end">
                     <Link
-                      to={`/user/${id}/animaux/${animal.id}`}
+                      to={`/utilisateur/${id}/animaux/${animal.id}`}
                       className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors"
                       title="Voir / Modifier"
                     >

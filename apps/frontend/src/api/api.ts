@@ -36,8 +36,8 @@ api.interceptors.response.use(
         // Redirection vers la vraie route de connexion
         window.location.replace("/connexion");
       }
-    } else if (status === 403 && currentPath !== "/forbidden") {
-      window.location.replace("/forbidden");
+    } else if (status === 403 && currentPath !== "/interdit") {
+      window.location.replace("/interdit");
     }
 
     return Promise.reject(error);

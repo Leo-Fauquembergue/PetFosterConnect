@@ -230,7 +230,7 @@ export default function AnimalDetail() {
 
             <div className="border-t-2 border-gray-300 pt-6 flex flex-col gap-4 w-full mt-auto no-print">
               {isShelterOwner ? (
-                <Button variant="primary" onClick={() => navigate(`/user/${user?.id}/profil/animaux/creer`, { state: { animal } })}>
+                <Button variant="primary" onClick={() => navigate(`/utilisateur/${user?.id}/profil/animaux/creer`, { state: { animal } })}>
                   Modifier
                 </Button>
               ) : (

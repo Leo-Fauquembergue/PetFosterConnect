@@ -4,7 +4,7 @@ import { AnimalsModule } from "./animals/animals.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
-import { HealthController } from "./health.controller";
+import { HealthController } from "./health/health.controller";
 import { PrismaModule } from "./prisma/prisma.module";
 import { UsersModule } from "./users/users.module";
 import { SheltersModule } from "./shelters/shelters.module";
