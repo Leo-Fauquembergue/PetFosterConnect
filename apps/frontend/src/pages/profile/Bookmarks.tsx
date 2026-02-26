@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import api from "../../api/api"; // ton instance Axios
+import { bookmarkApi } from "../../api/bookmarkApi";
 import { useAuth } from "../../auth/AuthContext";
 
 export default function BookmarksPage() {
@@ -11,8 +11,9 @@ export default function BookmarksPage() {
 
   useEffect(() => {
     if (!user) return;
-    api.get("/bookmarks/me")
-      .then(res => setBookmarks(res.data))
+    
+    bookmarkApi.getMyBookmarks()
+      .then(data => setBookmarks(data))
       .catch((err: any) => {
         const errorMessage = err.response?.data?.message || "Impossible de charger vos favoris ❌";
         toast.error(errorMessage, { position: "top-right" });
@@ -22,12 +23,13 @@ export default function BookmarksPage() {
 
   const handleToggle = async (animalId: number) => {
     try {
-      const res = await api.post("/bookmarks/toggle", { animalId });
+      const data = await bookmarkApi.toggleBookmark(animalId);
+      
       // Met à jour la liste localement
       setBookmarks(prev => prev.filter(bm => bm.animalId !== animalId));
-
+      
       // Feedback utilisateur
-      toast.success(res.data.message, {
+      toast.success(data.message, {
         position: "top-right",
         autoClose: 2000,
       });

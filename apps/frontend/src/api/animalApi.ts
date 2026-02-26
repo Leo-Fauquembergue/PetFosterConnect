@@ -1,5 +1,10 @@
-import { api } from "./api";
-import type { Animal, AnimalWithRelations } from "@projet/shared-types";
+import api from "./api";
+import type { 
+  Animal, 
+  AnimalWithRelations, 
+  CreateAnimalDto, 
+  UpdateAnimalDto 
+} from "@projet/shared-types";
 
 export const animalApi = {
   getAllAnimals: async (): Promise<AnimalWithRelations[]> => {
@@ -12,24 +17,39 @@ export const animalApi = {
     return response.data;
   },
 
-  getAnimalById: async (id: number): Promise<any> => {
-    const response = await api.get(`/animals/${id}`);
+  getAnimalById: async (id: number): Promise<AnimalWithRelations> => {
+    const response = await api.get<AnimalWithRelations>(`/animals/${id}`);
     return response.data;
   },
 
-  // --- Méthodes Admin ---
-  getAllAdmin: async () => {
-    const response = await api.get<Animal[]>("/animals/admin/all");
+  createAnimal: async (data: CreateAnimalDto): Promise<Animal> => {
+    const response = await api.post<Animal>(`/animals`, data);
     return response.data;
   },
 
-  deleteAnimalAdmin: async (id: number) => {
+  deleteAnimal: async (id: number): Promise<void> => {
     const response = await api.delete(`/animals/${id}`);
     return response.data;
   },
 
-  updateAnimalAdmin: async (id: number, data: Partial<Animal>) => {
-    const response = await api.patch(`/animals/${id}`, data);
+  updateAnimal: async (id: number, data: UpdateAnimalDto): Promise<Animal> => {
+    const response = await api.patch<Animal>(`/animals/${id}`, data);
+    return response.data;
+  },
+
+  // --- Méthodes Admin ---
+  getAllAdmin: async (): Promise<Animal[]> => {
+    const response = await api.get<Animal[]>("/animals/admin/all");
+    return response.data;
+  },
+
+  deleteAnimalAdmin: async (id: number): Promise<void> => {
+    const response = await api.delete(`/animals/${id}`);
+    return response.data;
+  },
+
+  updateAnimalAdmin: async (id: number, data: Partial<Animal>): Promise<Animal> => {
+    const response = await api.patch<Animal>(`/animals/${id}`, data);
     return response.data;
   },
 };

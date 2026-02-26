@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import SiteLogo from "../assets/Logo.png";
-import { useAuth } from "../auth/AuthContext"; // Majuscule suite à ton renommage !
+import { useAuth } from "../auth/AuthContext";
 import BackBanner from "../components/ui/BackBanner";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -14,15 +14,32 @@ import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
 import { toast } from "react-toastify";
 import { animalApi } from "../api/animalApi";
-import { createApplication } from "../api/applicationApi";
+import { applicationApi } from "../api/applicationApi";
 import { bookmarkApi } from "../api/bookmarkApi";
+import type { AnimalWithRelations } from "@projet/shared-types";
+
+// EXTENSION DU TYPE : On surcharge 'shelter' pour inclure les propriétés manquantes
+type AnimalDetailResponse = Omit<AnimalWithRelations, "shelter"> & {
+  isBookmarked?: boolean;
+  shelter?: {
+    id: number;
+    pfcUserId: number | null;
+    address: string | null;
+    shelterProfile?: {
+      shelterName: string;
+      logoUrl: string | null;
+    } | null;
+  } | null;
+};
 
 export default function AnimalDetail() {
   const { userId, id } = useParams<{ userId: string; id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
   const [hasApplied, setHasApplied] = useState(false);
-  const [animal, setAnimal] = useState<any>(null);
+  // ⚡ TYPAGE STRICT DU STATE
+  const [animal, setAnimal] = useState<AnimalDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
@@ -33,12 +50,18 @@ export default function AnimalDetail() {
   useEffect(() => {
     const fetchAnimal = async () => {
       try {
-
-        const data = await animalApi.getAnimalById(Number(id));
+        // ⚡ CAST DU RETOUR POUR INCLURE isBookmarked
+        const data = (await animalApi.getAnimalById(Number(id))) as AnimalDetailResponse;
         
         setAnimal(data);
-        if (data.isBookmarked !== undefined) setIsFavorite(data.isBookmarked);
-        if (data.photos?.length > 0) setSelectedPhoto(data.photos[0]);
+        if (data.isBookmarked !== undefined) {
+          setIsFavorite(data.isBookmarked);
+        }
+        
+        // ⚡ SÉCURITÉ TYPESCRIPT : On vérifie que photos existe avant de lire la longueur
+        if (data.photos && data.photos.length > 0) {
+          setSelectedPhoto(data.photos[0]);
+        }
       } catch (error) {
         setError("Impossible de charger les détails de l'animal.");
       } finally {
@@ -50,31 +73,33 @@ export default function AnimalDetail() {
 
   const handleAdopt = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return navigate("/connexion");
     try {
-      await createApplication({
+      await applicationApi.createApplication({
         animalId: Number(id),
         applicationType: "adoption",
         message: adoptMessage,
       });
-      toast.success("Demande d'adoption envoyée !");
       setHasApplied(true);
-    } catch (error: any) {
-      toast.error(`Erreur: ${error.response?.data?.message || "Erreur lors de la demande"}`);
+      toast.success("Demande d'adoption envoyée !");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Erreur lors de la demande");
     }
   };
 
   const handleFoster = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return navigate("/connexion");
     try {
-      await createApplication({
+      await applicationApi.createApplication({
         animalId: Number(id),
         applicationType: "foster",
         message: fosterMessage,
       });
-      toast.success("Demande d'accueil envoyée !");
       setHasApplied(true);
-    } catch (error: any) {
-      toast.error(`Erreur: ${error.response?.data?.message || "Erreur lors de la demande"}`);
+      toast.success("Demande de famille d'accueil envoyée !");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Erreur lors de la demande");
     }
   };
 
@@ -97,13 +122,21 @@ export default function AnimalDetail() {
 
     pdf.addImage(SiteLogo, "PNG", logoX, 10, logoWidth, 40);
     const element = document.getElementById("animal-detail");
-    if (!element) return;
+    if (!element || !animal) return;
 
     const buttons = document.querySelectorAll(".no-print");
-    buttons.forEach((btn) => ((btn as HTMLElement).style.display = "none"));
+    
+    // ⚡ CORRECTION BIOME LINT : Ajout des accolades pour éviter le return implicite et l'assignation d'expression
+    buttons.forEach((btn) => {
+      (btn as HTMLElement).style.display = "none";
+    });
 
     const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-    buttons.forEach((btn) => ((btn as HTMLElement).style.display = ""));
+    
+    // ⚡ CORRECTION BIOME LINT
+    buttons.forEach((btn) => {
+      (btn as HTMLElement).style.display = "";
+    });
 
     const imgData = canvas.toDataURL("image/png");
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -112,9 +145,9 @@ export default function AnimalDetail() {
 
     const logoUrl = animal.shelter?.shelterProfile?.logoUrl;
     if (logoUrl) {
-      const logoWidth = 40;
-      const logoX = (pageWidth - logoWidth) / 2;
-      pdf.addImage(logoUrl, "PNG", logoX, 10, logoWidth, 40);
+      const logoWidthShelter = 40;
+      const logoXShelter = (pageWidth - logoWidthShelter) / 2;
+      pdf.addImage(logoUrl, "PNG", logoXShelter, 10, logoWidthShelter, 40);
     }
 
     pdf.addImage(qrData, "PNG", pageWidth - 40 - 10, 250, 40, 40);
@@ -156,7 +189,7 @@ export default function AnimalDetail() {
           <div className="space-y-4">
             <div className="relative rounded-xl overflow-hidden shadow-lg h-[500px] lg:h-[600px] bg-gray-200">
               <img
-                src={selectedPhoto || (Array.isArray(animal.photos) ? animal.photos[0] : "https://placehold.co/600x600")}
+                src={selectedPhoto || (photoArray.length > 0 ? photoArray[0] : "https://placehold.co/600x600")}
                 alt={animal.name}
                 className="w-full h-full object-cover transition-all duration-500"
               />
@@ -171,14 +204,14 @@ export default function AnimalDetail() {
             </div>
 
             <div className="grid grid-cols-4 gap-4 no-print">
-              {photoArray.map((photo: string, index: number) => (
+              {photoArray.map((photo: string) => (
                 <button
                   type="button"
-                  key={index}
+                  key={photo} // On utilise l'URL de la photo comme clé unique
                   onClick={() => setSelectedPhoto(photo)}
                   className={`h-24 rounded-lg overflow-hidden border-4 transition-all ${selectedPhoto === photo ? "border-success scale-95" : "border-transparent opacity-70 hover:opacity-100"}`}
                 >
-                  <img src={photo} alt={`Miniature ${index}`} className="w-full h-full object-cover" />
+                  <img src={photo} alt="Miniature animal" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -188,7 +221,7 @@ export default function AnimalDetail() {
             <div className="flex justify-between items-start mb-2 w-full">
               <div>
                 <h1 className="text-4xl font-bold font-montserrat text-black">{animal.name}</h1>
-                <p className="text-lg text-gray-600">{animal.species.name}</p>
+                <p className="text-lg text-gray-600">{animal.species?.name}</p>
               </div>
               {animal.animalStatus === "available" && <Badge label="Disponible" variant="success" />}
             </div>
