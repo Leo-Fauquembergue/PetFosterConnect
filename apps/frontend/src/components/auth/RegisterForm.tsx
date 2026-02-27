@@ -12,7 +12,6 @@ interface RegisterFormProps {
 const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // Utilisation de l'Enum à la place du type en dur
   const [role, setRole] = useState<UserRole>(UserRole.individual);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
@@ -49,7 +48,7 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
             value={UserRole.individual}
             checked={role === UserRole.individual}
             onChange={() => setRole(UserRole.individual)}
-            className="text-primary focus:ring-primary"
+            className="text-primary focus:ring-primary w-4 h-4"
           />
           <span className="text-sm font-medium text-gray-700">Adoptant</span>
         </label>
@@ -60,16 +59,14 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
             value={UserRole.shelter}
             checked={role === UserRole.shelter}
             onChange={() => setRole(UserRole.shelter)}
-            className="text-primary focus:ring-primary"
+            className="text-primary focus:ring-primary w-4 h-4"
           />
           <span className="text-sm font-medium text-gray-700">Refuge (Pro)</span>
         </label>
       </div>
 
-      {/* Remplacement par les composants UI */}
       <Input
         label="Email"
-        id="reg-email"
         type="email"
         required
         value={email}
@@ -78,7 +75,6 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
 
       <InputPassword
         label="Mot de passe"
-        id="reg-password"
         required
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -86,7 +82,6 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
 
       <Input
         label="Téléphone"
-        id="phoneNumber"
         type="tel"
         required
         value={phoneNumber}
@@ -95,7 +90,6 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
 
       <Input
         label="Adresse"
-        id="address"
         type="text"
         required
         value={address}
@@ -104,10 +98,9 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
 
       {/* Champs Spécifiques Refuge */}
       {role === UserRole.shelter && (
-        <div className="space-y-4 rounded-md bg-gray-50 p-4 border border-gray-200">
+        <div className="space-y-4 rounded-md bg-gray-50 p-4 border border-gray-200 mt-2">
           <Input
             label="Nom du Refuge"
-            id="shelterName"
             type="text"
             required={role === UserRole.shelter}
             value={shelterName}
@@ -116,7 +109,6 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
           
           <Input
             label="SIRET (14 chiffres)"
-            id="siret"
             type="text"
             required={role === UserRole.shelter}
             maxLength={14}
@@ -126,11 +118,11 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
         </div>
       )}
 
-      {/* Utilisation du composant Button */}
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full mt-4"
+        fullWidth
+        className="mt-4"
       >
         {isLoading ? "Inscription en cours..." : "Créer mon compte"}
       </Button>

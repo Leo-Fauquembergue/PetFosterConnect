@@ -22,7 +22,6 @@ const LoginForm = ({ onSubmit, isLoading }: LoginFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <Input
         label="Adresse Email"
-        id="email"
         type="email"
         required
         value={email}
@@ -32,7 +31,6 @@ const LoginForm = ({ onSubmit, isLoading }: LoginFormProps) => {
 
       <InputPassword
         label="Mot de passe"
-        id="password"
         required
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -42,7 +40,8 @@ const LoginForm = ({ onSubmit, isLoading }: LoginFormProps) => {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full"
+        fullWidth
+        className="mt-2"
       >
         {isLoading ? "Connexion en cours..." : "Se connecter"}
       </Button>
