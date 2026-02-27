@@ -1,42 +1,31 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./AuthContext";
+import type { UserRole } from "@projet/shared-types";
+import Loader from "../components/ui/Loader";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  roles?: string[];
+  allowedRoles?: UserRole[];
 }
 
-export default function ProtectedRoute({
-  children,
-  roles,
-}: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth(); // ✅ Ajout de isLoading
-  const location = useLocation();
+export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
+  const { user, isLoading } = useAuth();
 
-  // ⚡ ne pas rediriger si on est sur la page de login ou inscription
-  const publicPaths = ["/connexion", "/inscription"];
-  if (publicPaths.includes(location.pathname)) {
-    return <>{children}</>;
-  }
-
-  // ✅ Pendant le chargement, afficher un loader
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Vérification de l'authentification...</div>
+      <div className="flex h-screen items-center justify-center">
+        <Loader />
       </div>
     );
   }
 
-  // ✅ Après le chargement, vérifier l'utilisateur
   if (!user) {
-    return <Navigate to="/connexion" state={{ from: location }} replace />;
+    return <Navigate to="/connexion" replace />;
   }
 
-  // ✅ Vérifier les rôles
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/non-autorise" replace />;
+  // Vérification stricte avec l'Enum plutôt que des magic strings
+  if (allowedRoles && !allowedRoles.includes(user.role as UserRole)) {
+    return <Navigate to="/interdit" replace />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 }

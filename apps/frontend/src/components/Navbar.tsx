@@ -1,10 +1,12 @@
-import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { UserRole } from "@projet/shared-types"; // Import de l'Enum
+import { useDisclosure } from "../hooks/useDisclosure"; // Import du hook
 
 const Navbar = () => {
   const { isLoggedIn, logout, user } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  // Remplacement du useState par le hook
+  const { isOpen, toggle, close } = useDisclosure();
 
   const links = [
     { to: "/", label: "Accueil" },
@@ -16,7 +18,8 @@ const Navbar = () => {
     links.push({ to: `/utilisateur/${user.id}/profil`, label: "Profil" });
   }
 
-  if (isLoggedIn && user?.role === "admin") {
+  // Utilisation de l'Enum au lieu de "admin"
+  if (isLoggedIn && user?.role === UserRole.admin) {
     links.push({ to: "/admin", label: "Admin" });
   }
 
@@ -27,7 +30,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
-    setIsOpen(false);
+    close(); // Utilisation de close() du hook
   };
 
   return (
@@ -68,7 +71,7 @@ const Navbar = () => {
         {/* Burger mobile */}
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={toggle} // Remplacé par toggle
           className="md:hidden text-white text-2xl ml-auto"
         >
           ☰
@@ -83,7 +86,7 @@ const Navbar = () => {
               <NavLink
                 key={link.to}
                 to={link.to}
-                onClick={() => setIsOpen(false)}
+                onClick={close} // Remplacé par close
                 className={linkClass}
               >
                 {link.label}
@@ -101,7 +104,7 @@ const Navbar = () => {
             ) : (
               <NavLink
                 to="/connexion"
-                onClick={() => setIsOpen(false)}
+                onClick={close} // Remplacé par close
                 className="text-sm font-medium text-white hover:underline"
               >
                 Connexion / Inscription

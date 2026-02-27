@@ -1,14 +1,11 @@
-import { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { Users, LayoutDashboard, LogOut, Home, Menu, X, PawPrint } from "lucide-react";
 import logo from "../../assets/Logo.png";
+import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
 
 export default function AdminLayout() {
-  // État pour gérer l'ouverture du menu sur mobile
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Ferme le menu quand on clique sur un lien
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  // Remplacement du useState par le hook
+  const { isOpen, open, close } = useDisclosure();
 
   // Style des liens de navigation
   const getLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -29,17 +26,17 @@ export default function AdminLayout() {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        <NavLink to="/admin" end className={getLinkClass} onClick={closeMobileMenu}>
+        <NavLink to="/admin" end className={getLinkClass} onClick={close}>
           <LayoutDashboard size={20} />
           <span>Dashboard</span>
         </NavLink>
         
-        <NavLink to="/admin/utilisateurs" className={getLinkClass} onClick={closeMobileMenu}>
+        <NavLink to="/admin/utilisateurs" className={getLinkClass} onClick={close}>
           <Users size={20} />
           <span>Utilisateurs</span>
         </NavLink>
 
-        <NavLink to="/admin/animaux" className={getLinkClass} onClick={closeMobileMenu}>
+        <NavLink to="/admin/animaux" className={getLinkClass} onClick={close}>
           <PawPrint size={20} />
           <span>Animaux</span>
         </NavLink>
@@ -50,7 +47,7 @@ export default function AdminLayout() {
         <NavLink 
           to="/" 
           className="flex items-center gap-3 px-4 py-2 text-sm text-gray-500 hover:text-secondary transition rounded-md hover:bg-gray-100"
-          onClick={closeMobileMenu}
+          onClick={close}
         >
           <Home size={18} />
           <span>Retour au site</span>
@@ -76,10 +73,10 @@ export default function AdminLayout() {
       </aside>
 
       {/* SIDEBAR MOBILE */}
-      {isMobileMenuOpen && (
+      {isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity cursor-pointer"
-          onClick={closeMobileMenu}
+          onClick={close}
           aria-hidden="true"
         />
       )}
@@ -87,13 +84,13 @@ export default function AdminLayout() {
       {/* Menu glissant */}
       <aside 
         className={`fixed top-0 right-0 h-full w-72 bg-white z-50 transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl flex flex-col ${
-          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Bouton Fermer */}
         <button 
           type="button"
-          onClick={closeMobileMenu}
+          onClick={close}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition z-50"
           aria-label="Fermer le menu"
         >
@@ -105,7 +102,6 @@ export default function AdminLayout() {
             <SidebarContent />
         </div>
       </aside>
-
 
       {/* ZONE PRINCIPALE */}
       <div className="flex-1 flex flex-col h-full w-full relative">
@@ -122,7 +118,7 @@ export default function AdminLayout() {
           {/* Bouton Burger */}
           <button 
             type="button"
-            onClick={() => setIsMobileMenuOpen(true)}
+            onClick={open} // Remplacement de setIsMobileMenuOpen(true)
             className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             aria-label="Ouvrir le menu"
           >

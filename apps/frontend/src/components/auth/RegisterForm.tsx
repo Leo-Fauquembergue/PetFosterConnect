@@ -1,5 +1,8 @@
 import { useState } from "react";
-import type { RegisterDto } from "@projet/shared-types";
+import { UserRole, type RegisterDto } from "@projet/shared-types";
+import Input from "../ui/Input";
+import InputPassword from "../ui/InputPassword";
+import Button from "../ui/Button";
 
 interface RegisterFormProps {
   onSubmit: (data: RegisterDto) => void;
@@ -9,7 +12,8 @@ interface RegisterFormProps {
 const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"individual" | "shelter">("individual");
+  // Utilisation de l'Enum à la place du type en dur
+  const [role, setRole] = useState<UserRole>(UserRole.individual);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [siret, setSiret] = useState("");
@@ -18,7 +22,6 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Construction stricte basée sur ton DTO
     const data: RegisterDto = {
       email,
       password,
@@ -27,7 +30,7 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       address,
     };
 
-    if (role === "shelter") {
+    if (role === UserRole.shelter) {
       data.siret = siret;
       data.shelterName = shelterName;
     }
@@ -43,9 +46,9 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
           <input
             type="radio"
             name="role"
-            value="individual"
-            checked={role === "individual"}
-            onChange={() => setRole("individual")}
+            value={UserRole.individual}
+            checked={role === UserRole.individual}
+            onChange={() => setRole(UserRole.individual)}
             className="text-primary focus:ring-primary"
           />
           <span className="text-sm font-medium text-gray-700">Adoptant</span>
@@ -54,100 +57,83 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
           <input
             type="radio"
             name="role"
-            value="shelter"
-            checked={role === "shelter"}
-            onChange={() => setRole("shelter")}
+            value={UserRole.shelter}
+            checked={role === UserRole.shelter}
+            onChange={() => setRole(UserRole.shelter)}
             className="text-primary focus:ring-primary"
           />
           <span className="text-sm font-medium text-gray-700">Refuge (Pro)</span>
         </label>
       </div>
 
-      {/* Champs Communs */}
-      <div>
-        <label htmlFor="reg-email" className="block text-sm font-medium text-gray-700">Email</label>
-        <input
-          id="reg-email"
-          type="email"
-          required
-          className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
+      {/* Remplacement par les composants UI */}
+      <Input
+        label="Email"
+        id="reg-email"
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
 
-      <div>
-        <label htmlFor="reg-password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
-        <input
-          id="reg-password"
-          type="password"
-          required
-          className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
+      <InputPassword
+        label="Mot de passe"
+        id="reg-password"
+        required
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
-      <div>
-        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Téléphone</label>
-        <input
-          id="phoneNumber"
-          type="tel"
-          required
-          className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-        />
-      </div>
+      <Input
+        label="Téléphone"
+        id="phoneNumber"
+        type="tel"
+        required
+        value={phoneNumber}
+        onChange={(e) => setPhoneNumber(e.target.value)}
+      />
 
-      <div>
-        <label htmlFor="address" className="block text-sm font-medium text-gray-700">Adresse</label>
-        <input
-          id="address"
-          type="text"
-          required
-          className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        />
-      </div>
+      <Input
+        label="Adresse"
+        id="address"
+        type="text"
+        required
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+      />
 
       {/* Champs Spécifiques Refuge */}
-      {role === "shelter" && (
+      {role === UserRole.shelter && (
         <div className="space-y-4 rounded-md bg-gray-50 p-4 border border-gray-200">
-          <div>
-            <label htmlFor="shelterName" className="block text-sm font-medium text-gray-700">Nom du Refuge</label>
-            <input
-              id="shelterName"
-              type="text"
-              required={role === "shelter"}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              value={shelterName}
-              onChange={(e) => setShelterName(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="siret" className="block text-sm font-medium text-gray-700">SIRET (14 chiffres)</label>
-            <input
-              id="siret"
-              type="text"
-              required={role === "shelter"}
-              maxLength={14}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              value={siret}
-              onChange={(e) => setSiret(e.target.value)}
-            />
-          </div>
+          <Input
+            label="Nom du Refuge"
+            id="shelterName"
+            type="text"
+            required={role === UserRole.shelter}
+            value={shelterName}
+            onChange={(e) => setShelterName(e.target.value)}
+          />
+          
+          <Input
+            label="SIRET (14 chiffres)"
+            id="siret"
+            type="text"
+            required={role === UserRole.shelter}
+            maxLength={14}
+            value={siret}
+            onChange={(e) => setSiret(e.target.value)}
+          />
         </div>
       )}
 
-      <button
+      {/* Utilisation du composant Button */}
+      <Button
         type="submit"
         disabled={isLoading}
-        className="w-full flex justify-center rounded-xl border border-transparent bg-primary py-3 px-4 text-sm font-bold text-white shadow-sm hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 transition-colors mt-4"
+        className="w-full mt-4"
       >
         {isLoading ? "Inscription en cours..." : "Créer mon compte"}
-      </button>
+      </Button>
     </form>
   );
 };

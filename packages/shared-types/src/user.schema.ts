@@ -1,16 +1,20 @@
 import { z } from "zod";
 
-// ENUM
-// Définit les rôles possibles
-export const UserRoleEnum = z.enum(["individual", "shelter", "admin"], {
+// 1. On crée le véritable Enum TypeScript (utilisable comme valeur ET comme type)
+export enum UserRole {
+  individual = "individual",
+  shelter = "shelter",
+  admin = "admin",
+}
+
+// 2. On dit à Zod d'utiliser cet Enum
+export const UserRoleEnum = z.nativeEnum(UserRole, {
   error: "Veuillez choisir un type de compte valide",
 });
-export type UserRole = z.infer<typeof UserRoleEnum>; // Export du type TS
 
 // SCHÉMA PRINCIPAL (Entité BDD)
-// Représente un utilisateur complet tel qu'il est stocké en base
 export const UserSchema = z.object({
-  id: z.int().positive().optional(), // Optionnel car auto-incrémenté
+  id: z.int().positive().optional(),
   email: z.email({ error: "Format d'email invalide" }).max(255),
   password: z
     .string()
@@ -18,23 +22,21 @@ export const UserSchema = z.object({
     .regex(/[A-Z]/, { error: "Une majuscule requise" })
     .regex(/[0-9]/, { error: "Un chiffre requis" })
     .regex(/[^a-zA-Z0-9]/, { error: "Un caractère spécial requis" }),
-  role: UserRoleEnum,
+  role: UserRoleEnum, // On l'utilise ici
   phoneNumber: z
     .string()
     .regex(/^\+?[0-9]{10,15}$/, { error: "Numéro de téléphone invalide" })
     .optional(),
-    
   address: z.string().max(255).optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
-  deletedAt: z.date().nullable().optional(), // Archivage (Soft Delete)
+  deletedAt: z.date().nullable().optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;
 
 // DTOs (Data Transfer Objects)
 
-// REGISTER : Données envoyées par le formulaire d'inscription
 export const RegisterSchema = UserSchema.pick({
   email: true,
   password: true,
@@ -42,14 +44,12 @@ export const RegisterSchema = UserSchema.pick({
   phoneNumber: true,
   address: true,
 }).extend({
-  // Champs optionnels (uniquement si role === 'shelter')
   siret: z.string().length(14).optional().or(z.literal("")),
   shelterName: z.string().min(2).optional().or(z.literal("")),
 });
 
 export type RegisterDto = z.infer<typeof RegisterSchema>;
 
-// LOGIN : Données envoyées pour la connexion
 export const LoginSchema = z.object({
   email: z.email({ error: "Email invalide" }),
   password: z.string().min(1, { error: "Mot de passe requis" }),
@@ -57,17 +57,15 @@ export const LoginSchema = z.object({
 
 export type LoginDto = z.infer<typeof LoginSchema>;
 
-// UPDATE : Mise à jour du compte (User)
 export const UpdateUserSchema = UserSchema.pick({
   email: true,
   password: true,
   phoneNumber: true,
   address: true,
-  deletedAt: true, // Permet d'envoyer null pour restaurer
+  deletedAt: true,
 }).partial();
 
 export type UpdateUserDto = z.infer<typeof UpdateUserSchema>;
-
 
 export const UpdatePasswordSchema = z.object({
   oldPassword: z.string().min(1, { message: "Ancien mot de passe requis" }),
