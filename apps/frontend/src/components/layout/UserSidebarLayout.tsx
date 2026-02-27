@@ -4,17 +4,19 @@ import { CiFolderOn } from "react-icons/ci";
 import { LuPlus } from "react-icons/lu";
 import { useAuth } from "../../auth/AuthContext";
 import BurgerMenu from "../ui/BurgerMenu";
-import { useState } from "react";
+import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
+import { UserRole } from "@projet/shared-types"; // Import de l'Enum
 
 export default function UserSidebarLayout() {
   const { user, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  // Remplacement du useState
+  const { isOpen, open, close } = useDisclosure();
 
   return (
     <div className="flex h-screen relative">
 
       {/* Burger menu (mobile only) */}
-      <BurgerMenu onOpen={() => setIsOpen(true)} />
+      <BurgerMenu onOpen={open} /> {/* Utilisation de open */}
 
       {/* Sidebar responsive */}
       <aside
@@ -27,9 +29,9 @@ export default function UserSidebarLayout() {
         `}
       >
         {/* Bouton fermer (mobile only) */}
-        <button
+        <button type="button"
           className="md:hidden absolute top-4 right-4"
-          onClick={() => setIsOpen(false)}
+          onClick={close} // Utilisation de close
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
@@ -56,15 +58,14 @@ export default function UserSidebarLayout() {
                     ? "bg-[#F28C28] text-white" 
                     : "text-gray-700 hover:bg-[#F28C28]/20"}`
               }
-              onClick={() => setIsOpen(false)}
+              onClick={close}
             >
               <UserCircle className="w-5 h-5" />
               Mon Profil
             </NavLink>
             
-
             {/* Refuge : Mes Animaux + sous-menu */}
-            {user?.role === "shelter" && (
+            {user?.role === UserRole.shelter && ( // Utilisation de l'Enum
               <div className="space-y-1">
                 <NavLink
                   to={`/utilisateur/${user?.id}/animaux`}
@@ -74,7 +75,7 @@ export default function UserSidebarLayout() {
                           ? "bg-[#F28C28] text-white" 
                           : "text-gray-700 hover:bg-[#F28C28]/20"}`
                     }
-                  onClick={() => setIsOpen(false)}
+                  onClick={close}
                 >
                   <PawPrint className="w-5 h-5" />
                   Mes Animaux
@@ -89,7 +90,7 @@ export default function UserSidebarLayout() {
                             ? "bg-[#F28C28] text-white" 
                             : "text-gray-700 hover:bg-[#F28C28]/20"}`
                       }
-                    onClick={() => setIsOpen(false)}
+                    onClick={close}
                   >
                     <LuPlus className="w-5 h-5"/>
                     Ajouter un animal
@@ -104,7 +105,7 @@ export default function UserSidebarLayout() {
                         ? "bg-[#F28C28] text-white" 
                         : "text-gray-700 hover:bg-[#F28C28]/20"}`
                     }
-                  onClick={() => setIsOpen(false)}
+                  onClick={close}
                 >
                   <CiFolderOn className="w-5 h-5" /> 
                   Demandes reçues
@@ -113,7 +114,7 @@ export default function UserSidebarLayout() {
             )}
 
             {/* Particulier : Mes Favoris */}
-            {user?.role === "individual" && (
+            {user?.role === UserRole.individual && ( // Utilisation de l'Enum
             <NavLink
               to={`/utilisateur/${user?.id}/favoris`}
               className={({ isActive }) =>
@@ -122,15 +123,15 @@ export default function UserSidebarLayout() {
                     ? "bg-[#F28C28] text-white" 
                     : "text-gray-700 hover:bg-[#F28C28]/20"}`
               }
-              onClick={() => setIsOpen(false)}
+              onClick={close}
             >
               <PawPrint className="w-5 h-5" />
               Mes Favoris
             </NavLink>
             )}
             
-              {/* Particulier : Mes Demandes */}
-            {user?.role === "individual" && (
+            {/* Particulier : Mes Demandes */}
+            {user?.role === UserRole.individual && ( // Utilisation de l'Enum
               <NavLink
                 to={`/utilisateur/${user?.id}/demandes`}
                 className={({ isActive }) =>
@@ -139,7 +140,7 @@ export default function UserSidebarLayout() {
                         ? "bg-[#F28C28] text-white" 
                         : "text-gray-700 hover:bg-[#F28C28]/20"}`
                   }
-                onClick={() => setIsOpen(false)}
+                onClick={close}
               >
                 <CiFolderOn className="w-5 h-5" />
                 Mes Demandes
@@ -158,7 +159,7 @@ export default function UserSidebarLayout() {
                     ? "bg-[#F28C28] text-white" 
                     : "text-gray-700 hover:bg-[#F28C28]/20"}`
               }
-            onClick={() => setIsOpen(false)}
+            onClick={close}
           >
             <Home size={18} />
             <span>Retour au site</span>
@@ -168,7 +169,7 @@ export default function UserSidebarLayout() {
             type="button"
             onClick={() => {
               logout();
-              setIsOpen(false);
+              close();
             }}
             className="flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-[#F28C28]/20 w-full rounded-lg transition font-medium"
           >
@@ -182,7 +183,7 @@ export default function UserSidebarLayout() {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={close}
         />
       )}
 

@@ -1,8 +1,9 @@
 import { CiSettings } from "react-icons/ci";
+import Input from "../ui/Input";
 
 type Props = {
   formData: {
-    logo: string; // URL renvoyée par le backend
+    logo: string;
     email: string;
     phoneNumber: string;
     address: string;
@@ -16,100 +17,81 @@ type Props = {
 export default function ShelterProfileForm({ formData, onChange }: Props) {
   return (
     <div className="space-y-4">
-          {/* Logo affiché depuis une URL */}
-        <div className="relative inline-block">
-          {formData.logo ? (
-            <img
-              src={formData.logo}
-              alt="Logo du refuge"
-              className="h-20 w-20 object-cover rounded"
-            />
-          ) : (
-            <div className="h-20 w-20 bg-gray-200 flex items-center justify-center rounded">
-              Non renseigné
-            </div>
-          )}
-      
-          {/* Icône engrenage pour modifier le lien */}
-          <label
-            htmlFor="logo-link"
-            className="absolute top-0 right-0 bg-white rounded-full p-1 shadow cursor-pointer hover:bg-gray-100"
-          >
-            <CiSettings className="w-5 h-5 text-gray-600" />
-          </label>
-        </div>
-      
-        {/* Champ texte pour saisir l’URL du logo */}
-        <input
-          id="logo-link"
-          type="text"
-          value={formData.logo}
-          onChange={(e) => onChange("logo", e.target.value)}
-          placeholder="Lien vers le logo (URL)"
-          className="border rounded p-2 w-full mt-2"
-        />
-      {/* Email */}
-      <div>
-        <label>Email</label>
-        <input
-          type="email"
-          value={formData.email}
-          onChange={(e) => onChange("email", e.target.value)}
-          className="border rounded p-2 w-full"
-        />
+      {/* Logo */}
+      <div className="relative inline-block mb-2">
+        {formData.logo ? (
+          <img src={formData.logo} alt="Logo du refuge" className="h-20 w-20 object-cover rounded shadow-sm border border-gray-100" />
+        ) : (
+          <div className="h-20 w-20 bg-gray-100 flex items-center justify-center rounded text-sm text-gray-500 border border-gray-200">
+            Non renseigné
+          </div>
+        )}
+        <label
+          htmlFor="logo-link"
+          className="absolute -top-2 -right-2 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50 border border-gray-100"
+        >
+          <CiSettings className="w-5 h-5 text-gray-600" />
+        </label>
       </div>
 
-      {/* Téléphone */}
-      <div>
-        <label>Téléphone</label>
-        <input
-          type="text"
-          value={formData.phoneNumber}
-          onChange={(e) => onChange("phoneNumber", e.target.value)}
-          className="border rounded p-2 w-full"
-        />
-      </div>
+      <Input
+        id="logo-link"
+        label="Lien vers le logo (URL)"
+        type="text"
+        value={formData.logo}
+        onChange={(e) => onChange("logo", e.target.value)}
+        placeholder="https://..."
+      />
 
-      {/* Adresse */}
-      <div>
-        <label>Adresse</label>
-        <input
-          type="text"
-          value={formData.address}
-          onChange={(e) => onChange("address", e.target.value)}
-          className="border rounded p-2 w-full"
-        />
-      </div>
+      <Input
+        label="Email"
+        type="email"
+        value={formData.email}
+        onChange={(e) => onChange("email", e.target.value)}
+      />
 
-      {/* Nom du refuge */}
-      <div>
-        <label>Nom du refuge</label>
-        <input
-          type="text"
-          value={formData.shelterName}
-          onChange={(e) => onChange("shelterName", e.target.value)}
-          className="border rounded p-2 w-full"
-        />
-      </div>
+      <Input
+        label="Téléphone"
+        type="text"
+        value={formData.phoneNumber}
+        onChange={(e) => onChange("phoneNumber", e.target.value)}
+      />
 
-      {/* SIRET */}
-      <div>
-        <label>SIRET</label>
-        <input
-          type="text"
-          value={formData.siret}
-          onChange={(e) => onChange("siret", e.target.value)}
-          className="border rounded p-2 w-full"
-        />
-      </div>
+      <Input
+        label="Adresse"
+        type="text"
+        value={formData.address}
+        onChange={(e) => onChange("address", e.target.value)}
+      />
 
-      {/* Description */}
+      <Input
+        label="Nom du refuge"
+        type="text"
+        value={formData.shelterName}
+        onChange={(e) => onChange("shelterName", e.target.value)}
+      />
+
+      <Input
+        label="SIRET"
+        type="text"
+        value={formData.siret}
+        onChange={(e) => onChange("siret", e.target.value)}
+      />
+
+      {/* Textarea stylisé avec htmlFor et id pour l'accessibilité */}
       <div>
-        <label>Description</label>
+        <label 
+          htmlFor="description" 
+          className="block text-sm font-medium text-gray-700 font-openSans mb-1"
+        >
+          Description
+        </label>
         <textarea
+          id="description"
           value={formData.description}
           onChange={(e) => onChange("description", e.target.value)}
-          className="border rounded p-2 w-full"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 text-gray-800"
+          rows={4}
         />
       </div>
     </div>
