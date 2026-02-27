@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 import { UserRole } from "@projet/shared-types"; // Import de l'Enum
-import { useDisclosure } from "../hooks/useDisclosure"; // Import du hook
+import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
 
 const Navbar = () => {
   const { isLoggedIn, logout, user } = useAuth();

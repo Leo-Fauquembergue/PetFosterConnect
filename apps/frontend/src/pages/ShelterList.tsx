@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ShelterCard from "../components/ShelterCard";
+import ShelterCard from "../components/cards/ShelterCard";
 import Loader from "../components/ui/Loader";
 import { Home } from "lucide-react";
 import { toast } from "react-toastify";

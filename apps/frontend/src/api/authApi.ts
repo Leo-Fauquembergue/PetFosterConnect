@@ -12,6 +12,12 @@ export const authApi = {
     return response.data;
   },
 
+  logout: async () => {
+    // Fait un appel à la route backend qui efface le cookie HttpOnly
+    const response = await api.post('/auth/logout'); 
+    return response.data;
+  },
+
   getMe: async () => {
     const response = await api.get<User>("/auth/me");
     return response.data;

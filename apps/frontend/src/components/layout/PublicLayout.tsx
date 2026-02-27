@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import Header from "../Header.tsx";
-import Footer from "../Footer.tsx";
+import Header from "../navigation/Header.tsx";
+import Footer from "../navigation/Footer.tsx";
 
 export default function PublicLayout() {
   return (

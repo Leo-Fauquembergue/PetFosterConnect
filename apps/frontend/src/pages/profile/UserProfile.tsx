@@ -4,7 +4,7 @@ import api from "../../api/api";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
-import UserCard from "../../components/ui/UserCard";
+import UserCard from "../../components/cards/UserCard";
 import { toast } from "react-toastify";
 
 export default function UserProfilePage() {
@@ -26,27 +26,28 @@ export default function UserProfilePage() {
         setUser(data);
 
         // Gestion des formulaires selon le rôle
-        if (data.role === "individual" && data.individualProfile) {
+        if (data.role === "individual") {
           setFormData({
             email: data.email ?? "",
             phoneNumber: data.phoneNumber ?? "",
             address: data.address ?? "",
-            surface: data.individualProfile.surface ?? 0,
-            housingType: data.individualProfile.housingType ?? "other",
-            haveGarden: data.individualProfile.haveGarden ?? false,
-            haveAnimals: data.individualProfile.haveAnimals ?? false,
-            haveChildren: data.individualProfile.haveChildren ?? false,
-            availableFamily: data.individualProfile.availableFamily ?? false,
-            availableTime: data.individualProfile.availableTime ?? "",
+            surface: data.individualProfile?.surface ?? 0,
+            housingType: data.individualProfile?.housingType ?? "other",
+            haveGarden: data.individualProfile?.haveGarden ?? false,
+            haveAnimals: data.individualProfile?.haveAnimals ?? false,
+            haveChildren: data.individualProfile?.haveChildren ?? false,
+            availableFamily: data.individualProfile?.availableFamily ?? false,
+            availableTime: data.individualProfile?.availableTime ?? "",
           });
-        } else if (data.role === "shelter" && data.shelterProfile) {
+        } else if (data.role === "shelter") {
           setFormData({
             email: data.email ?? "",
             phoneNumber: data.phoneNumber ?? "",
             address: data.address ?? "",
-            shelterName: data.shelterProfile.shelterName ?? "",
-            siret: data.shelterProfile.siret ?? "",
-            description: data.shelterProfile.description ?? "",
+            shelterName: data.shelterProfile?.shelterName ?? "",
+            siret: data.shelterProfile?.siret ?? "",
+            description: data.shelterProfile?.description ?? "",
+            logo: data.shelterProfile?.logo ?? "",
           });
         }
 

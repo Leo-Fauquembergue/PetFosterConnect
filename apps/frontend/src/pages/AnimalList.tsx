@@ -1,7 +1,7 @@
 import { PawPrint } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AnimalCard from "../components/AnimalCard";
+import AnimalCard from "../components/cards/AnimalCard";
 import Loader from "../components/ui/Loader";
 import { toast } from "react-toastify";
 import { animalApi } from "../api/animalApi";

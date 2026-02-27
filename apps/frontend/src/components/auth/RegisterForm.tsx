@@ -3,6 +3,7 @@ import { UserRole, type RegisterDto } from "@projet/shared-types";
 import Input from "../ui/Input";
 import InputPassword from "../ui/InputPassword";
 import Button from "../ui/Button";
+import Radio from "../ui/Radio";
 
 interface RegisterFormProps {
   onSubmit: (data: RegisterDto) => void;
@@ -20,7 +21,6 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     const data: RegisterDto = {
       email,
       password,
@@ -28,12 +28,10 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
       phoneNumber,
       address,
     };
-
     if (role === UserRole.shelter) {
       data.siret = siret;
       data.shelterName = shelterName;
     }
-
     onSubmit(data);
   };
 
@@ -41,28 +39,20 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Sélecteur de Rôle */}
       <div className="flex gap-4 mb-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            name="role"
-            value={UserRole.individual}
-            checked={role === UserRole.individual}
-            onChange={() => setRole(UserRole.individual)}
-            className="text-primary focus:ring-primary w-4 h-4"
-          />
-          <span className="text-sm font-medium text-gray-700">Adoptant</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            name="role"
-            value={UserRole.shelter}
-            checked={role === UserRole.shelter}
-            onChange={() => setRole(UserRole.shelter)}
-            className="text-primary focus:ring-primary w-4 h-4"
-          />
-          <span className="text-sm font-medium text-gray-700">Refuge (Pro)</span>
-        </label>
+        <Radio
+          label="Adoptant"
+          name="role"
+          value={UserRole.individual}
+          checked={role === UserRole.individual}
+          onChange={() => setRole(UserRole.individual)}
+        />
+        <Radio
+          label="Refuge (Pro)"
+          name="role"
+          value={UserRole.shelter}
+          checked={role === UserRole.shelter}
+          onChange={() => setRole(UserRole.shelter)}
+        />
       </div>
 
       <Input
