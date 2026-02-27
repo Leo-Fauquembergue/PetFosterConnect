@@ -229,7 +229,7 @@ export default function AnimalDetail() {
             <div className="mt-6 w-full">
               <h2 className="text-xl font-bold text-success mb-2 font-montserrat">Informations Générales</h2>
               <ul className="text-sm space-y-1 text-gray-700">
-                <li><span className="font-semibold">Age :</span> {animal.age} ans</li>
+                <li><span className="font-semibold">Age :</span> {animal.age}</li>
                 <li><span className="font-semibold">Sexe :</span> {animal.sex === "male" ? "Mâle" : "Femelle"}</li>
                 <li><span className="font-semibold">Taille :</span> {animal.height} cm</li>
                 <li><span className="font-semibold">Poids :</span> {animal.weight} kg</li>
