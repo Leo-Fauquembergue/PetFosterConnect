@@ -16,6 +16,9 @@ export default function AnimalForm() {
   const animal = location.state?.animal;
 
   const [species, setSpecies] = useState<{ id: number; name: string }[]>([]);
+  // ⚡ AJOUT : État pour le chargement
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState<any>({
     name: animal?.name ?? "",
     age: animal?.age ?? "",
@@ -52,6 +55,8 @@ export default function AnimalForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // ⚡ AJOUT : On verrouille le formulaire
+    setIsSubmitting(true);
 
     const parsedData = {
       ...formData,
@@ -79,6 +84,9 @@ export default function AnimalForm() {
           err.response?.data?.message || "Erreur lors de l'enregistrement.";
         toast.error(errorMessage);
       }
+    } finally {
+      // ⚡ AJOUT : On déverrouille le formulaire quoi qu'il arrive
+      setIsSubmitting(false);
     }
   };
 
@@ -246,9 +254,11 @@ export default function AnimalForm() {
               </button>
               <button
                 type="submit"
-                className="bg-primary text-white px-4 py-2 rounded hover:bg-orange-500 transition-colors"
+                disabled={isSubmitting} // ⚡ AJOUT : Bouton désactivé pendant le chargement
+                className="bg-primary text-white px-4 py-2 rounded hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" // ⚡ AJOUT : Opacité et curseur si disabled
               >
-                Sauvegarder
+                {/* ⚡ AJOUT : Texte dynamique */}
+                {isSubmitting ? "Enregistrement..." : "Sauvegarder"}
               </button>
             </div>
           </div>
