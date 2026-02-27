@@ -2,7 +2,7 @@
 // url --> http://localhost:5173/refuges
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import _AnimalCard from "../components/AnimalCard";
+import _AnimalCard from "../components/cards/AnimalCard";
 import BackBanner from "../components/ui/BackBanner";
 import { api } from "../api/api";
 

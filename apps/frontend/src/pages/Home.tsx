@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AnimalCard from "../components/AnimalCard"; 
-import ShelterCard from "../components/ShelterCard";
+import AnimalCard from "../components/cards/AnimalCard"; 
+import ShelterCard from "../components/cards/ShelterCard";
 import Button from "../components/ui/Button";
 import Loader from "../components/ui/Loader";
 import { toast } from "react-toastify";

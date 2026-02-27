@@ -6,7 +6,7 @@ interface BurgerMenuProps {
 
 export default function BurgerMenu({ onOpen }: BurgerMenuProps) {
   return (
-    <button
+    <button type="button"
       className="md:hidden p-4 absolute top-2 left-2 z-50"
       onClick={onOpen}
     >

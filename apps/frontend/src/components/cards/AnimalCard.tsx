@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import type { Animal, Species } from "@projet/shared-types";
-import Badge from "./ui/Badge"; // Ajout de l'import du Badge pour la version "home"
+import Badge from "../ui/Badge"; // Ajout de l'import du Badge pour la version "home"
 
 // 1. Types de la carte par défaut
 type AnimalWithDetails = Animal & {
