@@ -2,15 +2,14 @@ import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import { COOKIE_NAME } from "../constants";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        // 1. Lecture depuis le cookie
-        (req: Request) => req?.cookies?.access_token,
-        // 2. Lecture depuis le header Authorization
+        (req: Request) => req?.cookies?.[COOKIE_NAME],
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
@@ -19,7 +18,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // payload doit contenir sub, email, role
     return {
       id: payload.sub,
       email: payload.email,
