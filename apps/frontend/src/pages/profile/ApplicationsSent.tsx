@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { applicationApi } from "../../api/applicationApi"
 import { toast } from "react-toastify";
 import type { Application as BaseApplication, Animal } from "@projet/shared-types";
+import Loader from "../../components/ui/Loader";
 
 
 export type ApplicationWithAnimal = BaseApplication & {
@@ -26,7 +27,7 @@ export default function ApplicationsSent() {
   }, []);
 
   if (loading) {
-    return <p className="text-center text-gray-500">Chargement…</p>;
+    return <Loader text="Chargement de vos demandes..." />;
   }
 
   return (
@@ -34,7 +35,10 @@ export default function ApplicationsSent() {
       <h1 className="text-3xl font-bold mb-6">Mes demandes envoyées</h1>
 
       {applications.length === 0 && (
-        <p className="text-gray-600">Vous n’avez envoyé aucune demande.</p>
+        <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-lg shadow-sm border border-gray-100 mt-6">
+          <span className="text-4xl mb-4">📨</span>
+          <p className="text-gray-500 text-lg font-medium">Vous n’avez envoyé aucune demande pour le moment.</p>
+        </div>
       )}
 
       <div className="space-y-4">

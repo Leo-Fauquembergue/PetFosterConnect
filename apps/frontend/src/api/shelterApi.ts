@@ -5,6 +5,12 @@ export type ShelterWithRelations = ShelterProfile & {
   user?: User;
 };
 
+export type ShelterDetailResponse = ShelterProfile & {
+  user: User & {
+    animals: AnimalWithRelations[];
+  };
+};
+
 export const shelterApi = {
   getAllShelters: async (): Promise<ShelterWithRelations[]> => {
     const response = await api.get<ShelterWithRelations[]>("/shelters");
@@ -18,6 +24,11 @@ export const shelterApi = {
 
   getShelterAnimals: async (id: number): Promise<AnimalWithRelations[]> => {
     const response = await api.get<AnimalWithRelations[]>(`/shelters/${id}/animals`);
+    return response.data;
+  },
+
+  getShelterById: async (id: number): Promise<ShelterDetailResponse> => {
+    const response = await api.get<ShelterDetailResponse>(`/shelters/${id}`);
     return response.data;
   },
 };
