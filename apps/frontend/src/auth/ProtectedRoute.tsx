@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import type { UserRole } from "@projet/shared-types";
@@ -5,9 +6,10 @@ import Loader from "../components/ui/Loader";
 
 interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
+  children?: ReactNode; // Autorise l'imbrication de composants
 }
 
-export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
+export default function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -27,5 +29,6 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     return <Navigate to="/interdit" replace />;
   }
 
-  return <Outlet />;
+  // S'il encapsule un composant, on le retourne, sinon on rend les sous-routes (Outlet)
+  return children ? <>{children}</> : <Outlet />;
 }

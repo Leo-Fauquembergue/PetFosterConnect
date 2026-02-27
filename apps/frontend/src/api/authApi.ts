@@ -4,12 +4,17 @@ import type { LoginDto, RegisterDto, User } from "@projet/shared-types";
 export const authApi = {
   login: async (credentials: LoginDto) => {
     const response = await api.post<{ access_token: string; user: User }>("/auth/login", credentials);
-    return response.data;
+    // Standardisation de l'état : on force un appel à /auth/me pour garantir que le contexte React 
+    // aura toujours exactement la même structure (id, email, role) qu'après un rafraîchissement
+    const meResponse = await api.get<User>("/auth/me");
+    return { access_token: response.data.access_token, user: meResponse.data };
   },
 
   register: async (data: RegisterDto) => {
     const response = await api.post<{ access_token: string; user: User }>("/auth/register", data);
-    return response.data;
+    // Standardisation de l'état
+    const meResponse = await api.get<User>("/auth/me");
+    return { access_token: response.data.access_token, user: meResponse.data };
   },
 
   logout: async () => {
