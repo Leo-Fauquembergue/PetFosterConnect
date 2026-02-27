@@ -1,13 +1,15 @@
 import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./auth/AuthContext.tsx";
+import { UserRole } from "@projet/shared-types";
 import "react-toastify/dist/ReactToastify.css";
+
 // Layouts
 import AdminLayout from "./components/layout/AdminLayout";
 import PublicLayout from "./components/layout/PublicLayout";
 import UserSidebarLayout from "./components/layout/UserSidebarLayout.tsx";
 
-//Pages
+// Pages
 import About from "./pages/About";
 import AnimalDetail from "./pages/AnimalDetail";
 import AnimalList from "./pages/AnimalList";
@@ -51,86 +53,44 @@ function App() {
           <Route path="/refuges/:id/animaux" element={<ShelterAnimalPage />} />
 
           {/* ESPACE UTILISATEUR */}
-          <Route element={<UserSidebarLayout />}>
-            <Route
-              path="/utilisateur/:id/profil"
-              element={
-                <ProtectedRoute>
-                  <UserProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/utilisateur/:id/profil/animaux/creer"
-              element={
-                <ProtectedRoute>
-                  <AnimalForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/utilisateur/:id/animaux" element={<ShelterAnimalList />} />
-            <Route
-              path="/utilisateur/:userId/animaux/:id"
-              element={
-                <ProtectedRoute>
-                  <AnimalDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/utilisateur/:id/demandes" element={
+          <Route 
+            element={
               <ProtectedRoute>
-                <ApplicationsSent />
+                <UserSidebarLayout />
               </ProtectedRoute>
             }
-            />
-            <Route path="/utilisateur/:id/demandes-recues" element={
-              <ProtectedRoute>
-                <ApplicationsReceived />
-              </ProtectedRoute>} 
-              />
-
-            <Route path="/utilisateur/:id/favoris" element={
-              <ProtectedRoute>
-                <BookmarksPage />
-              </ProtectedRoute>
-            } />
+          >
+            <Route path="/utilisateur/:id/profil" element={<UserProfilePage />} />
+            <Route path="/utilisateur/:id/profil/animaux/creer" element={<AnimalForm />} />
+            <Route path="/utilisateur/:id/animaux" element={<ShelterAnimalList />} />
+            <Route path="/utilisateur/:userId/animaux/:id" element={<AnimalDetail />} />
+            <Route path="/utilisateur/:id/demandes" element={<ApplicationsSent />} />
+            <Route path="/utilisateur/:id/demandes-recues" element={<ApplicationsReceived />} />
+            <Route path="/utilisateur/:id/favoris" element={<BookmarksPage />} />
           </Route>
 
-          {/* Route 404 */}
+          {/* Route 404 & Erreurs */}
           <Route path="*" element={<NotFound />} />
-          {/* Routes d'erreurs */}
           <Route path="/non-autorise" element={<Unauthorized />} />
           <Route path="/interdit" element={<Forbidden />} />
         </Route>
 
         {/* ZONE ADMIN */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route
-            index
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="utilisateurs"
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <AdminUsers />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="animaux"
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <AdminAnimals />
-              </ProtectedRoute>
-            }
-          />
+        {/* Sécurisation globale du layout Admin avec le bon nom de prop et l'Enum */}
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.admin]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="utilisateurs" element={<AdminUsers />} />
+          <Route path="animaux" element={<AdminAnimals />} />
         </Route>
       </Routes>
+
       <ToastContainer
         position="top-right"
         autoClose={3000}

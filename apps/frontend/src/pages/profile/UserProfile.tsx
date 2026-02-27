@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../../api/api";
+// On n'importe plus "api" directement, on utilise ton fichier centralisé !
+import { userApi } from "../../api/userApi";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
@@ -9,6 +10,7 @@ import { toast } from "react-toastify";
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
+  // On garde "any" ici pour ne pas bloquer sur les relations (individualProfile / shelterProfile)
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -20,34 +22,36 @@ export default function UserProfilePage() {
       if (!id) return;
 
       try {
-        const res = await api.get(`/users/${id}/profile`);
-        const data = res.data;
-
-        setUser(data);
+        // ⚡ Utilisation de ta méthode API propre
+        const data = await userApi.getProfile(Number(id));
+        
+        // On force le type en any localement pour lire les relations sans erreur TS
+        const userData: any = data;
+        setUser(userData);
 
         // Gestion des formulaires selon le rôle
-        if (data.role === "individual") {
+        if (userData.role === "individual") {
           setFormData({
-            email: data.email ?? "",
-            phoneNumber: data.phoneNumber ?? "",
-            address: data.address ?? "",
-            surface: data.individualProfile?.surface ?? 0,
-            housingType: data.individualProfile?.housingType ?? "other",
-            haveGarden: data.individualProfile?.haveGarden ?? false,
-            haveAnimals: data.individualProfile?.haveAnimals ?? false,
-            haveChildren: data.individualProfile?.haveChildren ?? false,
-            availableFamily: data.individualProfile?.availableFamily ?? false,
-            availableTime: data.individualProfile?.availableTime ?? "",
+            email: userData.email ?? "",
+            phoneNumber: userData.phoneNumber ?? "",
+            address: userData.address ?? "",
+            surface: userData.individualProfile?.surface ?? 0,
+            housingType: userData.individualProfile?.housingType ?? "other",
+            haveGarden: userData.individualProfile?.haveGarden ?? false,
+            haveAnimals: userData.individualProfile?.haveAnimals ?? false,
+            haveChildren: userData.individualProfile?.haveChildren ?? false,
+            availableFamily: userData.individualProfile?.availableFamily ?? false,
+            availableTime: userData.individualProfile?.availableTime ?? "",
           });
-        } else if (data.role === "shelter") {
+        } else if (userData.role === "shelter") {
           setFormData({
-            email: data.email ?? "",
-            phoneNumber: data.phoneNumber ?? "",
-            address: data.address ?? "",
-            shelterName: data.shelterProfile?.shelterName ?? "",
-            siret: data.shelterProfile?.siret ?? "",
-            description: data.shelterProfile?.description ?? "",
-            logo: data.shelterProfile?.logo ?? "",
+            email: userData.email ?? "",
+            phoneNumber: userData.phoneNumber ?? "",
+            address: userData.address ?? "",
+            shelterName: userData.shelterProfile?.shelterName ?? "",
+            siret: userData.shelterProfile?.siret ?? "",
+            description: userData.shelterProfile?.description ?? "",
+            logo: userData.shelterProfile?.logo ?? "",
           });
         }
 
@@ -67,17 +71,22 @@ export default function UserProfilePage() {
   const handleChange = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const endpoint = user.role === "individual" 
-        ? `/users/${user.id}/individual-profile` 
-        : `/users/${user.id}/shelter-profile`;
 
     const { password, ...profileData } = formData;
     
     try {
-        const response = await api.put(endpoint, profileData);
-        setUser({ ...user, ...response.data });
+        let updatedUser;
+        // ⚡ Utilisation de tes méthodes API propres pour la mise à jour
+        if (user.role === "individual") {
+          updatedUser = await userApi.updateIndividualProfile(user.id, profileData);
+        } else {
+          updatedUser = await userApi.updateShelterProfile(user.id, profileData);
+        }
+
+        setUser({ ...user, ...updatedUser });
         setIsEditing(false);
         toast.success("Profil mis à jour avec succès !");
     } catch (error: any) {
@@ -102,19 +111,14 @@ export default function UserProfilePage() {
 
             {/* Bloc mot de passe toujours accessible */}
             <div className="mt-6 border-t pt-4">
-              <h2 className="text-lg font-semibold">
-                Modifier le mot de passe
-              </h2>
+              <h2 className="text-lg font-semibold">Modifier le mot de passe</h2>
               <PasswordForm userId={user.id} />
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {user.role === "individual" ? (
-              <IndividualProfileForm
-                formData={formData}
-                onChange={handleChange}
-              />
+              <IndividualProfileForm formData={formData} onChange={handleChange} />
             ) : (
               <ShelterProfileForm formData={formData} onChange={handleChange} />
             )}
@@ -127,10 +131,7 @@ export default function UserProfilePage() {
               >
                 Annuler
               </button>
-              <button
-                type="submit"
-                className="bg-primary text-white px-4 py-2 rounded"
-              >
+              <button type="submit" className="bg-primary text-white px-4 py-2 rounded">
                 Sauvegarder
               </button>
             </div>

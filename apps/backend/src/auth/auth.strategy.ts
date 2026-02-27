@@ -19,7 +19,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     return {
-      id: payload.sub,
+      // L'astuce chirurgicale : on force la conversion du 'sub' (String) en Number 
+      // pour que tout le reste de l'application (Guards, Prisma) reçoive un entier valide.
+      id: Number(payload.sub),
       email: payload.email,
       role: payload.role,
     };

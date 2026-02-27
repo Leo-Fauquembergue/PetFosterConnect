@@ -13,11 +13,10 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
-    if (!user)
-      throw new UnauthorizedException("Email ou mot de passe incorrect");
+    if (!user) throw new UnauthorizedException("Email ou mot de passe incorrect");
+    
     const isValid = await argon2.verify(user.password, dto.password);
-    if (!isValid)
-      throw new UnauthorizedException("Email ou mot de passe incorrect");
+    if (!isValid) throw new UnauthorizedException("Email ou mot de passe incorrect");
 
     const token = this.jwtService.sign({
       sub: user.id,
@@ -25,7 +24,9 @@ export class AuthService {
       role: user.role,
     });
 
-    return { user, token };
+    // Faille corrigée : on exclut le mot de passe hashé de la réponse
+    const { password, ...userSafe } = user;
+    return { user: userSafe, token };
   }
 
   async register(dto: RegisterDto) {
@@ -43,6 +44,7 @@ export class AuthService {
       role: user.role,
     });
 
-    return { user, token };
+    // Faille corrigée : on exclut le mot de passe hashé de la réponse
+    const { password, ...userSafe } = user;
+    return { user: userSafe, token };
   }
-}
