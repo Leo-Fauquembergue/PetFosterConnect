@@ -48,3 +48,4 @@ export class AuthService {
     const { password, ...userSafe } = user;
     return { user: userSafe, token };
   }
+}
