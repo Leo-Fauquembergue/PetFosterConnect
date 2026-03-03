@@ -29,6 +29,7 @@ import {
   UpdatePasswordSchema,
   UpdateUserWithIndividualProfileSchema,
   UpdateUserWithShelterProfileSchema,
+  UpdateUserSchema, // 🛡️ SÉCURITÉ : Import ajouté pour le PATCH
 } from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
@@ -148,7 +149,10 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "Utilisateur mis à jour avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  update(@Param("id") id: string, @Body() body: sharedTypes.UpdateUserDto) {
+  update(
+    @Param("id") id: string, 
+    @Body(new ZodPipe(UpdateUserSchema)) body: sharedTypes.UpdateUserDto // 🛡️ SÉCURITÉ : Application du pipe Zod
+  ) {
     return this.usersService.update(Number(id), body);
   }
 

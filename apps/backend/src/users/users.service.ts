@@ -6,6 +6,18 @@ import { UpdateUserWithIndividualProfileDto, UpdateUserWithShelterProfileDto ,Up
 import * as argon2 from "argon2";
 import { PrismaService } from "../prisma/prisma.service";
 
+// Objet réutilisable pour exclure le password proprement partout
+const safeUserSelect = {
+  id: true,
+  email: true,
+  role: true,
+  phoneNumber: true,
+  address: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+};
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -14,7 +26,6 @@ export class UsersService {
   async create(data: RegisterDto) {
     const hashedPassword = await argon2.hash(data.password);
 
-    // Préparation des données de base
     const userData: any = {
       email: data.email,
       password: hashedPassword,
@@ -23,7 +34,6 @@ export class UsersService {
       address: data.address,
     };
 
-    // Si c'est un refuge, on crée le profil lié immédiatement
     if (data.role === 'shelter') {
       if (!data.siret || !data.shelterName) {
         throw new Error("Le SIRET et le nom du refuge sont obligatoires pour un compte Association.");
@@ -38,25 +48,16 @@ export class UsersService {
       };
     }
   
-    // Création atomique (User + Profil en une seule transaction)
     return this.prisma.pfcUser.create({
       data: userData,
+      select: safeUserSelect, // 🛡️ SÉCURITÉ : Ne renvoie pas le password
     });
   }
 
   // --- Récupérer tous les utilisateurs (SÉCURISÉ) ---
   findAll() {
     return this.prisma.pfcUser.findMany({
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        phoneNumber: true,
-        address: true,
-        createdAt: true,
-        updatedAt: true,
-        deletedAt: true,
-      }
+      select: safeUserSelect
     });
   }
 
@@ -64,16 +65,7 @@ export class UsersService {
   findOne(id: number) {
     return this.prisma.pfcUser.findUnique({ 
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        phoneNumber: true,
-        address: true,
-        createdAt: true,
-        updatedAt: true,
-        deletedAt: true,
-      }
+      select: safeUserSelect
     });
   }
 
@@ -97,6 +89,7 @@ export class UsersService {
     return this.prisma.pfcUser.update({
       where: { id },
       data: updateData,
+      select: safeUserSelect, // 🛡️ SÉCURITÉ
     });
   }
 
@@ -105,34 +98,32 @@ export class UsersService {
     return this.prisma.pfcUser.update({
       where: { id },
       data: { deletedAt: new Date() },
+      select: safeUserSelect, // 🛡️ SÉCURITÉ
     });
   }
 
   // --- Validation login (email + mot de passe) ---
   async validateUser(email: string, plainPassword: string) {
     const user = await this.findByEmail(email);
-
     if (!user) return null;
 
     const isValid = await argon2.verify(user.password, plainPassword);
     if (!isValid) return null;
 
-    return user;
+    // 🛡️ SÉCURITÉ : On retire le password de l'objet retourné au login
+    const { password, ...safeUser } = user;
+    return safeUser;
   }
 
   // --- Récupérer le profil enrichi ---
   async getProfile(userId: number) {
-    if (!userId || isNaN(userId)) {
+    if (!userId || Number.isNaN(userId)) {
       throw new Error("Invalid userId");
     }
     return this.prisma.pfcUser.findUnique({
       where: { id: userId },
       select: {
-          id: true,
-          email: true, 
-          phoneNumber: true, // <-- ajoute ce champ 
-          address: true, 
-          role: true, 
+          ...safeUserSelect, // 🛡️ Utilise la base sécurisée
           individualProfile: true, 
           shelterProfile: true, 
       },
@@ -143,11 +134,9 @@ export class UsersService {
   async updatePassword(userId: number, dto: UpdatePasswordDto) {
     try {
       const user = await this.prisma.pfcUser.findUnique({ where: { id: userId } });
-
       if (!user) throw new Error("Utilisateur introuvable");
   
       const isValid = await argon2.verify(user.password, dto.oldPassword);
-
       if (!isValid) throw new Error("Ancien mot de passe incorrect");
   
       const hashed = await argon2.hash(dto.newPassword);
@@ -155,6 +144,7 @@ export class UsersService {
       return await this.prisma.pfcUser.update({
         where: { id: userId },
         data: { password: hashed },
+        select: safeUserSelect, // 🛡️ SÉCURITÉ
       });
 
     } catch (err) {
@@ -194,7 +184,7 @@ export class UsersService {
           },
         },
       },
-      include: { individualProfile: true },
+      select: { ...safeUserSelect, individualProfile: true }, // 🛡️ Remplace le 'include' pour filtrer le mot de passe
     });
   }
   
@@ -233,12 +223,11 @@ export class UsersService {
             },
           },
         },
-        include: { shelterProfile: true },
+        select: { ...safeUserSelect, shelterProfile: true }, // 🛡️ Remplace le 'include' pour sécuriser
       });
 
     } catch (err) {
       Logger.error("Erreur Prisma updateShelterProfile:", err);
-
       throw new Error("Impossible de mettre à jour le profil refuge");
     }
   }

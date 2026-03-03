@@ -28,8 +28,7 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      // Sinon refuser
-      console.warn(`🚫 CORS Bloqué: ${origin}`);
+      // 🛡️ SÉCURITÉ : Rejet silencieux. Pas de log pour éviter le "Log Flooding" par des bots.
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true, // Requis pour tes cookies/sessions
