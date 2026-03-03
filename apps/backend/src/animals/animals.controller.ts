@@ -131,9 +131,10 @@ export class AnimalsController {
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
   update(
     @Param("id", ParseIntPipe) id: number,
-    @Body(new ZodPipe(UpdateAnimalSchema)) updateAnimalDto: UpdateAnimalDto
+    @Body(new ZodPipe(UpdateAnimalSchema)) updateAnimalDto: UpdateAnimalDto,
+    @Req() req: any
   ) {
-    return this.animalsService.update(id, updateAnimalDto);
+    return this.animalsService.update(id, updateAnimalDto, req.user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -145,7 +146,7 @@ export class AnimalsController {
   @ApiResponse({ status: 200, description: "Animal supprimé avec succès" })
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.animalsService.remove(id);
+  remove(@Param("id", ParseIntPipe) id: number, @Req() req: any) {
+    return this.animalsService.remove(id, req.user);
   }
 }

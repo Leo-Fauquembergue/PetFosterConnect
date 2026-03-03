@@ -11,48 +11,64 @@ export class SheltersService {
   }
 
   async findAll(limit?: number) {
-  return this.prisma.shelterProfile.findMany({
-    where: { user: { deletedAt: null } },
-    take: limit, // Ajout de la limite
-    orderBy: { // Ajout du tri
-        user: {
-          createdAt: 'desc'
-        }
+    return this.prisma.shelterProfile.findMany({
+      where: { user: { deletedAt: null } },
+      take: limit, // Ajout de la limite
+      orderBy: { // Ajout du tri
+          user: {
+            createdAt: 'desc'
+          }
+        },
+      include: {
+        user: { 
+          select: {
+            id: true,
+            email: true,
+            phoneNumber: true,
+            address: true,
+            deletedAt: true,
+            animals: { include: { species: true } }
+          }
+        },
       },
-    include: {
-      user: { 
-        include: { 
-          animals: { include: { species: true } } 
-        } 
-      },
-    },
-  });
-}
-
-async findOne(id: number) {
-  const shelter = await this.prisma.shelterProfile.findUnique({
-    where: { pfcUserId: id },
-    include: {
-      user: { 
-        include: { 
-          animals: {
-            include: { species: true,
-              shelter: {
-                include: { shelterProfile: true } 
-              }
-             }
-          } 
-        } 
-      },
-    },
-  });
-
-  if (!shelter || shelter.user.deletedAt) {
-    throw new NotFoundException("Refuge introuvable");
+    });
   }
 
-  return shelter;
-}
+  async findOne(id: number) {
+    const shelter = await this.prisma.shelterProfile.findUnique({
+      where: { pfcUserId: id },
+      include: {
+        user: { 
+          select: {
+            id: true,
+            email: true,
+            phoneNumber: true,
+            address: true,
+            deletedAt: true,
+            animals: {
+              include: { 
+                species: true,
+                shelter: {
+                  select: {
+                    id: true,
+                    email: true,
+                    phoneNumber: true,
+                    shelterProfile: true
+                  } 
+                }
+              }
+            } 
+          } 
+        },
+      },
+    });
+
+    if (!shelter || shelter.user?.deletedAt) {
+      throw new NotFoundException("Refuge introuvable");
+    }
+
+    return shelter;
+  }
 
   async update(id: number, data: UpdateShelterProfileDto) {
     return this.prisma.shelterProfile.update({

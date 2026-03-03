@@ -1,8 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { UserRole } from "@prisma/client"; 
+import { UserRole } from "@prisma/client";
 import { RegisterDto } from "@projet/shared-types";
 import { UpdateUserWithIndividualProfileDto, UpdateUserWithShelterProfileDto ,UpdatePasswordDto } from "@projet/shared-types"; 
-
 
 import * as argon2 from "argon2";
 import { PrismaService } from "../prisma/prisma.service";
@@ -14,44 +13,68 @@ export class UsersService {
   // --- Création d'un utilisateur ---
   async create(data: RegisterDto) {
     const hashedPassword = await argon2.hash(data.password);
+
     // Préparation des données de base
-      const userData: any = {
-        email: data.email,
-        password: hashedPassword,
-        role: data.role as UserRole,
-        phoneNumber: data.phoneNumber,
-        address: data.address,
-      };
-    
-      // Si c'est un refuge, on crée le profil lié immédiatement
-      if (data.role === 'shelter') {
-        if (!data.siret || !data.shelterName) {
-          throw new Error("Le SIRET et le nom du refuge sont obligatoires pour un compte Association.");
-        }
-    
-        userData.shelterProfile = {
-          create: {
-            siret: data.siret,
-            shelterName: data.shelterName,
-            description: "Nouveau refuge inscrit",
-          },
-        };
+    const userData: any = {
+      email: data.email,
+      password: hashedPassword,
+      role: data.role as UserRole,
+      phoneNumber: data.phoneNumber,
+      address: data.address,
+    };
+
+    // Si c'est un refuge, on crée le profil lié immédiatement
+    if (data.role === 'shelter') {
+      if (!data.siret || !data.shelterName) {
+        throw new Error("Le SIRET et le nom du refuge sont obligatoires pour un compte Association.");
       }
-    
-      // Création atomique (User + Profil en une seule transaction)
-      return this.prisma.pfcUser.create({
-        data: userData,
-      });
+  
+      userData.shelterProfile = {
+        create: {
+          siret: data.siret,
+          shelterName: data.shelterName,
+          description: "Nouveau refuge inscrit",
+        },
+      };
+    }
+  
+    // Création atomique (User + Profil en une seule transaction)
+    return this.prisma.pfcUser.create({
+      data: userData,
+    });
   }
 
-  // --- Récupérer tous les utilisateurs ---
+  // --- Récupérer tous les utilisateurs (SÉCURISÉ) ---
   findAll() {
-    return this.prisma.pfcUser.findMany();
+    return this.prisma.pfcUser.findMany({
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        phoneNumber: true,
+        address: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+      }
+    });
   }
 
-  // --- Récupérer un utilisateur par ID ---
+  // --- Récupérer un utilisateur par ID (SÉCURISÉ) ---
   findOne(id: number) {
-    return this.prisma.pfcUser.findUnique({ where: { id } });
+    return this.prisma.pfcUser.findUnique({ 
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        phoneNumber: true,
+        address: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+      }
+    });
   }
 
   // --- Récupérer un utilisateur par email ---
@@ -88,6 +111,7 @@ export class UsersService {
   // --- Validation login (email + mot de passe) ---
   async validateUser(email: string, plainPassword: string) {
     const user = await this.findByEmail(email);
+
     if (!user) return null;
 
     const isValid = await argon2.verify(user.password, plainPassword);
@@ -110,33 +134,35 @@ export class UsersService {
           address: true, 
           role: true, 
           individualProfile: true, 
-          shelterProfile: true, },
+          shelterProfile: true, 
+      },
     });
   }
   
-  
-  
   // --- Mise à jour du mot de passe ---
-    async updatePassword(userId: number, dto: UpdatePasswordDto) {
+  async updatePassword(userId: number, dto: UpdatePasswordDto) {
     try {
       const user = await this.prisma.pfcUser.findUnique({ where: { id: userId } });
+
       if (!user) throw new Error("Utilisateur introuvable");
   
       const isValid = await argon2.verify(user.password, dto.oldPassword);
+
       if (!isValid) throw new Error("Ancien mot de passe incorrect");
   
       const hashed = await argon2.hash(dto.newPassword);
+
       return await this.prisma.pfcUser.update({
         where: { id: userId },
         data: { password: hashed },
       });
+
     } catch (err) {
       Logger.error("Erreur updatePassword:", err);
       throw err;
     }
   }
   
-
   // --- Mise à jour profil individuel ---
   async updateIndividualProfile(id: number, dto: UpdateUserWithIndividualProfileDto) {
     return this.prisma.pfcUser.update({
@@ -178,6 +204,7 @@ export class UsersService {
       where: { id },
       include: { shelterProfile: true },
     });
+
     if (!user) {
       throw new Error("Utilisateur introuvable");
     }
@@ -208,8 +235,10 @@ export class UsersService {
         },
         include: { shelterProfile: true },
       });
+
     } catch (err) {
       Logger.error("Erreur Prisma updateShelterProfile:", err);
+
       throw new Error("Impossible de mettre à jour le profil refuge");
     }
   }
