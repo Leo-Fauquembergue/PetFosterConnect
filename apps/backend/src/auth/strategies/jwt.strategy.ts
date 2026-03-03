@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
-import { COOKIE_NAME } from "../constants";
+import { COOKIE_NAME } from "../../constants";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

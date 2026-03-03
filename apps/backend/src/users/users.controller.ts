@@ -30,8 +30,8 @@ import {
   UpdateUserWithIndividualProfileSchema,
   UpdateUserWithShelterProfileSchema,
 } from "@projet/shared-types";
-import { JwtAuthGuard } from "../auth/auth.guard";
-import { ProfileAccessGuard } from "../auth/profile-access.guard";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { UsersService } from "./users.service";
 

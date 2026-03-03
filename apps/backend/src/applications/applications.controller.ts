@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ParseIntPipe, UseGuards, Request } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from "@nestjs/swagger";
 import * as sharedTypes from "@projet/shared-types";
-import { JwtAuthGuard } from "../auth/auth.guard";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { ApplicationsService } from "./applications.service";
 

@@ -18,7 +18,7 @@ import {
   type CreateBookmarkDto,
   CreateBookmarkSchema,
 } from "@projet/shared-types";
-import { JwtAuthGuard } from "../auth/auth.guard";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { BookmarksService } from "./bookmarks.service";
 

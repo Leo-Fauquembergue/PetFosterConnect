@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { AnimalsModule } from "./animals/animals.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -12,6 +14,7 @@ import { ApplicationsModule } from "./applications/applications.module";
 import { SpeciesModule } from './species/species.module';
 import { BookmarksModule } from "./bookmarks/bookmarks.module";
 import { EmailsModule } from "./emails/emails.module";
+
 /**
  * MODULE RACINE (ROOT MODULE)
  * * Ce module est le chef d'orchestre de l'application NestJS.
@@ -25,6 +28,10 @@ import { EmailsModule } from "./emails/emails.module";
     ConfigModule.forRoot({
       isGlobal: true, // Recommandé : rend le .env accessible dans tous les futurs modules
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
     PrismaModule,
     UsersModule,
     AnimalsModule,
@@ -36,6 +43,12 @@ import { EmailsModule } from "./emails/emails.module";
     EmailsModule
   ],
   controllers: [AppController, HealthController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
