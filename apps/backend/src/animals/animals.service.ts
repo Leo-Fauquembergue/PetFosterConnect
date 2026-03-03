@@ -1,17 +1,16 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 
-
 // Animal avec relations species + shelterProfile
 type AnimalWithRelations = Prisma.AnimalGetPayload<{
-  include: { species: true; shelter: { include: { shelterProfile: true } } };
+  include: { species: true;
+shelter: { select: { id: true, email: true, phoneNumber: true, shelterProfile: true } } };
 }>;
 
 // Animal enrichi avec isBookmarked
 type AnimalWithBookmark = AnimalWithRelations & { isBookmarked: boolean };
-
 
 @Injectable()
 export class AnimalsService {
@@ -34,11 +33,8 @@ export class AnimalsService {
       shelter: { connect: { id: userId } },   // relation vers PfcUser
       species: { connect: { id: dto.speciesId } }, // relation vers Species
     };
-  
     return this.prisma.animal.create({ data });
   }
-  
-  
 
   async findAll(includeDeleted = false, limit?: number) {
     return this.prisma.animal.findMany({
@@ -52,7 +48,14 @@ export class AnimalsService {
       },
       include: {
         species: true,
-        shelter: { include: { shelterProfile: true } },
+        shelter: {
+          select: {
+            id: true,
+            email: true,
+            phoneNumber: true,
+            shelterProfile: true, // Sélection explicite et sûre
+          }
+        },
       },
     });
   }
@@ -62,11 +65,18 @@ export class AnimalsService {
      where: { id },
      include: {
        species: true,
-       shelter: { include: { shelterProfile: true } },
+       shelter: {
+         select: {
+           id: true,
+           email: true,
+           phoneNumber: true,
+           shelterProfile: true,
+         }
+       },
        bookmarks: userId ? { where: { pfcUserId: userId } } : false,
      },
    });
- 
+
    if (!animal || animal.deletedAt) {
      throw new NotFoundException(`Animal ${id} non trouvé ou supprimé`);
    }
@@ -75,24 +85,35 @@ export class AnimalsService {
  
    // On supprime bookmarks du retour si tu veux éviter de l’exposer
    const { bookmarks, ...rest } = animal;
- 
    return { ...rest, isBookmarked };
  }
+
   async findAllByShelter(userId: number) {
     return this.prisma.animal.findMany({
       where: { pfcUserId: userId },
-      include: { // <--- C'EST CETTE PARTIE QUI MANQUE SÛREMENT
+      include: {
         species: true, // "Va chercher le nom de l'espèce"
         shelter: {     // "Va chercher les infos du refuge"
-          include: {
-            shelterProfile: true 
+          select: {
+            id: true,
+            email: true,
+            phoneNumber: true,
+            shelterProfile: true,
           }
         }
       }
     });
   }
 
-  async update(id: number, updateAnimalDto: UpdateAnimalDto) {
+  async update(id: number, updateAnimalDto: UpdateAnimalDto, user: any) {
+    const animal = await this.prisma.animal.findUnique({ where: { id } });
+    if (!animal) throw new NotFoundException("Animal introuvable");
+    
+    // Vérification IDOR : Bloquer si l'utilisateur n'est pas Admin ET n'est pas le propriétaire
+    if (user.role !== 'admin' && animal.pfcUserId !== user.id) {
+      throw new ForbiddenException("Vous ne pouvez modifier que vos animaux.");
+    }
+  
     const data: any = {};
     Object.entries(updateAnimalDto).forEach(([key, value]) => {
       if (value !== undefined) data[key] = value;
@@ -100,7 +121,15 @@ export class AnimalsService {
     return this.prisma.animal.update({ where: { id }, data });
   }
 
-  async remove(id: number) {
+  async remove(id: number, user: any) {
+    const animal = await this.prisma.animal.findUnique({ where: { id } });
+    if (!animal) throw new NotFoundException("Animal introuvable");
+    
+    // Vérification IDOR
+    if (user.role !== 'admin' && animal.pfcUserId !== user.id) {
+      throw new ForbiddenException("Action interdite sur cet animal.");
+    }
+
     return this.prisma.animal.update({
       where: { id },
       data: { deletedAt: new Date() },

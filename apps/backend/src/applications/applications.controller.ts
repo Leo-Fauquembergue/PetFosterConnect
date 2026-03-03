@@ -78,6 +78,7 @@ export class ApplicationsController {
   @ApiOperation({ summary: "Mettre à jour le statut d'une demande" })
   @UsePipes(new ZodPipe(sharedTypes.UpdateApplicationStatusSchema))
   update(
+    @Request() req: any,
     @Param("animalId", ParseIntPipe) animalId: number,
     @Param("candidateId", ParseIntPipe) candidateId: number,
     @Body() updateDto: sharedTypes.UpdateApplicationStatusDto
@@ -85,7 +86,8 @@ export class ApplicationsController {
     return this.applicationsService.updateStatus(
       candidateId,
       animalId,
-      updateDto
+      updateDto,
+      req.user
     );
   }
 
@@ -94,10 +96,11 @@ export class ApplicationsController {
   @Roles(UserRole.shelter, UserRole.admin)
   @ApiOperation({ summary: "Archiver / Supprimer une demande" })
   remove(
+    @Request() req: any,
     @Param("animalId", ParseIntPipe) animalId: number,
     @Param("candidateId", ParseIntPipe) candidateId: number
   ) {
-    return this.applicationsService.remove(candidateId, animalId);
+    return this.applicationsService.remove(candidateId, animalId, req.user);
   }
 
   @Post(":candidateId/:animalId/accept")
@@ -105,10 +108,11 @@ export class ApplicationsController {
   @Roles(UserRole.shelter, UserRole.admin)
   @ApiOperation({ summary: "Accepter formellement une demande" })
   async accept(
+    @Request() req: any,
     @Param("candidateId", ParseIntPipe) candidateId: number,
     @Param("animalId", ParseIntPipe) animalId: number
   ) {
-    return this.applicationsService.acceptApplication(candidateId, animalId);
+    return this.applicationsService.acceptApplication(candidateId, animalId, req.user);
   }
 
   @Post(":candidateId/:animalId/reject")
@@ -116,9 +120,10 @@ export class ApplicationsController {
   @Roles(UserRole.shelter, UserRole.admin)
   @ApiOperation({ summary: "Refuser formellement une demande" })
   async reject(
+    @Request() req: any,
     @Param("candidateId", ParseIntPipe) candidateId: number,
     @Param("animalId", ParseIntPipe) animalId: number
   ) {
-    return this.applicationsService.rejectApplication(candidateId, animalId);
+    return this.applicationsService.rejectApplication(candidateId, animalId, req.user);
   }
 }

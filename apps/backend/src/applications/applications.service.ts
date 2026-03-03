@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, ConflictException, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApplicationStatus, CreateApplicationDto, UpdateApplicationStatusDto } from '@projet/shared-types';
 import { Prisma } from '@prisma/client';
@@ -64,7 +64,15 @@ export class ApplicationsService {
     });
   }
 
-  async updateStatus(candidateId: number, animalId: number, updateDto: UpdateApplicationStatusDto) {
+  async updateStatus(candidateId: number, animalId: number, updateDto: UpdateApplicationStatusDto, user: any) {
+    const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
+    if (!animal) throw new NotFoundException("Animal introuvable");
+    
+    // Vérification IDOR stricte
+    if (user.role !== 'admin' && animal.pfcUserId !== user.id) {
+      throw new ForbiddenException("Vous ne gérez pas cet animal.");
+    }
+
     return this.prisma.application.update({
       where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
       data: { applicationStatus: updateDto.applicationStatus as ApplicationStatus },
@@ -75,17 +83,25 @@ export class ApplicationsService {
     });
   }
 
-  remove(candidateId: number, animalId: number) {
+  async remove(candidateId: number, animalId: number, user: any) {
+    const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
+    if (!animal) throw new NotFoundException("Animal introuvable");
+    
+    // Vérification IDOR stricte
+    if (user.role !== 'admin' && animal.pfcUserId !== user.id) {
+      throw new ForbiddenException("Vous ne gérez pas cet animal.");
+    }
+
     return this.prisma.application.update({
       where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
       data: { deletedAt: new Date() },
     });
   }
 
-  async acceptApplication(candidateId: number, animalId: number) {
+  async acceptApplication(candidateId: number, animalId: number, user: any) {
     const application = await this.updateStatus(candidateId, animalId, {
       applicationStatus: "approved",
-    });
+    }, user);
 
     try {
       if (application.user?.email) {
@@ -99,10 +115,10 @@ export class ApplicationsService {
     return { message: "Candidature acceptée (Notification email traitée)", application };
   }
 
-  async rejectApplication(candidateId: number, animalId: number) {
+  async rejectApplication(candidateId: number, animalId: number, user: any) {
     const application = await this.updateStatus(candidateId, animalId, {
       applicationStatus: "rejected",
-    });
+    }, user);
 
     try {
       if (application.user?.email) {

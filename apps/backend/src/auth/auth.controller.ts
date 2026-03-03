@@ -23,8 +23,8 @@ export class AuthController {
 
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: this.isProduction, 
-      sameSite: this.isProduction ? "none" : "lax", 
+      secure: true, // Forcé à true (SÉCURITÉ)
+      sameSite: this.isProduction ? "none" : "strict", // Empêche le CSRF selon le type de déploiement
       maxAge: 1000 * 60 * 60,
       path: "/",
     });
@@ -37,8 +37,8 @@ export class AuthController {
   logout(@Res({ passthrough: true }) res: express.Response) {
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
-      secure: this.isProduction,
-      sameSite: this.isProduction ? "none" : "lax",
+      secure: true,
+      sameSite: this.isProduction ? "none" : "strict",
       path: "/",
     });
 
@@ -63,8 +63,8 @@ export class AuthController {
 
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: this.isProduction,
-      sameSite: this.isProduction ? "none" : "lax",
+      secure: true, // Forcé à true (SÉCURITÉ)
+      sameSite: this.isProduction ? "none" : "strict",
       maxAge: 1000 * 60 * 60,
       path: "/",
     });
