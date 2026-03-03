@@ -1,6 +1,10 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { EmailsService } from "./emails.service";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { Roles } from "../auth/decorators/roles.decorators";
+import { UserRole } from "@prisma/client";
 
 @ApiTags("emails")
 @Controller("emails")
@@ -8,6 +12,8 @@ export class EmailsController {
   constructor(private readonly emailsService: EmailsService) {}
 
   @Post("send")
+  @UseGuards(JwtAuthGuard, RolesGuard) // 🛡️ SÉCURITÉ : Bloque les bots anonymes
+  @Roles(UserRole.admin)               // 🛡️ SÉCURITÉ : Réserve l'usage SMTP aux Admins
   @ApiOperation({ summary: "Envoyer un email" })
   @ApiBody({
     schema: {
@@ -52,6 +58,7 @@ export class EmailsController {
       body.text,
       body.html
     );
+
     return { message: "Email envoyé", result };
   }
 }

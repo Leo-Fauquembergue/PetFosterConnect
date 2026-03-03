@@ -54,12 +54,11 @@ export const LoginSchema = z.object({
 
 export type LoginDto = z.infer<typeof LoginSchema>;
 
+// CORRECTION SÉCURITÉ : Retrait exclusif de "password" et "deletedAt" pour empêcher le Mass Assignment
 export const UpdateUserSchema = UserSchema.pick({
   email: true,
-  password: true,
   phoneNumber: true,
   address: true,
-  deletedAt: true,
 }).partial().strict();
 
 export type UpdateUserDto = z.infer<typeof UpdateUserSchema>;
