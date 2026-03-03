@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Req, Res, UseGuards } from "@nestjs/common
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { LoginDto, RegisterDto } from "@projet/shared-types";
 import express from "express";
-import { JwtAuthGuard } from "./auth.guard";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { AuthService } from "./auth.service";
 import { COOKIE_NAME } from "../constants";
 

@@ -21,8 +21,8 @@ import {
 } from "@nestjs/swagger";
 import type { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
 import { CreateAnimalSchema, UpdateAnimalSchema } from "@projet/shared-types";
-import { JwtAuthGuard } from "../auth/auth.guard";
-import { OptionalJwtAuthGuard } from "../auth/optional-jwt-auth.guard";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { OptionalJwtAuthGuard } from "../auth/guards/optional-jwt-auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { AnimalsService } from "./animals.service";
 
