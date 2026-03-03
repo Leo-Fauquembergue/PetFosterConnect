@@ -58,25 +58,19 @@ export class AnimalsController {
     description: "Nombre maximum d'animaux à retourner",
     type: Number,
   })
-  @ApiQuery({
-    name: "includeDeleted",
-    required: false,
-    description: "Inclure les animaux supprimés",
-    type: Boolean,
-  })
+  // 🛡️ CORRECTION SÉCURITÉ : Suppression de "includeDeleted" (Empêche l'attaque BOLA)
   @ApiResponse({
     status: 200,
     description: "Liste des animaux retournée avec succès",
   })
   findAll(
-    @Query("limit") limit?: string,
-    @Query("includeDeleted") includeDeleted?: string
+    @Query("limit") limit?: string
   ) {
     // Conversion des Query Params
     const numericLimit = limit ? parseInt(limit, 10) : undefined;
-    const isDeletedIncluded = includeDeleted === "true";
 
-    return this.animalsService.findAll(isDeletedIncluded, numericLimit);
+    // 🛡️ CORRECTION SÉCURITÉ : Force la valeur "false" en dur pour le public
+    return this.animalsService.findAll(false, numericLimit);
   }
 
   // ROUTE SPECIALE ADMIN

@@ -35,6 +35,8 @@ export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Post()
+  @UseGuards(RolesGuard) // 🛡️ CORRECTION SÉCURITÉ : Active la vérification du rôle
+  @Roles(UserRole.individual) // 🛡️ CORRECTION SÉCURITÉ : Seuls les particuliers peuvent adopter
   @ApiOperation({ summary: "Créer une demande d'adoption" })
   @ApiResponse({ status: 201, description: "Demande créée avec succès" })
   @UsePipes(new ZodPipe(sharedTypes.CreateApplicationSchema))
