@@ -61,8 +61,12 @@ export class SheltersController {
     description: "Liste des refuges retournée avec succès",
   })
   findAll(@Query("limit") limit?: string) {
-    const numericLimit = limit ? parseInt(limit, 10) : undefined;
-    return this.sheltersService.findAll(numericLimit);
+    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
+    // 🛡️ PATCH DoS : Plafond strict à 50 et fallback sécurisé si NaN
+    const safeLimit = parsedLimit && !Number.isNaN(parsedLimit) ? Math.min(parsedLimit, 50) : 50;
+    
+    // On passe safeLimit au service
+    return this.sheltersService.findAll(safeLimit);
   }
 
   @Get(":id")

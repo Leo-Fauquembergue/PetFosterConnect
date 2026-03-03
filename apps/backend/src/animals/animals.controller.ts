@@ -63,14 +63,13 @@ export class AnimalsController {
     status: 200,
     description: "Liste des animaux retournée avec succès",
   })
-  findAll(
-    @Query("limit") limit?: string
-  ) {
-    // Conversion des Query Params
-    const numericLimit = limit ? parseInt(limit, 10) : undefined;
-
-    // 🛡️ CORRECTION SÉCURITÉ : Force la valeur "false" en dur pour le public
-    return this.animalsService.findAll(false, numericLimit);
+  findAll(@Query("limit") limit?: string) {
+    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
+    // 🛡️ PATCH DoS : Plafond strict à 50 et fallback sécurisé si NaN
+    const safeLimit = parsedLimit && !Number.isNaN(parsedLimit) ? Math.min(parsedLimit, 50) : 50;
+    
+    // On passe safeLimit au lieu d'une valeur non vérifiée
+    return this.animalsService.findAll(false, safeLimit);
   }
 
   // ROUTE SPECIALE ADMIN
