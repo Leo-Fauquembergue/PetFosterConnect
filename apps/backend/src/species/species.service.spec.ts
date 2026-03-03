@@ -7,6 +7,9 @@ describe('SpeciesService', () => {
   const mockPrisma = {
     species: {
       findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
   };
 
@@ -42,6 +45,49 @@ describe('SpeciesService', () => {
         orderBy: { name: 'asc' },
       });
       expect(result).toEqual(mockSpecies);
+    });
+  });
+
+  describe('create', () => {
+    it('doit créer une nouvelle espèce', async () => {
+      const newSpecies = { id: 3, name: 'Oiseau' };
+      mockPrisma.species.create.mockResolvedValue(newSpecies);
+
+      const result = await service.create({ name: 'Oiseau' });
+
+      expect(mockPrisma.species.create).toHaveBeenCalledWith({
+        data: { name: 'Oiseau' },
+      });
+      expect(result).toEqual(newSpecies);
+    });
+  });
+
+  describe('update', () => {
+    it('doit mettre à jour une espèce', async () => {
+      const updatedSpecies = { id: 1, name: 'Félin' };
+      mockPrisma.species.update.mockResolvedValue(updatedSpecies);
+
+      const result = await service.update(1, { name: 'Félin' });
+
+      expect(mockPrisma.species.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { name: 'Félin' },
+      });
+      expect(result).toEqual(updatedSpecies);
+    });
+  });
+
+  describe('remove', () => {
+    it('doit supprimer une espèce', async () => {
+      const deletedSpecies = { id: 1, name: 'Chat' };
+      mockPrisma.species.delete.mockResolvedValue(deletedSpecies);
+
+      const result = await service.remove(1);
+
+      expect(mockPrisma.species.delete).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
+      expect(result).toEqual(deletedSpecies);
     });
   });
 });

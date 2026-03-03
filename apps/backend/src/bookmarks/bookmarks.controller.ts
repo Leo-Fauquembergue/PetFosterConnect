@@ -12,8 +12,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-} from "@nestjs/swagger"; 
-
+} from "@nestjs/swagger";
 import {
   type CreateBookmarkDto,
   CreateBookmarkSchema,
@@ -38,12 +37,9 @@ export class BookmarksController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 401, description: "Non authentifié" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
-  
   @UsePipes(new ZodPipe(CreateBookmarkSchema))
-  async toggle(
-    @Req() req: any,
-    @Body() dto: CreateBookmarkDto
-  ) {
+  async toggle(@Req() req: any, @Body() dto: CreateBookmarkDto) {
+    // 🔒 L'ID utilisateur est extrait de force depuis le JWT, usurpation impossible
     return this.bookmarksService.toggle(req.user.id, dto.animalId);
   }
 
@@ -55,6 +51,7 @@ export class BookmarksController {
   })
   @ApiResponse({ status: 401, description: "Non authentifié" })
   async getMyBookmarks(@Req() req: any) {
+    // 🔒 L'ID utilisateur est extrait de force depuis le JWT, usurpation impossible
     return this.bookmarksService.findAllByUser(req.user.id);
   }
 }

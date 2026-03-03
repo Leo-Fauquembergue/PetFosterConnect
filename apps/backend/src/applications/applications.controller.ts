@@ -1,7 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ParseIntPipe, UseGuards, Request } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from "@nestjs/swagger";
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UsePipes,
+  ParseIntPipe,
+  UseGuards,
+  Request,
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from "@nestjs/swagger";
 import * as sharedTypes from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
+import { Roles } from "../auth/decorators/roles.decorators";
+import { UserRole } from "@prisma/client";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { ApplicationsService } from "./applications.service";
 
@@ -16,35 +38,61 @@ export class ApplicationsController {
   @ApiOperation({ summary: "Créer une demande d'adoption" })
   @ApiResponse({ status: 201, description: "Demande créée avec succès" })
   @UsePipes(new ZodPipe(sharedTypes.CreateApplicationSchema))
-  create(@Request() req, @Body() createApplicationDto: sharedTypes.CreateApplicationDto) {
+  create(
+    @Request() req,
+    @Body() createApplicationDto: sharedTypes.CreateApplicationDto
+  ) {
     return this.applicationsService.create(req.user.id, createApplicationDto);
   }
 
-  @Get("sent")
-  @ApiOperation({ summary: "Récupérer mes demandes d'adoption envoyées" })
-  findAllSent(@Request() req) {
-    return this.applicationsService.findAllSent(req.user.id);
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.admin)
+  @ApiOperation({ summary: "Récupérer toutes les demandes (ADMIN uniquement)" })
+  findAll() {
+    // Appel d'une méthode findAll() à implémenter dans le service si nécessaire
+    return (this.applicationsService as any).findAll
+      ? (this.applicationsService as any).findAll()
+      : [];
   }
 
-  @Get("received")
-  @ApiOperation({ summary: "Récupérer les demandes d'adoption reçues par mon refuge" })
-  findAllReceived(@Request() req) {
-    return this.applicationsService.findAllReceived(req.user.id);
+  @Get("user/:id")
+  @UseGuards(ProfileAccessGuard)
+  @ApiOperation({ summary: "Récupérer les demandes d'adoption d'un candidat" })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
+  findAllSent(@Param("id", ParseIntPipe) id: number) {
+    return this.applicationsService.findAllSent(id);
   }
 
-  @Patch(":animalId/:candidateId")
-  @ApiOperation({ summary: "Mettre à jour le statut d'une demande d'adoption" })
+  @Get("shelter/:id")
+  @UseGuards(ProfileAccessGuard)
+  @ApiOperation({ summary: "Récupérer les demandes reçues par un refuge" })
+  @ApiParam({ name: "id", description: "ID du refuge", type: Number })
+  findAllReceived(@Param("id", ParseIntPipe) id: number) {
+    return this.applicationsService.findAllReceived(id);
+  }
+
+  @Patch(":animalId/:candidateId/status")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.shelter, UserRole.admin)
+  @ApiOperation({ summary: "Mettre à jour le statut d'une demande" })
   @UsePipes(new ZodPipe(sharedTypes.UpdateApplicationStatusSchema))
   update(
     @Param("animalId", ParseIntPipe) animalId: number,
     @Param("candidateId", ParseIntPipe) candidateId: number,
     @Body() updateDto: sharedTypes.UpdateApplicationStatusDto
   ) {
-    return this.applicationsService.updateStatus(candidateId, animalId, updateDto);
+    return this.applicationsService.updateStatus(
+      candidateId,
+      animalId,
+      updateDto
+    );
   }
 
   @Delete(":animalId/:candidateId")
-  @ApiOperation({ summary: "Supprimer une demande d'adoption" })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.shelter, UserRole.admin)
+  @ApiOperation({ summary: "Archiver / Supprimer une demande" })
   remove(
     @Param("animalId", ParseIntPipe) animalId: number,
     @Param("candidateId", ParseIntPipe) candidateId: number
@@ -53,7 +101,9 @@ export class ApplicationsController {
   }
 
   @Post(":candidateId/:animalId/accept")
-  @ApiOperation({ summary: "Accepter une demande d'adoption" })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.shelter, UserRole.admin)
+  @ApiOperation({ summary: "Accepter formellement une demande" })
   async accept(
     @Param("candidateId", ParseIntPipe) candidateId: number,
     @Param("animalId", ParseIntPipe) animalId: number
@@ -62,7 +112,9 @@ export class ApplicationsController {
   }
 
   @Post(":candidateId/:animalId/reject")
-  @ApiOperation({ summary: "Refuser une demande d'adoption" })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.shelter, UserRole.admin)
+  @ApiOperation({ summary: "Refuser formellement une demande" })
   async reject(
     @Param("candidateId", ParseIntPipe) candidateId: number,
     @Param("animalId", ParseIntPipe) animalId: number
