@@ -10,4 +10,23 @@ export class SpeciesService {
       orderBy: { name: 'asc' },
     });
   }
+
+  async create(data: { name: string }) {
+    return this.prisma.species.create({
+      data,
+    });
+  }
+
+  async update(id: number, data: { name: string }) {
+    return this.prisma.species.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async remove(id: number) {
+    return this.prisma.species.delete({
+      where: { id },
+    });
+  }
 }
