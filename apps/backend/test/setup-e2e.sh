@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. URL de la base de test
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5440/petfoster_test?schema=public"
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5441/petfoster_test?schema=public"
 
 echo "🛠  Préparation de la base de données de test..."
 

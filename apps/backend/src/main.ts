@@ -2,10 +2,14 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser'; // 👈 C'est ici la correction !
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Sécurisation des en-têtes HTTP
+  app.use(helmet());
 
   // Gérer les cookies
   app.use(cookieParser());
@@ -15,20 +19,12 @@ async function bootstrap() {
     origin: (origin, callback) => {
       const allowedOrigins = [
         'http://localhost:5173', // Dev local
-        process.env.CORS_ORIGIN, // Prod (Render)
-      ];
+        'http://localhost:3000',
+        process.env.FRONTEND_URL, // Prod stricte (à définir dans ton .env de production)
+      ].filter(Boolean);
 
-      // Autoriser les requêtes sans origine (ex: Postman) ou Localhost explicite
+      // Autoriser les requêtes sans origine (ex: Postman) ou si elles sont dans la liste blanche
       if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      // Autoriser dynamiquement tes déploiements Vercel
-      // Accepte : https://pet-foster-connect-[n'importe quoi].vercel.app
-      const isMyVercelApp =
-        /^https:\/\/pet-foster-connect.*\.vercel\.app$/.test(origin);
-
-      if (isMyVercelApp) {
         return callback(null, true);
       }
 
