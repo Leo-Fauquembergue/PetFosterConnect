@@ -14,6 +14,7 @@ export default function UserProfilePage() {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<any>({});
 
@@ -74,12 +75,13 @@ export default function UserProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true); // ⚡ VERROUILLAGE
 
     const { password, ...profileData } = formData;
-    
+
     try {
-        let updatedUser;
-        // ⚡ Utilisation de tes méthodes API propres pour la mise à jour
+        let updatedUser: any; 
+        
         if (user.role === "individual") {
           updatedUser = await userApi.updateIndividualProfile(user.id, profileData);
         } else {
@@ -92,6 +94,8 @@ export default function UserProfilePage() {
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Impossible de mettre à jour le profil.";
       toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -131,8 +135,12 @@ export default function UserProfilePage() {
               >
                 Annuler
               </button>
-              <button type="submit" className="bg-primary text-white px-4 py-2 rounded">
-                Sauvegarder
+              <button 
+                type="submit" 
+                disabled={isSubmitting} // ⚡ AJOUT
+                className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting ? "Sauvegarde..." : "Sauvegarder"} 
               </button>
             </div>
           </form>

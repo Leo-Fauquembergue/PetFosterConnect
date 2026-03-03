@@ -12,9 +12,12 @@ export default function PasswordForm({ userId }: Props) {
     oldPassword: "",
     newPassword: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true); // ⚡ VERROUILLAGE
+
     try {
       await userApi.updatePassword(userId, formData);
       toast.success("Mot de passe modifié avec succès !");
@@ -22,6 +25,8 @@ export default function PasswordForm({ userId }: Props) {
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Erreur lors de la modification du mot de passe.";
       toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -41,9 +46,10 @@ export default function PasswordForm({ userId }: Props) {
 
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full md:w-auto"
+        disabled={isSubmitting}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        Mettre à jour le mot de passe
+        {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
       </button>
     </form>
   );

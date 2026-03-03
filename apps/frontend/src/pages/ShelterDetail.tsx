@@ -3,32 +3,36 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import BackBanner from "../components/ui/BackBanner";
-import { api } from "../api/api";
+import { shelterApi, type ShelterDetailResponse } from "../api/shelterApi";
+import Loader from "../components/ui/Loader";
 
 const RefugeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
 
-  const [shelter, setShelter] = useState<any | null>(null);
+  const [shelter, setShelter] = useState<ShelterDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchShelter = async () => {
+      if (!id) return;
       try {
-        const response = await api.get(`/shelters/${id}`);
-        setShelter(response.data);
+        const data = await shelterApi.getShelterById(Number(id));
+        setShelter(data);
       } catch (err) {
         setError(true);
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchShelter();
+    fetchShelter();
   }, [id]);
 
-  if (loading) return <p>Chargement...</p>;
-  if (error) return <p>Erreur !</p>;
-  if (!shelter) return <p>Refuge introuvable</p>;
+  if (loading) return <Loader text="Chargement du refuge..." />;
+  
+  if (error) return <p className="text-center text-red-500 my-12 font-medium">Erreur lors du chargement du refuge.</p>;
+  
+  if (!shelter) return <p className="text-center text-gray-500 my-12 font-medium">Refuge introuvable</p>;
 
   return (
     <div className="bg-bgapp font-openSans text-gray-800">

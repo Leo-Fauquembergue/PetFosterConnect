@@ -38,7 +38,6 @@ export default function AnimalDetail() {
   const { user } = useAuth();
   
   const [hasApplied, setHasApplied] = useState(false);
-  // ⚡ TYPAGE STRICT DU STATE
   const [animal, setAnimal] = useState<AnimalDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +46,12 @@ export default function AnimalDetail() {
   const [adoptMessage, setAdoptMessage] = useState("");
   const [fosterMessage, setFosterMessage] = useState("");
 
+  // ⚡ AJOUT : État de soumission global pour empêcher le double-clic
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     const fetchAnimal = async () => {
       try {
-        // ⚡ CAST DU RETOUR POUR INCLURE isBookmarked
         const data = (await animalApi.getAnimalById(Number(id))) as AnimalDetailResponse;
         
         setAnimal(data);
@@ -58,7 +59,6 @@ export default function AnimalDetail() {
           setIsFavorite(data.isBookmarked);
         }
         
-        // ⚡ SÉCURITÉ TYPESCRIPT : On vérifie que photos existe avant de lire la longueur
         if (data.photos && data.photos.length > 0) {
           setSelectedPhoto(data.photos[0]);
         }
@@ -74,6 +74,7 @@ export default function AnimalDetail() {
   const handleAdopt = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return navigate("/connexion");
+    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
       await applicationApi.createApplication({
         animalId: Number(id),
@@ -84,12 +85,15 @@ export default function AnimalDetail() {
       toast.success("Demande d'adoption envoyée !");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Erreur lors de la demande");
+    } finally {
+      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
   const handleFoster = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return navigate("/connexion");
+    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
       await applicationApi.createApplication({
         animalId: Number(id),
@@ -100,6 +104,8 @@ export default function AnimalDetail() {
       toast.success("Demande de famille d'accueil envoyée !");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Erreur lors de la demande");
+    } finally {
+      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -126,14 +132,12 @@ export default function AnimalDetail() {
 
     const buttons = document.querySelectorAll(".no-print");
     
-    // ⚡ CORRECTION BIOME LINT : Ajout des accolades pour éviter le return implicite et l'assignation d'expression
     buttons.forEach((btn) => {
       (btn as HTMLElement).style.display = "none";
     });
 
     const canvas = await html2canvas(element, { scale: 2, useCORS: true });
     
-    // ⚡ CORRECTION BIOME LINT
     buttons.forEach((btn) => {
       (btn as HTMLElement).style.display = "";
     });
@@ -207,7 +211,7 @@ export default function AnimalDetail() {
               {photoArray.map((photo: string) => (
                 <button
                   type="button"
-                  key={photo} // On utilise l'URL de la photo comme clé unique
+                  key={photo}
                   onClick={() => setSelectedPhoto(photo)}
                   className={`h-24 rounded-lg overflow-hidden border-4 transition-all ${selectedPhoto === photo ? "border-success scale-95" : "border-transparent opacity-70 hover:opacity-100"}`}
                 >
@@ -275,16 +279,22 @@ export default function AnimalDetail() {
                         <div className="flex-grow">
                           <Input label="Message d'adoption" placeholder="Pourquoi souhaitez-vous adopter ?" className="bg-white" value={adoptMessage} onChange={(e) => setAdoptMessage(e.target.value)} />
                         </div>
-                        <div className="w-32 mt-[26px]">
-                          <Button variant="primary" fullWidth type="submit">Adopter</Button>
+                        <div className="w-40 mt-[26px]">
+                          {/* ⚡ MODIFICATION : Bouton Adopter désactivé si isSubmitting */}
+                          <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "Envoi..." : "Adopter"}
+                          </Button>
                         </div>
                       </form>
                       <form onSubmit={handleFoster} className="flex items-start gap-4">
                         <div className="flex-grow">
                           <Input label="Message pour l'accueil" placeholder="Vos disponibilités et motivations..." className="bg-white" value={fosterMessage} onChange={(e) => setFosterMessage(e.target.value)} />
                         </div>
-                        <div className="w-32 mt-[26px]">
-                          <Button variant="primary" fullWidth type="submit">Accueillir</Button>
+                        <div className="w-40 mt-[26px]">
+                          {/* ⚡ MODIFICATION : Bouton Accueillir désactivé si isSubmitting */}
+                          <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "Envoi..." : "Accueillir"}
+                          </Button>
                         </div>
                       </form>
                     </>

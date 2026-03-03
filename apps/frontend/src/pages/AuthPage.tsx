@@ -9,7 +9,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
 import { authApi } from "../api/authApi";
 
 import { useAuth } from "../auth/AuthContext";
@@ -19,10 +18,7 @@ import InputPassword from "../components/ui/InputPassword";
 
 export default function AuthPage() {
   const location = useLocation();
-  // Si l'URL contient "inscription", on affiche le formulaire d'inscription par défaut
   const isRegisterUrl = location.pathname === "/inscription";
-
-  // On inverse la logique : isLoginView est faux si on est sur /inscription
   const [isLoginView, setIsLoginView] = useState(!isRegisterUrl);
 
   return (
@@ -76,10 +72,12 @@ export default function AuthPage() {
   );
 }
 
-//LOGIN
+// LOGIN
 function LoginForm() {
   const { setIsLoggedIn, setUser } = useAuth();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
+
   const {
     register,
     handleSubmit,
@@ -89,22 +87,15 @@ function LoginForm() {
   });
 
   const onSubmit = async (data: LoginDto) => {
+    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
-      // ⚡ 1. Connexion via l'API encapsulée
       const res = await authApi.login(data);
-
-      // ⚡ 2. Met à jour l'état de connexion
       setIsLoggedIn(true);
-
-      // ⚡ 3. Récupère l'utilisateur immédiatement
-      setUser(res.user); // On utilise res.user car authApi renvoie { access_token, user }
-
-      // ⚡ 4. Feedback + redirection
+      setUser(res.user);
       toast.success("Connexion réussie !", {
         position: "top-right",
         autoClose: 2000,
       });
-
       navigate("/");
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -113,6 +104,8 @@ function LoginForm() {
         const errorMessage = error.response?.data?.message || "Erreur serveur. Veuillez réessayer.";
         toast.error(errorMessage, { position: "top-right" });
       }
+    } finally {
+      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -139,8 +132,8 @@ function LoginForm() {
           Mot de passe oublié ?
         </Link>
       </div>
-      <Button type="submit" fullWidth>
-        Se connecter
+      <Button type="submit" fullWidth disabled={isSubmitting}>
+        {isSubmitting ? "Connexion en cours..." : "Se connecter"}
       </Button>
     </form>
   );
@@ -156,28 +149,23 @@ function RegisterForm() {
   } = useForm<RegisterDto>({
     resolver: zodResolver(RegisterSchema),
   });
+
   const navigate = useNavigate();
   const { setIsLoggedIn, setUser } = useAuth();
   const selectedRole = watch("role");
+  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
   const onSubmit = async (data: RegisterDto) => {
+    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
-      // ⚡ 1. Création du compte via l'API encapsulée
       await authApi.register(data);
-
-      // ⚡ 2. Met à jour l'état
       setIsLoggedIn(true);
-
-      // ⚡ 3. Récupère l'utilisateur immédiatement
       const me = await authApi.getMe();
       setUser(me);
-
-      // ⚡ 4. Feedback + redirection
       toast.success("Compte créé avec succès 🎉", {
         position: "top-right",
         autoClose: 2000,
       });
-
       navigate("/");
     } catch (err: any) {
       if (err.response?.status === 409) {
@@ -186,6 +174,8 @@ function RegisterForm() {
         const errorMessage = err.response?.data?.message || "Erreur lors de l'inscription. Veuillez réessayer.";
         toast.error(errorMessage, { position: "top-right" });
       }
+    } finally {
+      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -252,8 +242,8 @@ function RegisterForm() {
         </fieldset>
       </div>
 
-      <Button type="submit" fullWidth>
-        Créer mon compte
+      <Button type="submit" fullWidth disabled={isSubmitting}>
+        {isSubmitting ? "Création en cours..." : "Créer mon compte"}
       </Button>
     </form>
   );
