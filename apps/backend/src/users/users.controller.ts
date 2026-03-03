@@ -32,6 +32,9 @@ import {
 } from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { Roles } from "../auth/decorators/roles.decorators";
+import { UserRole } from "@prisma/client";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { UsersService } from "./users.service";
 
@@ -56,6 +59,8 @@ export class UsersController {
   }
 
   @Put(":id/individual-profile")
+  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le profil individuel d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Profil individuel mis à jour avec succès" })
@@ -70,6 +75,8 @@ export class UsersController {
   }
 
   @Put(":id/shelter-profile")
+  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le profil refuge d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Profil refuge mis à jour avec succès" })
@@ -84,6 +91,8 @@ export class UsersController {
   }
 
   @Put(":id/password")
+  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le mot de passe d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Mot de passe mis à jour avec succès" })
@@ -99,7 +108,10 @@ export class UsersController {
   // --- 2. ROUTES GÉNÉRIQUES CRUD (Avec paramètre dynamique) ENSUITE ---
 
   @Post()
-  @ApiOperation({ summary: "Créer un nouvel utilisateur" })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Créer un nouvel utilisateur (Admin)" })
   @ApiResponse({ status: 201, description: "Utilisateur créé avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides ou email déjà utilisé" })
   @UsePipes(new ZodPipe(sharedTypes.RegisterSchema))
@@ -108,13 +120,18 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOperation({ summary: "Récupérer tous les utilisateurs" })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Récupérer tous les utilisateurs (Admin)" })
   @ApiResponse({ status: 200, description: "Liste des utilisateurs retournée avec succès" })
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Récupérer un utilisateur par son ID" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Utilisateur trouvé" })
@@ -124,6 +141,8 @@ export class UsersController {
   }
 
   @Patch(":id")
+  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Utilisateur mis à jour avec succès" })
@@ -134,6 +153,8 @@ export class UsersController {
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Supprimer un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Utilisateur supprimé avec succès" })
