@@ -2,7 +2,7 @@ import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import { applicationApi } from "../../api/applicationApi";
 import type { Application as BaseApplication, Animal } from "@projet/shared-types";
-import Loader from "../../components/ui/Loader"; // ⚡ AJOUT DU LOADER
+import Loader from "../../components/ui/Loader";
 
 // Type minimal pour le candidat (pas besoin de tout PfcUser)
 type CandidateUser = {
@@ -22,12 +22,16 @@ export type ApplicationWithRelations = BaseApplication & {
 export default function ApplicationsReceived() {
   const [applications, setApplications] = useState<ApplicationWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
-  // ⚡ AJOUT : État pour savoir quelle action précise est en cours (on combine les 2 IDs)
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     applicationApi.getReceivedApplications()
       .then((data: ApplicationWithRelations[]) => setApplications(data))
+      // 🛡️ CORRECTION SÉCURITÉ/UX : Ajout du .catch() pour éviter l'échec silencieux
+      .catch((err: any) => {
+        toast.error("Erreur lors du chargement des demandes reçues.");
+        console.error(err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -38,23 +42,22 @@ export default function ApplicationsReceived() {
   ) => {
     const uniqueId = `${candidateId}-${animalId}`;
     setActionLoadingId(uniqueId); // ⚡ VERROUILLAGE
+
     try {
       if (status === "approved") {
         const res = await applicationApi.acceptApplication(candidateId, animalId);
         toast.success(
-          `✅ Candidature acceptée pour ${res.application?.user?.individualProfile?.firstname ?? ""} ${res.application?.user?.individualProfile?.lastname ?? ""}.
-          Un email de confirmation a été envoyé !`,
+          `✅ Candidature acceptée pour ${res.application?.user?.individualProfile?.firstname ?? ""} ${res.application?.user?.individualProfile?.lastname ?? ""}. Un email de confirmation a été envoyé !`,
           { autoClose: 4000 }
         );
       } else {
         const res = await applicationApi.rejectApplication(candidateId, animalId);
         toast.error(
-          `❌ Candidature refusée pour ${res.application?.user?.individualProfile?.firstname ?? ""} ${res.application?.user?.individualProfile?.lastname ?? ""}.
-          Un email de notification a été envoyé.`,
+          `❌ Candidature refusée pour ${res.application?.user?.individualProfile?.firstname ?? ""} ${res.application?.user?.individualProfile?.lastname ?? ""}. Un email de notification a été envoyé.`,
           { autoClose: 4000 }
         );
       }
-  
+
       // Met à jour l'état local pour refléter le nouveau statut
       setApplications((prev) =>
         prev.map((app) =>
@@ -72,16 +75,16 @@ export default function ApplicationsReceived() {
       setActionLoadingId(null); // ⚡ DÉVERROUILLAGE
     }
   };
-  
+
   const handleArchive = async (candidateId: number, animalId: number) => {
     const uniqueId = `${candidateId}-${animalId}`;
     setActionLoadingId(uniqueId); // ⚡ VERROUILLAGE
+
     try {
       await applicationApi.archiveApplication(candidateId, animalId);
       setApplications((prev) =>
         prev.filter(
-          (app) =>
-            !(app.animalId === animalId && app.pfcUserId === candidateId)
+          (app) => !(app.animalId === animalId && app.pfcUserId === candidateId)
         )
       );
       toast.success("Demande archivée avec succès !"); // ⚡ AJOUT DU FEEDBACK
@@ -126,14 +129,11 @@ export default function ApplicationsReceived() {
                   alt={app.animal?.name}
                   className="w-20 h-20 object-cover rounded-md"
                 />
-
                 <div>
                   <h2 className="text-xl font-semibold">{app.animal?.name}</h2>
                   <p className="text-sm text-gray-500">
                     Type :{" "}
-                    {app.applicationType === "adoption"
-                      ? "Adoption"
-                      : "Famille d’accueil"}
+                    {app.applicationType === "adoption" ? "Adoption" : "Famille d’accueil"}
                   </p>
                 </div>
               </div>
