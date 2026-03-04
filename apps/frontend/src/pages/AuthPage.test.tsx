@@ -5,17 +5,14 @@ import AuthPage from "./AuthPage";
 import { AuthProvider } from "../auth/AuthContext";
 import { authApi } from "../api/authApi";
 import { UserRole } from "@projet/shared-types";
+import { toast } from "react-toastify";
 
 // Mock de l'API
 vi.mock("../api/authApi", () => ({
   authApi: {
     login: vi.fn(),
     register: vi.fn(),
-    getMe: vi.fn().mockResolvedValue({ 
-      id: 1, 
-      email: "test@test.com", 
-      role: "individual" 
-    } as any),
+    getMe: vi.fn().mockResolvedValue({ id: 1, email: "test@test.com", role: "individual", phoneNumber: "0600000000", address: "Paris" }),
   },
 }));
 
@@ -53,21 +50,25 @@ describe("AuthPage - LoginForm", () => {
   });
 
   it("doit appeler l'API de connexion et afficher l'état de chargement lors d'un succès", async () => {
-    vi.mocked(authApi.login).mockImplementationOnce(() => 
-      new Promise((resolve) => setTimeout(() => resolve({
-        access_token: "fake-jwt-token",
-        user: { 
-          id: 1, 
-          email: "test@test.com", 
-          role: UserRole.individual
-        } as any, 
-      }), 50))
+    vi.mocked(authApi.login).mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                access_token: "fake-jwt-token",
+                user: { id: 1, email: "test@test.com", role: UserRole.individual, phoneNumber: "0600000000", address: "Paris" } as any,
+              }),
+            50
+          )
+        )
     );
 
     await renderAuthPage();
-    
+
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "test@test.com" } });
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "Password123!" } });
+
     fireEvent.click(screen.getByRole("button", { name: "Se connecter" }));
 
     await waitFor(() => {
@@ -79,23 +80,28 @@ describe("AuthPage - LoginForm", () => {
         email: "test@test.com",
         password: "Password123!",
       });
+      // CORRECTION : Vérification du retour Toast succès UI
+      expect(toast.success).toHaveBeenCalledWith("Connexion réussie !", expect.any(Object));
     });
   });
 
-  it("doit gérer les erreurs de l'API (ex: identifiants incorrects) et déverrouiller le bouton", async () => {
+  it("doit gérer les erreurs de l'API (ex: identifiants incorrects) et déverrouiller le bouton avec notification visuelle", async () => {
     vi.mocked(authApi.login).mockRejectedValueOnce({
       response: { status: 401, data: { message: "Unauthorized" } },
     });
 
     await renderAuthPage();
-    
+
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "wrong@test.com" } });
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "WrongPass!" } });
+
     fireEvent.click(screen.getByRole("button", { name: "Se connecter" }));
 
     await waitFor(() => {
       expect(authApi.login).toHaveBeenCalled();
       expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument();
+      // CORRECTION : S'assurer que le message d'erreur s'est bien affiché pour le Edge Case
+      expect(toast.error).toHaveBeenCalledWith("Email ou mot de passe incorrect !", expect.any(Object));
     });
   });
 });

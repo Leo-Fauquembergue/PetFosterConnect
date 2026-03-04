@@ -1,20 +1,9 @@
 import { useNavigate, Link } from "react-router-dom";
-import type { Animal, Species } from "@projet/shared-types";
+import type { AnimalWithRelations } from "@projet/shared-types";
 import Badge from "../ui/Badge"; // Ajout de l'import du Badge pour la version "home"
 
-// 1. Types de la carte par défaut
-type AnimalWithDetails = Animal & {
-  species: Species;
-  shelter: {
-    address: string | null;
-    shelterProfile: {
-      shelterName: string;
-      description: string | null;
-    } | null;
-  };
-};
-
-type AnimalCardDefaultProps = AnimalWithDetails & { variant?: "default" };
+// 1. Types de la carte par défaut (ON UTILISE LE DTO GLOBAL ICI)
+type AnimalCardDefaultProps = AnimalWithRelations & { variant?: "default" };
 
 // 2. Types de la carte d'accueil
 type AnimalCardHomeProps = {

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import AnimalList from "./AnimalList";
 import { animalApi } from "../api/animalApi";
+import type { AnimalWithRelations } from "@projet/shared-types";
 
 // Mock de l'API
 vi.mock("../api/animalApi", () => ({
@@ -11,7 +12,7 @@ vi.mock("../api/animalApi", () => ({
   },
 }));
 
-// Mock de Toastify pour éviter les erreurs liées au DOM manquant
+// Mock de Toastify
 vi.mock("react-toastify", () => ({
   toast: {
     error: vi.fn(),
@@ -24,29 +25,72 @@ describe("AnimalList", () => {
     vi.clearAllMocks();
   });
 
-  it("doit afficher le loader au début, puis les cartes des animaux une fois les données chargées", async () => {
-    // 1. Définition des fausses données
-    const mockAnimals = [
+  it("doit afficher le loader au début, puis les cartes des animaux", async () => {
+    // CORRECTION : Fidélité stricte des mocks. On remet createdAt exigé par AnimalSchema
+    const mockAnimals: AnimalWithRelations[] = [
       {
         id: 1,
         name: "Rex",
-        species: { name: "Chien" },
         age: "2 ans",
+        sex: "male",
+        weight: 15,
+        height: 50,
+        description: "Un chien adorable",
+        animalStatus: "available",
+        acceptOtherAnimals: true,
+        acceptChildren: true,
+        needGarden: true,
+        treatment: "Aucun",
         photos: ["http://photo.com/rex.jpg"],
-        shelter: { shelterProfile: { shelterName: "SPA Paris" } },
+        speciesId: 1,
+        pfcUserId: 1,
+        createdAt: new Date(), // <-- EXIGÉ PAR ZOD
+        updatedAt: null,
+        deletedAt: null,
+        species: {
+          id: 1,
+          name: "Chien",
+        },
+        shelter: {
+          id: 1,
+          shelterProfile: {
+            shelterName: "SPA Paris",
+          },
+        },
       },
       {
         id: 2,
         name: "Mimi",
-        species: { name: "Chat" },
         age: "1 an",
+        sex: "female",
+        weight: 4,
+        height: 25,
+        description: "Un chat joueur",
+        animalStatus: "available",
+        acceptOtherAnimals: false,
+        acceptChildren: true,
+        needGarden: false,
+        treatment: null,
         photos: ["http://photo.com/mimi.jpg"],
-        shelter: { shelterProfile: { shelterName: "SPA Lyon" } },
+        speciesId: 2,
+        pfcUserId: 2,
+        createdAt: new Date(), // <-- EXIGÉ PAR ZOD
+        updatedAt: null,
+        deletedAt: null,
+        species: {
+          id: 2,
+          name: "Chat",
+        },
+        shelter: {
+          id: 2,
+          shelterProfile: {
+            shelterName: "SPA Lyon",
+          },
+        },
       },
     ];
 
-    // 2. Simuler le délai de la promesse pour bien voir le loader
-    (animalApi.getAllAnimals as any).mockResolvedValueOnce(mockAnimals);
+    vi.mocked(animalApi.getAllAnimals).mockResolvedValueOnce(mockAnimals);
 
     render(
       <MemoryRouter>
@@ -54,16 +98,13 @@ describe("AnimalList", () => {
       </MemoryRouter>
     );
 
-    // 3. Vérifier que le loader est affiché immédiatement
     expect(screen.getByText(/Recherche de compagnons/i)).toBeInTheDocument();
 
-    // 4. Attendre le chargement complet et vérifier que les animaux s'affichent
     await waitFor(() => {
       expect(screen.getByText("Rex")).toBeInTheDocument();
       expect(screen.getByText("Mimi")).toBeInTheDocument();
     });
 
-    // 5. Vérifier que le loader a bien disparu
     expect(screen.queryByText(/Recherche de compagnons/i)).not.toBeInTheDocument();
   });
 });
