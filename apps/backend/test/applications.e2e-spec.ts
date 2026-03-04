@@ -75,6 +75,28 @@ describe('Applications (E2E) - Security & IDOR', () => {
   });
 
   describe('POST /applications', () => {
+    it('doit bloquer l\'accès sans token (401)', async () => {
+      await request(app.getHttpServer())
+        .post('/applications')
+        .send({
+          animalId: animalId,
+          message: 'Je souhaite adopter Mimi',
+          applicationType: 'adoption'
+        })
+        .expect(401);
+    });
+
+    it('doit renvoyer une erreur Zod (400) si les données sont invalides', async () => {
+      await request(app.getHttpServer())
+        .post('/applications')
+        .set('Authorization', `Bearer ${individualToken}`)
+        .send({
+          animalId: "id_invalide", // Doit être un nombre
+          applicationType: 'vol'   // Invalide (adoption ou foster)
+        })
+        .expect(400);
+    });
+
     it('doit permettre à un particulier de soumettre une candidature (201)', async () => {
       const response = await request(app.getHttpServer())
         .post('/applications')
