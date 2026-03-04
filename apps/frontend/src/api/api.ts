@@ -12,6 +12,7 @@ const NO_REDIRECT_API_ROUTES = [
   "/auth/register", // Endpoint backend
   "/auth/me",       // Ajout de cette exception vitale pour éviter la boucle de redirection au 1er rendu
 ];
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {

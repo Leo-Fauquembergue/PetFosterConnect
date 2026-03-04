@@ -23,9 +23,9 @@ export class AuthController {
 
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: true, // Forcé à true (SÉCURITÉ)
-      sameSite: this.isProduction ? "none" : "strict", // Empêche le CSRF selon le type de déploiement
-      maxAge: 1000 * 60 * 60,
+      secure: this.isProduction, // 🛡️ Local = false (HTTP), Render = true (HTTPS)
+      sameSite: this.isProduction ? "none" : "lax", // ⚠️ 'none' obligatoire pour le cross-domain Vercel/Render
+      maxAge: 1000 * 60 * 60 * 24, // 24 heures
       path: "/",
     });
 
@@ -37,8 +37,8 @@ export class AuthController {
   logout(@Res({ passthrough: true }) res: express.Response) {
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
-      secure: true,
-      sameSite: this.isProduction ? "none" : "strict",
+      secure: this.isProduction,
+      sameSite: this.isProduction ? "none" : "lax",
       path: "/",
     });
 
@@ -63,9 +63,9 @@ export class AuthController {
 
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: true, // Forcé à true (SÉCURITÉ)
-      sameSite: this.isProduction ? "none" : "strict",
-      maxAge: 1000 * 60 * 60,
+      secure: this.isProduction, // 🛡️ Local = false (HTTP), Render = true (HTTPS)
+      sameSite: this.isProduction ? "none" : "lax", // ⚠️ 'none' obligatoire pour le cross-domain Vercel/Render
+      maxAge: 1000 * 60 * 60 * 24, // 24 heures
       path: "/",
     });
 
