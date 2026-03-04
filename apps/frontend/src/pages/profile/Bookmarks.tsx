@@ -52,7 +52,7 @@ export default function BookmarksPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Mes Favoris</h1>
+      <h1 className="text-3xl font-bold mb-6">Mes favoris</h1>
 
       {/* ⚡ MODIFICATION : Empty State élégant */}
       {bookmarks.length === 0 && (
@@ -108,8 +108,8 @@ export default function BookmarksPage() {
                   Voir détails
                 </Link>
 
-                {/* ⚡ MODIFICATION : Sécurité bouton */}
                 <button
+                  type="button"
                   onClick={() => handleToggle(bm.animalId)}
                   disabled={isDeleting}
                   className={`px-4 py-2 bg-red-600 text-white rounded transition ${isDeleting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-700'}`}

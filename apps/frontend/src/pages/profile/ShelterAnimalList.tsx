@@ -3,6 +3,7 @@ import { Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { AxiosError } from "axios";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
@@ -33,8 +34,9 @@ export default function ShelterAnimalList() {
       try {
         const data = await shelterApi.getShelterAnimals(Number(id));
         setAnimals(data);
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || "Erreur de chargement des animaux.";
+      } catch (error) {
+        const axiosError = error as AxiosError<{ message: string }>;
+        const errorMessage = axiosError.response?.data?.message || "Erreur de chargement des animaux.";
         toast.error(errorMessage);
       } finally {
         setLoading(false);
@@ -110,6 +112,7 @@ export default function ShelterAnimalList() {
                     {animal.age ?? "-"}
                   </td>
                   <td className="px-6 py-4">
+                    {/* ⚡ AJOUT : Remplacement des variantes pour matcher le nouveau comportement */}
                     <Badge
                       label={
                         statusLabels[animal.animalStatus] ?? animal.animalStatus
@@ -118,9 +121,9 @@ export default function ShelterAnimalList() {
                         animal.animalStatus === "available"
                           ? "success"
                           : animal.animalStatus === "adopted"
-                          ? "neutral"
+                          ? "info"
                           : animal.animalStatus === "foster_care"
-                          ? "default"
+                          ? "warning"
                           : "error"
                       }
                     />

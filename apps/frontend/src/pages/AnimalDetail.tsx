@@ -4,6 +4,9 @@ import { AlertCircle, Heart } from "lucide-react";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { AxiosError } from "axios";
+import { toast } from "react-toastify";
+
 import SiteLogo from "../assets/Logo.png";
 import { useAuth } from "../auth/AuthContext";
 import BackBanner from "../components/ui/BackBanner";
@@ -12,25 +15,12 @@ import Button from "../components/ui/Button";
 import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
-import { toast } from "react-toastify";
+
 import { animalApi } from "../api/animalApi";
 import { applicationApi } from "../api/applicationApi";
 import { bookmarkApi } from "../api/bookmarkApi";
-import type { AnimalWithRelations } from "@projet/shared-types";
 
-// EXTENSION DU TYPE : On surcharge 'shelter' pour inclure les propriétés manquantes
-type AnimalDetailResponse = Omit<AnimalWithRelations, "shelter"> & {
-  isBookmarked?: boolean;
-  shelter?: {
-    id: number;
-    pfcUserId: number | null;
-    address: string | null;
-    shelterProfile?: {
-      shelterName: string;
-      logoUrl: string | null;
-    } | null;
-  } | null;
-};
+import type { AnimalDetailResponse } from "@projet/shared-types";
 
 export default function AnimalDetail() {
   const { userId, id } = useParams<{ userId: string; id: string }>();
@@ -46,7 +36,6 @@ export default function AnimalDetail() {
   const [adoptMessage, setAdoptMessage] = useState("");
   const [fosterMessage, setFosterMessage] = useState("");
 
-  // ⚡ AJOUT : État de soumission global pour empêcher le double-clic
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -62,7 +51,7 @@ export default function AnimalDetail() {
         if (data.photos && data.photos.length > 0) {
           setSelectedPhoto(data.photos[0]);
         }
-      } catch (error) {
+      } catch (err) {
         setError("Impossible de charger les détails de l'animal.");
       } finally {
         setLoading(false);
@@ -71,10 +60,29 @@ export default function AnimalDetail() {
     if (id) fetchAnimal();
   }, [id]);
 
+  const handleError = (err: unknown) => {
+    const axiosError = err as AxiosError<{ message: any }>;
+    const errorData = axiosError.response?.data?.message;
+
+    if (errorData?.errors?.message) {
+      try {
+        const parsedZodError = JSON.parse(errorData.errors.message);
+        if (parsedZodError[0]?.message) {
+          toast.error(parsedZodError[0].message);
+          return;
+        }
+      } catch (e) {
+        // Ignorer l'erreur de parsing et passer au fallback
+      }
+    }
+    
+    toast.error(typeof errorData === 'string' ? errorData : "Erreur lors de la demande");
+  };
+
   const handleAdopt = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return navigate("/connexion");
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
+    setIsSubmitting(true);
     try {
       await applicationApi.createApplication({
         animalId: Number(id),
@@ -83,17 +91,17 @@ export default function AnimalDetail() {
       });
       setHasApplied(true);
       toast.success("Demande d'adoption envoyée !");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Erreur lors de la demande");
+    } catch (err) {
+      handleError(err);
     } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
+      setIsSubmitting(false);
     }
   };
 
   const handleFoster = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return navigate("/connexion");
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
+    setIsSubmitting(true);
     try {
       await applicationApi.createApplication({
         animalId: Number(id),
@@ -102,10 +110,10 @@ export default function AnimalDetail() {
       });
       setHasApplied(true);
       toast.success("Demande de famille d'accueil envoyée !");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Erreur lors de la demande");
+    } catch (err) {
+      handleError(err);
     } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
+      setIsSubmitting(false);
     }
   };
 
@@ -116,8 +124,9 @@ export default function AnimalDetail() {
       const responseData = await bookmarkApi.toggleBookmark(Number(id));
       setIsFavorite(responseData.bookmarked);
       toast.success(responseData.message);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Erreur réseau");
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      toast.error(axiosError.response?.data?.message || "Erreur réseau");
     }
   };
 
@@ -176,7 +185,7 @@ export default function AnimalDetail() {
     </div>
   );
 
-  const photoArray = Array.isArray(animal.photos) ? animal.photos : [];
+  const photoArray = Array.isArray(animal.photos) ? (animal.photos as string[]) : [];
   const isShelterOwner =
     user?.role === "shelter" &&
     Number(user?.id) === Number(userId) &&
@@ -227,7 +236,17 @@ export default function AnimalDetail() {
                 <h1 className="text-4xl font-bold font-montserrat text-black">{animal.name}</h1>
                 <p className="text-lg text-gray-600">{animal.species?.name}</p>
               </div>
-              {animal.animalStatus === "available" && <Badge label="Disponible" variant="success" />}
+              
+              {/* ⚡ AJOUT : Remplacement du vide par une indication claire de l'état du badge */}
+              {animal.animalStatus === "available" ? (
+                <Badge label="Disponible" variant="success" />
+              ) : animal.animalStatus === "adopted" ? (
+                <Badge label="Adopté" variant="info" />
+              ) : animal.animalStatus === "foster_care" ? (
+                <Badge label="En famille d'accueil" variant="warning" />
+              ) : (
+                <Badge label="Non disponible" variant="error" />
+              )}
             </div>
 
             <div className="mt-6 w-full">
@@ -273,14 +292,13 @@ export default function AnimalDetail() {
               ) : (
                 hasApplied ? (
                     <p className="text-green-600 font-semibold">Demande déjà réalisée pour cet animal ✅</p>
-                  ) : (
+                  ) : animal.animalStatus === "available" ? (
                     <>
                       <form onSubmit={handleAdopt} className="flex items-start gap-4">
                         <div className="flex-grow">
                           <Input label="Message d'adoption" placeholder="Pourquoi souhaitez-vous adopter ?" className="bg-white" value={adoptMessage} onChange={(e) => setAdoptMessage(e.target.value)} />
                         </div>
                         <div className="w-40 mt-[26px]">
-                          {/* ⚡ MODIFICATION : Bouton Adopter désactivé si isSubmitting */}
                           <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
                             {isSubmitting ? "Envoi..." : "Adopter"}
                           </Button>
@@ -291,13 +309,16 @@ export default function AnimalDetail() {
                           <Input label="Message pour l'accueil" placeholder="Vos disponibilités et motivations..." className="bg-white" value={fosterMessage} onChange={(e) => setFosterMessage(e.target.value)} />
                         </div>
                         <div className="w-40 mt-[26px]">
-                          {/* ⚡ MODIFICATION : Bouton Accueillir désactivé si isSubmitting */}
                           <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
                             {isSubmitting ? "Envoi..." : "Accueillir"}
                           </Button>
                         </div>
                       </form>
                     </>
+                  ) : (
+                    <div className="text-center p-4 bg-gray-50 rounded-lg text-gray-500 border border-gray-200">
+                      <p>Cet animal n'est actuellement plus disponible à l'adoption.</p>
+                    </div>
                   )
               )}
               <button type="button" onClick={exportToPDF} className="bg-primary text-white px-4 py-2 rounded">

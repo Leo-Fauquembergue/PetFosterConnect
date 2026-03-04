@@ -23,7 +23,7 @@ import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ProtectedRoute from "./auth/ProtectedRoute.tsx";
-import AnimalForm from "./pages/profile/AnimalForm";
+import AnimalForm from "./pages/profile/CreateEditAnimalPage.tsx";
 import ShelterAnimalList from "./pages/profile/ShelterAnimalList";
 import UserProfilePage from "./pages/profile/UserProfile";
 import ShelterAnimalPage from "./pages/ShelterAnimal";

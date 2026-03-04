@@ -1,16 +1,13 @@
 import { z } from "zod";
 
-// 1. On crée le véritable Enum TypeScript (utilisable comme valeur ET comme type)
-export enum UserRole {
-  individual = "individual",
-  shelter = "shelter",
-  admin = "admin",
-}
-
-// 2. On utilise z.nativeEnum()
-export const UserRoleEnum = z.nativeEnum(UserRole, {
+// 1. Zod Enum (remplace le TS Enum classique pour la compatibilité avec erasableSyntaxOnly)
+export const UserRoleEnum = z.enum(["individual", "shelter", "admin"], {
   error: "Veuillez choisir un type de compte valide",
 });
+
+// 2. Export comme objet (valeur) et comme type
+export const UserRole = UserRoleEnum.enum;
+export type UserRole = z.infer<typeof UserRoleEnum>;
 
 // SCHÉMA PRINCIPAL (Entité BDD)
 export const UserSchema = z.object({

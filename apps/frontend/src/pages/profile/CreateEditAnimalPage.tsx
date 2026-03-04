@@ -4,22 +4,37 @@ import { CreateAnimalSchema } from "@projet/shared-types";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
 import { speciesApi } from "../../api/speciesApi";
-
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
 import Checkbox from "../../components/ui/Checkbox";
+import { AxiosError } from "axios";
+
+type FormData = {
+  name: string;
+  age: string;
+  description: string;
+  sex: string;
+  weight: string;
+  height: string;
+  animalStatus: string;
+  photos: string[];
+  acceptOtherAnimals: boolean;
+  acceptChildren: boolean;
+  needGarden: boolean;
+  treatment: string;
+  speciesId: string | number;
+};
 
 export default function AnimalForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const animal = location.state?.animal;
-
   const [species, setSpecies] = useState<{ id: number; name: string }[]>([]);
-  // ⚡ AJOUT : État pour le chargement
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<FormData>({
     name: animal?.name ?? "",
     age: animal?.age ?? "",
     description: animal?.description ?? "",
@@ -40,22 +55,22 @@ export default function AnimalForm() {
       try {
         const data = await speciesApi.getAllSpecies();
         setSpecies(data);
-      } catch (error: any) {
-        const errorMessage =
-          error.response?.data?.message || "Erreur lors du chargement des espèces.";
+      } catch (error) {
+        const err = error as AxiosError<{ message: string }>;
+        const errorMessage = err.response?.data?.message || "Erreur lors du chargement des espèces.";
         toast.error(errorMessage);
       }
     };
     fetchSpecies();
   }, []);
 
-  const handleChange = (field: string, value: any) => {
-    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  const handleChange = <K extends keyof FormData>(field: K, value: FormData[K]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // ⚡ AJOUT : On verrouille le formulaire
+    
     setIsSubmitting(true);
 
     const parsedData = {
@@ -67,7 +82,6 @@ export default function AnimalForm() {
 
     try {
       const parsed = CreateAnimalSchema.parse(parsedData);
-
       if (animal) {
         await animalApi.updateAnimal(animal.id, parsed);
         toast.success("Animal modifié avec succès 🎉");
@@ -76,16 +90,15 @@ export default function AnimalForm() {
         toast.success("Animal créé avec succès 🎉");
       }
       navigate(-1);
-    } catch (err: any) {
-      if (err.issues || err.errors) {
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      if (err && typeof err === "object" && ("issues" in err || "errors" in err)) {
         toast.error("Formulaire invalide : veuillez vérifier les champs.");
       } else {
-        const errorMessage =
-          err.response?.data?.message || "Erreur lors de l'enregistrement.";
+        const errorMessage = err.response?.data?.message || "Erreur lors de l'enregistrement.";
         toast.error(errorMessage);
       }
     } finally {
-      // ⚡ AJOUT : On déverrouille le formulaire quoi qu'il arrive
       setIsSubmitting(false);
     }
   };
@@ -109,7 +122,7 @@ export default function AnimalForm() {
             <div>
               <Input
                 label="Photos (URLs séparées par des virgules)"
-                value={formData.photos}
+                value={formData.photos.join(",")}
                 onChange={(e) =>
                   handleChange(
                     "photos",
@@ -136,13 +149,15 @@ export default function AnimalForm() {
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
               />
+
               <Input
                 label="Âge"
-                type="number"
-                placeholder="Ex: 3"
+                type="text"
+                placeholder="Ex: 3 ans"
                 value={formData.age}
                 onChange={(e) => handleChange("age", e.target.value)}
               />
+
               <Select
                 label="Sexe"
                 value={formData.sex}
@@ -152,9 +167,10 @@ export default function AnimalForm() {
                 <option value="female">Femelle</option>
                 <option value="unknown">Inconnu</option>
               </Select>
+
               <Select
                 label="Espèce"
-                value={formData.speciesId}
+                value={formData.speciesId.toString()}
                 onChange={(e) => handleChange("speciesId", Number(e.target.value))}
               >
                 <option value="">-- Sélectionner une espèce --</option>
@@ -164,6 +180,7 @@ export default function AnimalForm() {
                   </option>
                 ))}
               </Select>
+
               <Select
                 label="Statut"
                 value={formData.animalStatus}
@@ -254,11 +271,10 @@ export default function AnimalForm() {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting} // ⚡ AJOUT : Bouton désactivé pendant le chargement
-                className="bg-primary text-white px-4 py-2 rounded hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" // ⚡ AJOUT : Opacité et curseur si disabled
+                disabled={isSubmitting}
+                className="bg-primary text-white px-4 py-2 rounded hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {/* ⚡ AJOUT : Texte dynamique */}
-                {isSubmitting ? "Enregistrement..." : "Sauvegarder"}
+                {isSubmitting ? "Enregistrement..." : "Enregistrer"}
               </button>
             </div>
           </div>

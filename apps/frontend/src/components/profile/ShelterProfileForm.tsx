@@ -12,66 +12,53 @@ type Props = {
     siret: string;
     description: string;
   };
-  onChange: (field: keyof Props["formData"], value: any) => void;
+  onChange: <K extends keyof Props["formData"]>(field: K, value: Props["formData"][K]) => void;
 };
 
 export default function ShelterProfileForm({ formData, onChange }: Props) {
   return (
     <div className="space-y-4">
-      {/* Logo */}
-      <div className="relative inline-block mb-2">
-        {formData.logo ? (
-          <img
-            src={formData.logo}
-            alt="Logo du refuge"
-            className="h-20 w-20 object-cover rounded shadow-sm border border-gray-100"
-          />
-        ) : (
-          <div className="h-20 w-20 bg-gray-100 flex items-center justify-center rounded text-sm text-gray-500 border border-gray-200">
-            Non renseigné
-          </div>
-        )}
-        <label
-          htmlFor="logo-link"
-          className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow border border-gray-200 cursor-pointer hover:bg-gray-50"
-        >
-          <CiSettings size={18} className="text-gray-600" />
-        </label>
+      <div className="flex items-center gap-2 mb-4">
+        <CiSettings className="w-5 h-5 text-gray-500" />
+        <h2 className="text-lg font-semibold text-gray-700">Paramètres du Refuge</h2>
       </div>
 
       <Input
-        id="logo-link"
-        label="Lien de l'image (Logo)"
+        label="URL du Logo"
         type="text"
         value={formData.logo}
         onChange={(e) => onChange("logo", e.target.value)}
-        placeholder="https://..."
+        placeholder="https://exemple.com/mon-logo.png"
       />
 
       <Input
-        label="Email"
+        label="Email de contact"
         type="email"
         value={formData.email}
         onChange={(e) => onChange("email", e.target.value)}
       />
+
       <Input
         label="Téléphone"
-        type="text"
+        type="tel"
         value={formData.phoneNumber}
         onChange={(e) => onChange("phoneNumber", e.target.value)}
       />
+
       <Input
-        label="Adresse"
+        label="Adresse complète"
         type="text"
         value={formData.address}
         onChange={(e) => onChange("address", e.target.value)}
       />
+
       <Input
         label="Nom du refuge"
         type="text"
         value={formData.shelterName}
         onChange={(e) => onChange("shelterName", e.target.value)}
       />
+
       <Input
         label="SIRET"
         type="text"
@@ -80,10 +67,10 @@ export default function ShelterProfileForm({ formData, onChange }: Props) {
       />
 
       <Textarea
-        label="Description"
+        label="Description / Présentation"
         value={formData.description}
         onChange={(e) => onChange("description", e.target.value)}
-        placeholder="Présentez votre refuge..."
+        rows={4}
       />
     </div>
   );

@@ -13,7 +13,10 @@ interface RegisterFormProps {
 const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>(UserRole.individual);
+  
+  // ⚡ CORRECTION TYPAGE : On limite strictement le state aux rôles autorisés par RegisterDto
+  const [role, setRole] = useState<typeof UserRole.individual | typeof UserRole.shelter>(UserRole.individual);
+  
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [siret, setSiret] = useState("");

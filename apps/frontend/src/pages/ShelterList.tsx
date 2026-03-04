@@ -54,7 +54,7 @@ const SheltersPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Nos Refuges Partenaires
+            Nos refuges partenaires
           </h1>
           <p className="text-gray-600">
             Découvrez les associations qui œuvrent chaque jour pour le bien-être animal.

@@ -16,12 +16,10 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiParam,
 } from "@nestjs/swagger";
 import * as sharedTypes from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { UserRole } from "@prisma/client";
 import { ZodPipe } from "../common/pipes/zod.pipe";
@@ -35,43 +33,40 @@ export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Post()
-  @UseGuards(RolesGuard) // 🛡️ CORRECTION SÉCURITÉ : Active la vérification du rôle
-  @Roles(UserRole.individual) // 🛡️ CORRECTION SÉCURITÉ : Seuls les particuliers peuvent adopter
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.individual)
   @ApiOperation({ summary: "Créer une demande d'adoption" })
   @ApiResponse({ status: 201, description: "Demande créée avec succès" })
   @UsePipes(new ZodPipe(sharedTypes.CreateApplicationSchema))
   create(
-    @Request() req,
+    @Request() req: any,
     @Body() createApplicationDto: sharedTypes.CreateApplicationDto
   ) {
     return this.applicationsService.create(req.user.id, createApplicationDto);
   }
 
+  // ⚡ CORRECTION: Retour aux endpoints "sent" et "received" attendus par le Frontend
+  @Get("sent")
+  @ApiOperation({ summary: "Récupérer les demandes d'adoption envoyées par le candidat connecté" })
+  findAllSent(@Request() req: any) {
+    return this.applicationsService.findAllSent(req.user.id);
+  }
+
+  @Get("received")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.shelter, UserRole.admin)
+  @ApiOperation({ summary: "Récupérer les demandes reçues par le refuge connecté" })
+  findAllReceived(@Request() req: any) {
+    return this.applicationsService.findAllReceived(req.user.id);
+  }
+
+  // ⚡ AJOUT: Route Admin globale
   @Get()
   @UseGuards(RolesGuard)
   @Roles(UserRole.admin)
-  @ApiOperation({ summary: "Récupérer toutes les demandes (ADMIN uniquement)" })
+  @ApiOperation({ summary: "Récupérer l'intégralité des demandes (Admin)" })
   findAll() {
-    // Appel d'une méthode findAll() à implémenter dans le service si nécessaire
-    return (this.applicationsService as any).findAll
-      ? (this.applicationsService as any).findAll()
-      : [];
-  }
-
-  @Get("user/:id")
-  @UseGuards(ProfileAccessGuard)
-  @ApiOperation({ summary: "Récupérer les demandes d'adoption d'un candidat" })
-  @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
-  findAllSent(@Param("id", ParseIntPipe) id: number) {
-    return this.applicationsService.findAllSent(id);
-  }
-
-  @Get("shelter/:id")
-  @UseGuards(ProfileAccessGuard)
-  @ApiOperation({ summary: "Récupérer les demandes reçues par un refuge" })
-  @ApiParam({ name: "id", description: "ID du refuge", type: Number })
-  findAllReceived(@Param("id", ParseIntPipe) id: number) {
-    return this.applicationsService.findAllReceived(id);
+    return this.applicationsService.findAll();
   }
 
   @Patch(":animalId/:candidateId/status")

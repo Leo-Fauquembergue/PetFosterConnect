@@ -1,10 +1,10 @@
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
 import { applicationApi } from "../../api/applicationApi";
 import type { Application as BaseApplication, Animal } from "@projet/shared-types";
 import Loader from "../../components/ui/Loader";
 
-// Type minimal pour le candidat (pas besoin de tout PfcUser)
 type CandidateUser = {
   id: number;
   individualProfile?: {
@@ -13,7 +13,6 @@ type CandidateUser = {
   };
 };
 
-// Application enrichie avec relations
 export type ApplicationWithRelations = BaseApplication & {
   animal: Animal;
   user: CandidateUser;
@@ -25,14 +24,18 @@ export default function ApplicationsReceived() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
-    applicationApi.getReceivedApplications()
-      .then((data: ApplicationWithRelations[]) => setApplications(data))
-      // 🛡️ CORRECTION SÉCURITÉ/UX : Ajout du .catch() pour éviter l'échec silencieux
-      .catch((err: any) => {
+    const fetchApplications = async () => {
+      try {
+        const data = await applicationApi.getReceivedApplications();
+        setApplications(data);
+      } catch (err) {
         toast.error("Erreur lors du chargement des demandes reçues.");
-        console.error(err);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
   }, []);
 
   const handleStatus = async (
@@ -41,8 +44,8 @@ export default function ApplicationsReceived() {
     status: "approved" | "rejected"
   ) => {
     const uniqueId = `${candidateId}-${animalId}`;
-    setActionLoadingId(uniqueId); // ⚡ VERROUILLAGE
-
+    setActionLoadingId(uniqueId);
+    
     try {
       if (status === "approved") {
         const res = await applicationApi.acceptApplication(candidateId, animalId);
@@ -58,7 +61,6 @@ export default function ApplicationsReceived() {
         );
       }
 
-      // Met à jour l'état local pour refléter le nouveau statut
       setApplications((prev) =>
         prev.map((app) =>
           app.animalId === animalId && app.pfcUserId === candidateId
@@ -66,20 +68,19 @@ export default function ApplicationsReceived() {
             : app
         )
       );
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || "Impossible de mettre à jour la candidature.";
-      toast.error(`⚠️ Erreur: ${errorMessage}`, {
-        autoClose: 5000,
-      });
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage = axiosError.response?.data?.message || "Impossible de mettre à jour la candidature.";
+      toast.error(`⚠️ Erreur: ${errorMessage}`, { autoClose: 5000 });
     } finally {
-      setActionLoadingId(null); // ⚡ DÉVERROUILLAGE
+      setActionLoadingId(null);
     }
   };
 
   const handleArchive = async (candidateId: number, animalId: number) => {
     const uniqueId = `${candidateId}-${animalId}`;
-    setActionLoadingId(uniqueId); // ⚡ VERROUILLAGE
-
+    setActionLoadingId(uniqueId);
+    
     try {
       await applicationApi.archiveApplication(candidateId, animalId);
       setApplications((prev) =>
@@ -87,15 +88,14 @@ export default function ApplicationsReceived() {
           (app) => !(app.animalId === animalId && app.pfcUserId === candidateId)
         )
       );
-      toast.success("Demande archivée avec succès !"); // ⚡ AJOUT DU FEEDBACK
-    } catch (err: any) {
+      toast.success("Demande archivée avec succès !");
+    } catch (err) {
       toast.error("Erreur lors de l'archivage.");
     } finally {
-      setActionLoadingId(null); // ⚡ DÉVERROUILLAGE
+      setActionLoadingId(null);
     }
   };
 
-  // ⚡ MODIFICATION : Remplacement du chargement
   if (loading) {
     return <Loader text="Chargement des demandes reçues..." />;
   }
@@ -104,7 +104,6 @@ export default function ApplicationsReceived() {
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Demandes reçues</h1>
 
-      {/* ⚡ MODIFICATION : Empty State élégant */}
       {applications.length === 0 && (
         <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-lg shadow-sm border border-gray-100 mt-6">
           <span className="text-4xl mb-4">📥</span>
@@ -122,7 +121,6 @@ export default function ApplicationsReceived() {
               key={uniqueId}
               className="bg-white p-4 rounded-lg shadow border border-gray-100"
             >
-              {/* Animal */}
               <div className="flex items-center gap-4">
                 <img
                   src={app.animal?.photos?.[0] || "https://placehold.co/80x80"}
@@ -138,7 +136,6 @@ export default function ApplicationsReceived() {
                 </div>
               </div>
 
-              {/* Candidat */}
               <div className="mt-4 bg-gray-50 p-3 rounded">
                 <h3 className="font-semibold">Candidat</h3>
                 <p>
@@ -147,7 +144,6 @@ export default function ApplicationsReceived() {
                 </p>
               </div>
 
-              {/* Statut */}
               <div className="mt-3">
                 <span
                   className={`
@@ -167,32 +163,25 @@ export default function ApplicationsReceived() {
                 </span>
               </div>
 
-              {/* Message */}
               <p className="mt-3 text-gray-700 whitespace-pre-line">
                 {app.message}
               </p>
 
-              {/* Actions */}
               <div className="mt-4 flex gap-3">
                 {app.applicationStatus === "pending" && (
                   <>
                     <button
                       type="button"
                       disabled={isProcessing}
-                      onClick={() =>
-                        handleStatus(app.pfcUserId, app.animalId, "approved")
-                      }
+                      onClick={() => handleStatus(app.pfcUserId, app.animalId, "approved")}
                       className={`px-4 py-2 bg-green-600 text-white rounded transition ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
                     >
                       {isProcessing ? "..." : "Accepter"}
                     </button>
-
                     <button
                       type="button"
                       disabled={isProcessing}
-                      onClick={() =>
-                        handleStatus(app.pfcUserId, app.animalId, "rejected")
-                      }
+                      onClick={() => handleStatus(app.pfcUserId, app.animalId, "rejected")}
                       className={`px-4 py-2 bg-red-600 text-white rounded transition ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-700'}`}
                     >
                       {isProcessing ? "..." : "Refuser"}
@@ -210,7 +199,6 @@ export default function ApplicationsReceived() {
                 </button>
               </div>
 
-              {/* Date */}
               <p className="mt-2 text-xs text-gray-400">
                 Reçue le {new Date(app.createdAt).toLocaleDateString("fr-FR")}
               </p>
