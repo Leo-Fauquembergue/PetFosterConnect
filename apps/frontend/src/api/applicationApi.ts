@@ -1,59 +1,56 @@
-import type { Application, Animal } from "@projet/shared-types";
 import api from "./api";
-
-type CandidateUser = {
-  id: number;
-  individualProfile?: {
-    firstname?: string;
-    lastname?: string;
-  };
-};
-
-export type ApplicationWithRelations = Application & {
-  animal: Animal;
-  user: CandidateUser;
-};
+import type { 
+  CreateApplicationDto, 
+  UpdateApplicationStatusDto,
+  ApplicationSentResponse,
+  ApplicationReceivedResponse
+} from "@projet/shared-types";
 
 export const applicationApi = {
-  getSentApplications: async (): Promise<ApplicationWithRelations[]> => {
-    const res = await api.get<ApplicationWithRelations[]>("/applications/sent");
-    return res.data;
+  createApplication: async (data: CreateApplicationDto) => {
+    const response = await api.post("/applications", data);
+    return response.data;
   },
 
-  getReceivedApplications: async (): Promise<ApplicationWithRelations[]> => {
-    const res = await api.get<ApplicationWithRelations[]>("/applications/received");
-    return res.data;
+  getSentApplications: async (): Promise<ApplicationSentResponse[]> => {
+    const response = await api.get("/applications/sent");
+    return response.data;
+  },
+
+  getReceivedApplications: async (): Promise<ApplicationReceivedResponse[]> => {
+    const response = await api.get("/applications/received");
+    return response.data;
+  },
+
+  getAllApplicationsAdmin: async () => {
+    const response = await api.get("/applications");
+    return response.data;
   },
 
   updateApplicationStatus: async (
     candidateId: number,
     animalId: number,
-    status: "approved" | "rejected"
-  ): Promise<Application> => {
-    const res = await api.patch<Application>(
-      `/applications/${animalId}/${candidateId}`,
-      { applicationStatus: status }
+    data: UpdateApplicationStatusDto
+  ) => {
+    const response = await api.patch(
+      `/applications/${animalId}/${candidateId}/status`,
+      data
     );
-    return res.data;
-  },
-
-  archiveApplication: async (candidateId: number, animalId: number): Promise<Application> => {
-    const res = await api.delete<Application>(`/applications/${animalId}/${candidateId}`);
-    return res.data;
+    return response.data;
   },
 
   acceptApplication: async (candidateId: number, animalId: number) => {
-    const res = await api.post(`/applications/${candidateId}/${animalId}/accept`);
-    return res.data;
+    const response = await api.post(`/applications/${candidateId}/${animalId}/accept`);
+    return response.data;
   },
 
   rejectApplication: async (candidateId: number, animalId: number) => {
-    const res = await api.post(`/applications/${candidateId}/${animalId}/reject`);
-    return res.data;
+    const response = await api.post(`/applications/${candidateId}/${animalId}/reject`);
+    return response.data;
   },
 
-  createApplication: async (data: { animalId: number; applicationType: string; message: string }) => {
-    const res = await api.post("/applications", data);
-    return res.data;
+  deleteApplication: async (candidateId: number, animalId: number) => {
+    const response = await api.delete(`/applications/${animalId}/${candidateId}`);
+    return response.data;
   },
 };

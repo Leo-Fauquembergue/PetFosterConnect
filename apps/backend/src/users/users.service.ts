@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import { RegisterDto } from "@projet/shared-types";
 import { UpdateUserWithIndividualProfileDto, UpdateUserWithShelterProfileDto ,UpdatePasswordDto } from "@projet/shared-types"; 
 
@@ -26,7 +26,8 @@ export class UsersService {
   async create(data: RegisterDto) {
     const hashedPassword = await argon2.hash(data.password);
 
-    const userData: any = {
+    // ⚡ Utilisation stricte de Prisma.PfcUserCreateInput
+    const userData: Prisma.PfcUserCreateInput = {
       email: data.email,
       password: hashedPassword,
       role: data.role as UserRole,
@@ -76,14 +77,19 @@ export class UsersService {
 
   // --- Mise à jour d'un utilisateur ---
   async update(id: number, data: Partial<RegisterDto>) {
-    const updateData = { ...data };
+    // ⚡ Typage strict et assignation explicite
+    const updateData: Prisma.PfcUserUpdateInput = {};
 
-    if (updateData.password) {
-      updateData.password = await argon2.hash(updateData.password);
+    if (data.email) updateData.email = data.email;
+    if (data.phoneNumber) updateData.phoneNumber = data.phoneNumber;
+    if (data.address) updateData.address = data.address;
+
+    if (data.password) {
+      updateData.password = await argon2.hash(data.password);
     }
 
-    if (updateData.role) {
-      (updateData as any).role = updateData.role as UserRole;
+    if (data.role) {
+      updateData.role = data.role as UserRole;
     }
 
     return this.prisma.pfcUser.update({
@@ -105,6 +111,7 @@ export class UsersService {
   // --- Validation login (email + mot de passe) ---
   async validateUser(email: string, plainPassword: string) {
     const user = await this.findByEmail(email);
+
     if (!user) return null;
 
     const isValid = await argon2.verify(user.password, plainPassword);
@@ -112,6 +119,7 @@ export class UsersService {
 
     // 🛡️ SÉCURITÉ : On retire le password de l'objet retourné au login
     const { password, ...safeUser } = user;
+
     return safeUser;
   }
 
@@ -146,7 +154,6 @@ export class UsersService {
         data: { password: hashed },
         select: safeUserSelect, // 🛡️ SÉCURITÉ
       });
-
     } catch (err) {
       Logger.error("Erreur updatePassword:", err);
       throw err;
@@ -225,7 +232,6 @@ export class UsersService {
         },
         select: { ...safeUserSelect, shelterProfile: true }, // 🛡️ Remplace le 'include' pour sécuriser
       });
-
     } catch (err) {
       Logger.error("Erreur Prisma updateShelterProfile:", err);
       throw new Error("Impossible de mettre à jour le profil refuge");

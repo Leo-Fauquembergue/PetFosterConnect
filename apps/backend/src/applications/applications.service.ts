@@ -1,8 +1,11 @@
 import { Injectable, ConflictException, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApplicationStatus, CreateApplicationDto, UpdateApplicationStatusDto } from '@projet/shared-types';
+import type { RequestWithUser } from '@projet/shared-types';
 import { Prisma } from '@prisma/client';
 import { EmailsService } from '../emails/emails.service';
+
+type UserPayload = RequestWithUser["user"];
 
 @Injectable()
 export class ApplicationsService {
@@ -24,7 +27,7 @@ export class ApplicationsService {
         },
         include: { animal: true }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new ConflictException('Vous avez déjà envoyé une demande pour cet animal.');
@@ -76,8 +79,9 @@ export class ApplicationsService {
     });
   }
 
-  async updateStatus(candidateId: number, animalId: number, updateDto: UpdateApplicationStatusDto, user: any) {
+  async updateStatus(candidateId: number, animalId: number, updateDto: UpdateApplicationStatusDto, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
+
     if (!animal) throw new NotFoundException("Animal introuvable");
     
     // Vérification IDOR stricte
@@ -95,8 +99,9 @@ export class ApplicationsService {
     });
   }
 
-  async remove(candidateId: number, animalId: number, user: any) {
+  async remove(candidateId: number, animalId: number, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
+
     if (!animal) throw new NotFoundException("Animal introuvable");
     
     // Vérification IDOR stricte
@@ -110,7 +115,7 @@ export class ApplicationsService {
     });
   }
 
-  async acceptApplication(candidateId: number, animalId: number, user: any) {
+  async acceptApplication(candidateId: number, animalId: number, user: UserPayload) {
     // 1. On accepte la demande
     const application = await this.updateStatus(candidateId, animalId, {
       applicationStatus: "approved",
@@ -137,28 +142,30 @@ export class ApplicationsService {
     // 4. Envoi de l'email
     try {
       if (application.user?.email) {
-        const firstname = (application.user.individualProfile as any)?.firstname || "Candidat";
+        const firstname = (application.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
         await this.emailsService.sendAcceptanceEmail(application.user.email, firstname, application.animal.name);
       }
-    } catch (error: any) {
-      this.logger.error(`⚠️ [Email Error] Impossible d'envoyer l'email d'acceptation : ${error.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Erreur inconnue";
+      this.logger.error(`⚠️ [Email Error] Impossible d'envoyer l'email d'acceptation : ${msg}`);
     }
 
     return { message: "Candidature acceptée (Notification email traitée)", application };
   }
 
-  async rejectApplication(candidateId: number, animalId: number, user: any) {
+  async rejectApplication(candidateId: number, animalId: number, user: UserPayload) {
     const application = await this.updateStatus(candidateId, animalId, {
       applicationStatus: "rejected",
     }, user);
 
     try {
       if (application.user?.email) {
-        const firstname = (application.user.individualProfile as any)?.firstname || "Candidat";
+        const firstname = (application.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
         await this.emailsService.sendRejectionEmail(application.user.email, firstname, application.animal.name);
       }
-    } catch (error: any) {
-      this.logger.error(`⚠️ [Email Error] Impossible d'envoyer l'email de refus : ${error.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Erreur inconnue";
+      this.logger.error(`⚠️ [Email Error] Impossible d'envoyer l'email de refus : ${msg}`);
     }
 
     return { message: "Candidature refusée", application };
