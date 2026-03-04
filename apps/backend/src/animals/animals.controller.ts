@@ -19,7 +19,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import type { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
+import type { CreateAnimalDto, UpdateAnimalDto, RequestWithUser } from "@projet/shared-types";
 import { CreateAnimalSchema, UpdateAnimalSchema } from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { OptionalJwtAuthGuard } from "../auth/guards/optional-jwt-auth.guard";
@@ -45,7 +45,7 @@ export class AnimalsController {
   @ApiResponse({ status: 403, description: "Accès refusé" })
   create(
     @Body(new ZodPipe(CreateAnimalSchema)) dto: CreateAnimalDto,
-    @Req() req: any
+    @Req() req: RequestWithUser
   ) {
     return this.animalsService.create(dto, req.user.id);
   }
@@ -58,21 +58,17 @@ export class AnimalsController {
     description: "Nombre maximum d'animaux à retourner",
     type: Number,
   })
-  // 🛡️ CORRECTION SÉCURITÉ : Suppression de "includeDeleted" (Empêche l'attaque BOLA)
   @ApiResponse({
     status: 200,
     description: "Liste des animaux retournée avec succès",
   })
   findAll(@Query("limit") limit?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : undefined;
-    // 🛡️ PATCH DoS : Plafond strict à 50 et fallback sécurisé si NaN
     const safeLimit = parsedLimit && !Number.isNaN(parsedLimit) ? Math.min(parsedLimit, 50) : 50;
     
-    // On passe safeLimit au lieu d'une valeur non vérifiée
     return this.animalsService.findAll(false, safeLimit);
   }
 
-  // ROUTE SPECIALE ADMIN
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @Get("admin/all")
@@ -96,7 +92,7 @@ export class AnimalsController {
   @ApiParam({ name: "id", description: "ID de l'animal", type: Number })
   @ApiResponse({ status: 200, description: "Animal trouvé" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
-  async findOne(@Param("id", ParseIntPipe) id: number, @Req() req: any) {
+  async findOne(@Param("id", ParseIntPipe) id: number, @Req() req: RequestWithUser) {
     const userId = req.user?.id;
     return this.animalsService.findOne(id, userId);
   }
@@ -125,7 +121,7 @@ export class AnimalsController {
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body(new ZodPipe(UpdateAnimalSchema)) updateAnimalDto: UpdateAnimalDto,
-    @Req() req: any
+    @Req() req: RequestWithUser
   ) {
     return this.animalsService.update(id, updateAnimalDto, req.user);
   }
@@ -139,7 +135,7 @@ export class AnimalsController {
   @ApiResponse({ status: 200, description: "Animal supprimé avec succès" })
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
-  remove(@Param("id", ParseIntPipe) id: number, @Req() req: any) {
+  remove(@Param("id", ParseIntPipe) id: number, @Req() req: RequestWithUser) {
     return this.animalsService.remove(id, req.user);
   }
 }

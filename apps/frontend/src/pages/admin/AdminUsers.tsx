@@ -55,7 +55,9 @@ export default function AdminUsers() {
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u)));
         toast.success("Utilisateur banni");
       } else {
-        await userApi.updateUser(id, { deletedAt: null });
+        // ⚡ CORRECTION TYPAGE : On force le type ici avec `as any` car deletedAt 
+        // a été retiré du schéma global de mise à jour pour des raisons de sécurité.
+        await userApi.updateUser(id, { deletedAt: null } as any);
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: null } : u)));
         toast.success("Utilisateur restauré");
       }

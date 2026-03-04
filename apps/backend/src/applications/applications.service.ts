@@ -64,6 +64,18 @@ export class ApplicationsService {
     });
   }
 
+  // Route Admin restaurée précédemment
+  findAll() {
+    return this.prisma.application.findMany({
+      include: {
+        animal: true,
+        user: {
+          include: { individualProfile: true }
+        }
+      }
+    });
+  }
+
   async updateStatus(candidateId: number, animalId: number, updateDto: UpdateApplicationStatusDto, user: any) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
     if (!animal) throw new NotFoundException("Animal introuvable");
@@ -99,10 +111,30 @@ export class ApplicationsService {
   }
 
   async acceptApplication(candidateId: number, animalId: number, user: any) {
+    // 1. On accepte la demande
     const application = await this.updateStatus(candidateId, animalId, {
       applicationStatus: "approved",
     }, user);
 
+    // 2. ⚡ LOGIQUE MÉTIER AJOUTÉE : On met à jour le statut de l'animal
+    const newAnimalStatus = application.applicationType === "adoption" ? "adopted" : "foster_care";
+    
+    await this.prisma.animal.update({
+      where: { id: animalId },
+      data: { animalStatus: newAnimalStatus }
+    });
+
+    // 3. ⚡ LOGIQUE MÉTIER AJOUTÉE : On refuse automatiquement toutes les autres demandes en attente pour cet animal
+    await this.prisma.application.updateMany({
+      where: { 
+        animalId: animalId, 
+        pfcUserId: { not: candidateId },
+        applicationStatus: "pending" 
+      },
+      data: { applicationStatus: "rejected" }
+    });
+
+    // 4. Envoi de l'email
     try {
       if (application.user?.email) {
         const firstname = (application.user.individualProfile as any)?.firstname || "Candidat";
