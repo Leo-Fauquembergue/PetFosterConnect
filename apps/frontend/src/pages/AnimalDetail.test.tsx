@@ -1,0 +1,127 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import AnimalDetail from "./AnimalDetail";
+import { animalApi } from "../api/animalApi";
+import { applicationApi } from "../api/applicationApi";
+import { toast } from "react-toastify";
+
+// Mocks des APIs
+vi.mock("../api/animalApi", () => ({
+  animalApi: { getAnimalById: vi.fn() },
+}));
+
+vi.mock("../api/applicationApi", () => ({
+  applicationApi: { createApplication: vi.fn() },
+}));
+
+vi.mock("../api/bookmarkApi", () => ({
+  bookmarkApi: { toggleBookmark: vi.fn() },
+}));
+
+// Mock de Toastify
+vi.mock("react-toastify", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+// Mock du contexte d'authentification pour forcer un utilisateur connecté ("individual")
+vi.mock("../auth/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: 1, email: "adoptant@test.com", role: "individual" },
+    isLoading: false,
+  }),
+}));
+
+// Mocks préventifs pour l'export PDF (évite les crashs JSDOM liés au canvas)
+vi.mock("html2canvas", () => ({ default: vi.fn() }));
+vi.mock("jspdf", () => ({ default: vi.fn() }));
+vi.mock("qrcode", () => ({ default: { toDataURL: vi.fn() } }));
+
+describe("AnimalDetail - Formulaire de demande", () => {
+  const mockAnimal = {
+    id: 1,
+    name: "Rex",
+    species: { name: "Chien" },
+    age: "2 ans",
+    sex: "male",
+    weight: 15,
+    height: 40,
+    description: "Un super chien très joueur",
+    animalStatus: "available",
+    photos: ["http://photo.com/rex.jpg"],
+    shelter: {
+      pfcUserId: 2,
+      address: "123 rue des chiens",
+      shelterProfile: { shelterName: "SPA Test" },
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const renderComponent = () => {
+    return render(
+      <MemoryRouter initialEntries={["/animaux/1"]}>
+        <Routes>
+          <Route path="/animaux/:id" element={<AnimalDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+  };
+
+  it("doit remplir le formulaire et appeler la soumission d'adoption avec les bonnes données", async () => {
+    (animalApi.getAnimalById as any).mockResolvedValueOnce(mockAnimal);
+    (applicationApi.createApplication as any).mockResolvedValueOnce({});
+
+    renderComponent();
+
+    // Attendre que la page charge l'animal
+    await waitFor(() => {
+      expect(screen.getByText("Rex")).toBeInTheDocument();
+    });
+
+    // 1. Identifier et remplir le champ "Message d'adoption"
+    const adoptInput = screen.getByLabelText(/Message d'adoption/i);
+    fireEvent.change(adoptInput, { target: { value: "Je voudrais adopter Rex." } });
+
+    // 2. Cliquer sur le bouton Adopter
+    const submitButton = screen.getByRole("button", { name: "Adopter" });
+    fireEvent.click(submitButton);
+
+    // 3. Vérifier que l'API est appelée avec le bon payload et qu'un succès s'affiche
+    await waitFor(() => {
+      expect(applicationApi.createApplication).toHaveBeenCalledWith({
+        animalId: 1,
+        applicationType: "adoption",
+        message: "Je voudrais adopter Rex.",
+      });
+      expect(toast.success).toHaveBeenCalledWith("Demande d'adoption envoyée !");
+    });
+  });
+
+  it("doit afficher une erreur si la demande échoue (ex: message manquant rejeté par le backend)", async () => {
+    (animalApi.getAnimalById as any).mockResolvedValueOnce(mockAnimal);
+    
+    // On simule un rejet de l'API (ex: Zod retourne 400 pour champ vide)
+    (applicationApi.createApplication as any).mockRejectedValueOnce({
+      response: { data: { message: "Le message de motivation est obligatoire" } },
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText("Rex")).toBeInTheDocument();
+    });
+
+    // On clique directement sans rien remplir
+    const submitButton = screen.getByRole("button", { name: "Adopter" });
+    fireEvent.click(submitButton);
+
+    // Vérifier que l'erreur du backend est bien interceptée et affichée dans un Toast
+    await waitFor(() => {
+      expect(applicationApi.createApplication).toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledWith("Le message de motivation est obligatoire");
+    });
+  });
+});
