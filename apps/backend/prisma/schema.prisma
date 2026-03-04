@@ -41,7 +41,8 @@
 // A. @@id : La Clé Primaire Composite
 //    Utilisé dans les tables de liaison (Bookmark, Application).
 //    - @@id([pfc_user_id, animal_id]) empêche un utilisateur de mettre 
-//      DEUX FOIS le même animal en favoris. Le couple doit être unique.
+//      DEUX FOIS le même animal en favoris.
+//      Le couple doit être unique.
 //
 // B. @@index : Le Booster de Performance
 //    Sans index, la BDD scanne TOUS les animaux pour en trouver un.
@@ -141,6 +142,7 @@ model PfcUser {
   /// Animaux publiés (Uniquement pour les comptes 'shelter')
   animals            Animal[] 
 
+  @@index([deletedAt]) // 🛡️ CORRECTION PERF : Empêche le Sequential Scan
   @@map("pfc_user")
 }
 
@@ -151,15 +153,15 @@ model PfcUser {
 /// Informations complémentaires pour les comptes 'individual'
 model IndividualProfile {
   pfcUserId         Int           @id             @map("pfc_user_id")
-  housingType      HousingType?                  @map("housing_type")
-  surface           Int?     // En m²
-  haveGarden        Boolean?                      @map("have_garden")
-  haveAnimals       Boolean?                      @map("have_animals")
-  haveChildren      Boolean?                      @map("have_children")
+  housingType       HousingType?  @map("housing_type")
+  surface           Int?          // En m²
+  haveGarden        Boolean?      @map("have_garden")
+  haveAnimals       Boolean?      @map("have_animals")
+  haveChildren      Boolean?      @map("have_children")
   /// Indique si l'utilisateur accepte d'être Famille d'Accueil
-  availableFamily Boolean?      @default(false)   @map("available_family")
+  availableFamily   Boolean?      @default(false) @map("available_family")
   /// Précisions sur l'emploi du temps pour s'occuper de l'animal
-  availableTime   String?       @db.Text          @map("available_time")
+  availableTime     String?       @db.Text        @map("available_time")
 
   // Relation
   user PfcUser @relation(fields: [pfcUserId], references: [id], onDelete: Cascade)
@@ -178,7 +180,7 @@ model ShelterProfile {
   siret         String  @unique @db.VarChar(14)
   shelterName   String          @db.VarChar(100)  @map("shelter_name")
   description   String? @db.Text
-  logo          String?                           @map("logo")
+  logo          String? @map("logo")
 
   user PfcUser @relation(fields: [pfcUserId], references: [id], onDelete: Cascade)
 
@@ -234,6 +236,7 @@ model Animal {
   @@index([speciesId])
   @@index([pfcUserId])
   @@index([animalStatus])
+  @@index([deletedAt]) // 🛡️ CORRECTION PERF
   @@map("animal")
 }
 
@@ -243,12 +246,12 @@ model Animal {
 
 /// Table de liaison gérant les dossiers d'adoption ou de FA
 model Application {
-  pfcUserId           Int                                               @map("pfc_user_id")
-  animalId            Int                                               @map("animal_id")
+  pfcUserId           Int                                              @map("pfc_user_id")
+  animalId            Int                                              @map("animal_id")
   /// Lettre de motivation ou message de l'adoptant
   message             String            @db.Text
-  applicationType    ApplicationType                                   @map("application_type")
-  applicationStatus  ApplicationStatus @default(pending)               @map("application_status")
+  applicationType     ApplicationType                                  @map("application_type")
+  applicationStatus   ApplicationStatus @default(pending)              @map("application_status")
   createdAt           DateTime          @default(now()) @db.Timestamptz  @map("created_at")
   updatedAt           DateTime?         @updatedAt @db.Timestamptz       @map("updated_at")
   deletedAt           DateTime?         @db.Timestamptz                  @map("deleted_at")
@@ -261,6 +264,7 @@ model Application {
   @@id([pfcUserId, animalId])
   @@index([animalId])
   @@index([applicationStatus])
+  @@index([deletedAt]) // 🛡️ CORRECTION PERF
   @@map("application")
 }
 

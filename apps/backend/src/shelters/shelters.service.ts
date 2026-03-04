@@ -27,7 +27,9 @@ export class SheltersService {
             phoneNumber: true,
             address: true,
             deletedAt: true,
-            animals: { include: { species: true } }
+            // 🛡️ CORRECTION SÉCURITÉ : Bombe Mémoire (OOM) désamorcée.
+            // On remplace le chargement de toute la table Animal par un compteur.
+            _count: { select: { animals: true } }
           }
         },
       },
