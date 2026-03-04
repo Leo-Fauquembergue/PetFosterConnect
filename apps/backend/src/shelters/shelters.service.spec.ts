@@ -28,13 +28,29 @@ describe('SheltersService', () => {
     jest.clearAllMocks();
   });
 
+  describe('findAll', () => {
+    it('doit retourner la liste des refuges SANS le mot de passe utilisateur (Prévention Data Leak)', async () => {
+      const fakeShelters = [
+        { pfcUserId: 1, shelterName: 'SPA', user: { id: 1, email: 'spa@test.com', deletedAt: null } }
+      ];
+      mockPrisma.shelterProfile.findMany.mockResolvedValue(fakeShelters);
+
+      const result = await service.findAll();
+      expect(result).toHaveLength(1);
+      // CORRECTION : Vérification formelle du non-leak
+      expect((result[0] as any).user?.password).toBeUndefined();
+    });
+  });
+
   describe('findOne', () => {
-    it('doit retourner un profil de refuge par ID', async () => {
-      const fakeProfile = { pfcUserId: 1, shelterName: 'SPA', user: { deletedAt: null } };
+    it('doit retourner un profil de refuge par ID SANS le mot de passe utilisateur (Prévention Data Leak)', async () => {
+      const fakeProfile = { pfcUserId: 1, shelterName: 'SPA', user: { id: 1, email: 'spa@test.com', deletedAt: null } };
       mockPrisma.shelterProfile.findUnique.mockResolvedValue(fakeProfile);
 
       const result = await service.findOne(1);
       expect(result.shelterName).toBe('SPA');
+      // CORRECTION : Vérification formelle du non-leak
+      expect((result as any).user?.password).toBeUndefined();
     });
 
     it('doit lever une erreur si le refuge n existe pas', async () => {
