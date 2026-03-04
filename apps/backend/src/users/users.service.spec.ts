@@ -64,7 +64,7 @@ describe('UsersService', () => {
         }),
         select: expect.any(Object), // On s'assure qu'un filtrage Prisma est utilisé
       });
-      
+
       // Vérification Critique de Sécurité
       expect(result.password).toBeUndefined();
       expect(result.id).toBe(1);
@@ -92,6 +92,23 @@ describe('UsersService', () => {
       
       expect(result).toHaveLength(2);
       expect(result[0].password).toBeUndefined();
+    });
+  });
+
+  describe('update', () => {
+    it('doit mettre à jour un utilisateur et NE PAS retourner le mot de passe (Prévention Data Leak)', async () => {
+      const mockUser = { id: 1, email: 'updated@test.com' };
+      mockPrisma.pfcUser.update.mockResolvedValue(mockUser);
+
+      const result = await service.update(1, { email: 'updated@test.com' }) as any;
+      
+      expect(mockPrisma.pfcUser.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: expect.objectContaining({ email: 'updated@test.com' }),
+        select: expect.any(Object),
+      });
+      // Vérification Critique de Sécurité
+      expect(result.password).toBeUndefined();
     });
   });
 });
