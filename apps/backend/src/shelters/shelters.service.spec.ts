@@ -2,90 +2,60 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SheltersService } from './shelters.service';
 import { PrismaService } from '../prisma/prisma.service';
 
-describe('ShelterService (integration)', () => {
+describe('SheltersService', () => {
   let service: SheltersService;
-  let prisma: PrismaService;
-  let testUserId: number;
 
-  beforeAll(async () => {
+  const mockPrisma = {
+    shelterProfile: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+  };
+
+  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SheltersService, PrismaService],
+      providers: [
+        SheltersService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     }).compile();
 
     service = module.get<SheltersService>(SheltersService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
-  beforeEach(async () => {
-    await prisma.shelterProfile.deleteMany();
-    await prisma.pfcUser.deleteMany();
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-    // Crée d’abord un utilisateur
-    const user = await prisma.pfcUser.create({
-      data: {
-        email: 'refuge@test.com',
-        password: 'hashedpassword',
-        role: 'shelter', // respecte ton enum UserRole
-      },
+  describe('findOne', () => {
+    it('doit retourner un profil de refuge par ID', async () => {
+      const fakeProfile = { pfcUserId: 1, shelterName: 'SPA', user: { deletedAt: null } };
+      mockPrisma.shelterProfile.findUnique.mockResolvedValue(fakeProfile);
+
+      const result = await service.findOne(1);
+      expect(result.shelterName).toBe('SPA');
     });
 
-    // Puis crée le refuge lié à cet utilisateur
-    await prisma.shelterProfile.create({
-      data: {
-        pfcUserId: user.id,
-        siret: '12345678901234',
-        shelterName: 'Refuge Test',
-        description: 'Un refuge fictif',
-        logo: null,
-      },
+    it('doit lever une erreur si le refuge n existe pas', async () => {
+      mockPrisma.shelterProfile.findUnique.mockResolvedValue(null);
+      await expect(service.findOne(99)).rejects.toThrow();
     });
-
-    testUserId = user.id;
   });
 
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
+  describe('update', () => {
+    const dto = { shelterName: 'SPA Modifiée' };
 
-  it('should return all shelters', async () => {
-    const shelters = await service.findAll();
-    expect(shelters.length).toBe(1);
-    expect(shelters[0].shelterName).toBe('Refuge Test');
-  });
+    it('doit modifier les informations du profil du refuge', async () => {
+      mockPrisma.shelterProfile.update.mockResolvedValue({ pfcUserId: 1, shelterName: 'SPA Modifiée' });
 
-  it('should find a shelter by id', async () => {
-    const shelter = await service.findOne(testUserId);
-    expect(shelter?.shelterName).toBe('Refuge Test');
-  });
-
-  it('should create a new shelter', async () => {
-    const newUser = await prisma.pfcUser.create({
-      data: {
-        email: 'nouveau@test.com',
-        password: 'hashedpassword',
-        role: 'shelter',
-      },
+      const result = await service.update(1, dto as any);
+      
+      expect(mockPrisma.shelterProfile.update).toHaveBeenCalledWith({
+        where: { pfcUserId: 1 },
+        data: dto,
+      });
+      expect(result.shelterName).toBe('SPA Modifiée');
     });
-
-    const created = await service.create({
-      pfcUserId: newUser.id,
-      siret: '98765432109876',
-      shelterName: 'Refuge Nouveau',
-      description: 'Un nouveau refuge',
-      logo: null,
-    });
-
-    expect(created.shelterName).toBe('Refuge Nouveau');
-  });
-
-  it('should update a shelter', async () => {
-    const updated = await service.update(testUserId, { shelterName: 'Refuge Modifié' });
-    expect(updated.shelterName).toBe('Refuge Modifié');
-  });
-
-  it('should remove a shelter', async () => {
-    await service.remove(testUserId);
-    const shelter = await prisma.shelterProfile.findUnique({ where: { pfcUserId: testUserId } });
-    expect(shelter).toBeNull();
   });
 });

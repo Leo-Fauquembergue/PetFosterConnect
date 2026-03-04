@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { JwtAuthGuard } from '../src/auth/auth.guard'; // Vérifie bien le chemin ici
+import { JwtAuthGuard } from '../src/auth/guards/jwt-auth.guard';
 
 describe('Bookmarks (E2E)', () => {
   let app: INestApplication;

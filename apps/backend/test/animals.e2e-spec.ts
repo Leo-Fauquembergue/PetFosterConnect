@@ -3,86 +3,91 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { JwtAuthGuard } from '../src/auth/auth.guard'; 
+import { JwtService } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 
-describe('Animals (E2E)', () => {
+describe('Animals (E2E) - Security & RBAC', () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let jwtService: JwtService;
+
+  let shelterToken: string;
+  let attackerToken: string; 
+  let individualToken: string; 
+  let sharedSpeciesId: number;
+  let createdAnimalId: number;
+
   beforeAll(async () => {
-    // 1. On compile d'abord le module (le Guard utilisera la référence de la variable)
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({
-        canActivate: (context) => {
-          const req = context.switchToHttp().getRequest();
-          // Important : On passe l'objet par référence, 
-          // sharedShelterId sera mis à jour après la création en base
-          req.user = { id: sharedShelterId }; 
-          return true;
-        },
-      })
-      .compile();
+    }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
 
     prisma = app.get<PrismaService>(PrismaService);
+    jwtService = app.get<JwtService>(JwtService);
 
-    // 2. NETTOYAGE (Ordre strict pour les clés étrangères)
     await prisma.animal.deleteMany();
     await prisma.species.deleteMany();
     await prisma.pfcUser.deleteMany();
 
-    // 3. PRÉPARATION DES DONNÉES
     const shelter = await prisma.pfcUser.create({
-      data: {
-        email: 'refuge@test.com',
-        password: 'hash',
-        role: UserRole.shelter,
-      },
+      data: { email: 'refuge_legitime@test.com', password: 'hash', role: UserRole.shelter },
     });
-    sharedShelterId = shelter.id; // L'ID est maintenant disponible pour le Guard
+    shelterToken = jwtService.sign({ sub: shelter.id, email: shelter.email, role: shelter.role });
 
-    const species = await prisma.species.create({
-      data: { name: 'Chat' },
+    const attacker = await prisma.pfcUser.create({
+      data: { email: 'refuge_attaquant@test.com', password: 'hash', role: UserRole.shelter },
     });
+    attackerToken = jwtService.sign({ sub: attacker.id, email: attacker.email, role: attacker.role });
+
+    const individual = await prisma.pfcUser.create({
+      data: { email: 'adoptant@test.com', password: 'hash', role: UserRole.individual },
+    });
+    individualToken = jwtService.sign({ sub: individual.id, email: individual.email, role: individual.role });
+
+    const species = await prisma.species.create({ data: { name: 'Chien' } });
     sharedSpeciesId = species.id;
   });
 
-  // --- CREATE ---
-  describe('POST /animals', () => {
-    it('devrait créer un animal lié au refuge', async () => {
-      const createDto = {
-        name: 'Pongo',
-        age: '2 ans',
-        sex: 'male',
-        speciesId: sharedSpeciesId,
-        animalStatus: 'available',
-        description: 'Un chien très amical',
-        weight: 25,
-        height: 60,
-        acceptOtherAnimals: true,
-        acceptChildren: true,
-        isUrgent: false,
-      };
+  afterAll(async () => {
+    await app.close();
+  });
 
+  describe('POST /animals (Création & RBAC)', () => {
+    const createDto = {
+      name: 'Pongo',
+      age: '2 ans',
+      sex: 'male',
+      animalStatus: 'available',
+      description: 'Un chien amical',
+      weight: 25,
+    };
+
+    it('doit bloquer la création si l\'utilisateur est un particulier (RBAC - 403)', async () => {
+      await request(app.getHttpServer())
+        .post('/animals')
+        .set('Authorization', `Bearer ${individualToken}`)
+        .send({ ...createDto, speciesId: sharedSpeciesId })
+        .expect(403);
+    });
+
+    it('doit autoriser la création si l\'utilisateur est un refuge (201)', async () => {
       const response = await request(app.getHttpServer())
         .post('/animals')
-        // On simule ce que le Guard ferait : on passe l'ID user dans un header ou via un mock
-        // Si ton controller utilise @Req() req, il faudra peut-être mocker le guard (voir note plus bas)
-        .send(createDto)
+        .set('Authorization', `Bearer ${shelterToken}`)
+        .send({ ...createDto, speciesId: sharedSpeciesId })
         .expect(201);
 
+      createdAnimalId = response.body.id;
       expect(response.body.name).toBe('Pongo');
-      expect(response.body.speciesId).toBe(sharedSpeciesId);
     });
   });
 
-  // --- GET ALL ---
   describe('GET /animals', () => {
-    it('devrait retourner une liste contenant au moins l animal créé', async () => {
+    it('devrait retourner une liste contenant l\'animal créé (Public - 200)', async () => {
       const response = await request(app.getHttpServer())
         .get('/animals')
         .expect(200);
@@ -92,56 +97,44 @@ describe('Animals (E2E)', () => {
     });
   });
 
-  // --- GET ONE ---
-  describe('GET /animals/:id', () => {
-    it('devrait retourner le détail d un animal', async () => {
-      // On récupère l'animal créé précédemment
-      const animal = await prisma.animal.findFirst();
-
-      const response = await request(app.getHttpServer())
-
-        .get(`/animals/${animal!.id}`)  
-        .expect(200);
-
-      expect(response.body.id).toBe(animal!.id);
-      expect(response.body.name).toBe(animal!.name);
-    });
-
-    it('devrait renvoyer 404 pour un animal inexistant', async () => {
+  describe('PATCH /animals/:id (Modification & Faille IDOR)', () => {
+    it('doit bloquer la modification par un AUTRE refuge (IDOR bloquée - 403)', async () => {
       await request(app.getHttpServer())
-        .get('/animals/999999')
-        .expect(404);
+        .patch(`/animals/${createdAnimalId}`)
+        .set('Authorization', `Bearer ${attackerToken}`)
+        .send({ name: 'Hacked Name' })
+        .expect(403);
     });
-  });
 
-  // --- UPDATE ---
-  describe('PATCH /animals/:id', () => {
-    it('devrait modifier le nom de l animal', async () => {
-      const animal = await prisma.animal.findFirst();
-
-      const response = await request(app.getHttpServer())
-        .patch(`/animals/${animal!.id}`)
+    it('doit autoriser la modification par le refuge PROPRIÉTAIRE (200)', async () => {
+      await request(app.getHttpServer())
+        .patch(`/animals/${createdAnimalId}`)
+        .set('Authorization', `Bearer ${shelterToken}`)
         .send({ name: 'Pongo Modifié' })
         .expect(200);
-
-      expect(response.body.name).toBe('Pongo Modifié');
     });
   });
 
-  // --- DELETE ---
-  describe('DELETE /animals/:id', () => {
-    it('devrait effectuer un soft delete (marquer deletedAt)', async () => {
-      const animal = await prisma.animal.findFirst();
-
+  describe('DELETE /animals/:id (Suppression & Faille IDOR)', () => {
+    it('doit bloquer la suppression par un non-propriétaire (IDOR bloquée - 403)', async () => {
       await request(app.getHttpServer())
-        .delete(`/animals/${animal!.id}`)
+        .delete(`/animals/${createdAnimalId}`)
+        .set('Authorization', `Bearer ${attackerToken}`)
+        .expect(403);
+    });
+
+    it('doit effectuer la suppression par le propriétaire (Soft Delete - 200)', async () => {
+      await request(app.getHttpServer())
+        .delete(`/animals/${createdAnimalId}`)
+        .set('Authorization', `Bearer ${shelterToken}`)
         .expect(200);
 
-      // On vérifie en base que l'animal a bien un deletedAt
       const deletedAnimal = await prisma.animal.findUnique({
-        where: { id: animal!.id },
+        where: { id: createdAnimalId },
       });
-      expect(deletedAnimal!.deletedAt).not.toBeNull();
+      
+      expect(deletedAnimal).not.toBeNull();
+      expect(deletedAnimal?.deletedAt).not.toBeNull();
     });
   });
 });

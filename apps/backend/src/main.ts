@@ -1,7 +1,7 @@
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, UnauthorizedException } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser from 'cookie-parser'; // 👈 C'est ici la correction !
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -20,20 +20,19 @@ async function bootstrap() {
       const allowedOrigins = [
         'http://localhost:5173', // Dev local
         'http://localhost:3000',
-        process.env.FRONTEND_URL, // Prod stricte (à définir dans ton .env de production)
+        process.env.FRONTEND_URL, // Prod stricte Vercel (à définir dans ton .env de production sur Render)
       ].filter(Boolean);
 
-      // Autoriser les requêtes sans origine (ex: Postman) ou si elles sont dans la liste blanche
-      if (!origin || allowedOrigins.includes(origin)) {
+      // 🛡️ SÉCURITÉ : Tolère l'absence d'origine en dev, mais stricte en prod
+      if (allowedOrigins.includes(origin as string) || (!origin && process.env.NODE_ENV !== 'production')) {
         return callback(null, true);
       }
 
-      // 🛡️ SÉCURITÉ : Rejet silencieux. Pas de log pour éviter le "Log Flooding" par des bots.
-      callback(new Error('Not allowed by CORS'));
+      callback(new UnauthorizedException('Not allowed by CORS'));
     },
-    credentials: true, // Requis pour tes cookies/sessions
+    credentials: true, // Requis pour tes cookies/sessions Vercel <-> Render
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   // DOCUMENTATION SWAGGER
