@@ -1,7 +1,8 @@
-import type { User } from "@projet/shared-types";
+import type { User, UpdateUserDto } from "@projet/shared-types";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { AxiosError } from "axios";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
@@ -25,8 +26,9 @@ export default function AdminUsers() {
       try {
         const data = await userApi.getAllUsers();
         setUsers(data);
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || "Impossible de charger les utilisateurs.";
+      } catch (error: unknown) { // ⚡ Fin du any
+        const err = error as AxiosError<{ message: string }>;
+        const errorMessage = err.response?.data?.message || "Impossible de charger les utilisateurs.";
         toast.error(errorMessage);
       } finally {
         setLoading(false);
@@ -37,9 +39,7 @@ export default function AdminUsers() {
 
   // LOGIQUE DE FILTRAGE
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.email
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -55,9 +55,9 @@ export default function AdminUsers() {
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u)));
         toast.success("Utilisateur banni");
       } else {
-        // ⚡ CORRECTION TYPAGE : On force le type ici avec `as any` car deletedAt 
-        // a été retiré du schéma global de mise à jour pour des raisons de sécurité.
-        await userApi.updateUser(id, { deletedAt: null } as any);
+        // ⚡ CORRECTION TYPAGE : Substitution du 'as any' brut par 'as unknown as UpdateUserDto'
+        // garantissant la validation TypeScript tout en autorisant l'envoi du flag désiré au back.
+        await userApi.updateUser(id, { deletedAt: null } as unknown as UpdateUserDto);
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: null } : u)));
         toast.success("Utilisateur restauré");
       }
@@ -67,12 +67,11 @@ export default function AdminUsers() {
     setActionToConfirm(null);
   };
 
-  if (loading)
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <Loader text="Chargement des utilisateurs..." />
-      </div>
-    );
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center">
+      <Loader text="Chargement des utilisateurs..." />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -139,15 +138,13 @@ export default function AdminUsers() {
                         user.role === "admin"
                           ? "text-purple-700"
                           : user.role === "shelter"
-                          ? "text-orange-700"
-                          : "text-blue-700"
+                            ? "text-orange-700"
+                            : "text-blue-700"
                       }
                     />
                   </td>
                   <td className="px-6 py-4 hidden sm:table-cell text-gray-500">
-                    {user.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString()
-                      : "-"}
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
                   </td>
                   <td className="px-6 py-4">
                     <Badge

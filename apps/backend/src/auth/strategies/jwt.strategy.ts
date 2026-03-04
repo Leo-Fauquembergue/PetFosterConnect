@@ -3,6 +3,16 @@ import { PassportStrategy } from "@nestjs/passport";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { COOKIE_NAME } from "../../constants";
+import { UserRole } from "@prisma/client";
+
+// ⚡ Définition stricte du payload
+export interface JwtPayload {
+  sub: string | number;
+  email: string;
+  role: UserRole;
+  iat?: number;
+  exp?: number;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,13 +23,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET,
+      secretOrKey: process.env.JWT_SECRET || "fallback_secret", // Pour sécuriser l'inférence de String côté TS
     });
   }
 
-  async validate(payload: any) {
+  // ⚡ On remplace `any` par l'interface `JwtPayload`
+  async validate(payload: JwtPayload) {
     return {
-      // L'astuce chirurgicale : on force la conversion du 'sub' (String) en Number 
+      // L'astuce chirurgicale : on force la conversion du 'sub' (String ou Number) en Number 
       // pour que tout le reste de l'application (Guards, Prisma) reçoive un entier valide.
       id: Number(payload.sub),
       email: payload.email,

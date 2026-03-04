@@ -1,9 +1,9 @@
-//Page des details d'un seul refuge
-//Url -> http://localhost:5173/refuges/48
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import BackBanner from "../components/ui/BackBanner";
-import { shelterApi, type ShelterDetailResponse } from "../api/shelterApi";
+import { shelterApi } from "../api/shelterApi";
+// ⚡ CORRECTION : Import du type depuis le package partagé
+import type { ShelterDetailResponse } from "@projet/shared-types";
 import Loader from "../components/ui/Loader";
 
 const RefugeDetailPage = () => {
@@ -19,7 +19,7 @@ const RefugeDetailPage = () => {
       try {
         const data = await shelterApi.getShelterById(Number(id));
         setShelter(data);
-      } catch (err) {
+      } catch (err: unknown) { // ⚡ Fin du any implicite
         setError(true);
       } finally {
         setLoading(false);

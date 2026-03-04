@@ -6,13 +6,15 @@ import {
   useState,
 } from "react";
 import { authApi } from "../api/authApi";
+// ⚡ Importation stricte du User
+import type { User } from "@projet/shared-types";
 
 interface AuthContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: (val: boolean) => void;
   logout: () => Promise<void>;
-  user: any | null;
-  setUser: (user: any | null) => void;
+  user: User | null; // ⚡ Fin du "any"
+  setUser: (user: User | null) => void;
   isLoading: boolean;
 }
 
@@ -20,7 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>(null); // ⚡ Typage du state
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,7 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
     };
-
     checkAuth();
   }, []);
 

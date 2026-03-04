@@ -1,16 +1,18 @@
 import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
 import { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
+import type { RequestWithUser } from "@projet/shared-types";
 import { PrismaService } from "../prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 
 // Animal avec relations species + shelterProfile
 type AnimalWithRelations = Prisma.AnimalGetPayload<{
-  include: { species: true;
-shelter: { select: { id: true, email: true, phoneNumber: true, shelterProfile: true } } };
+  include: { species: true; shelter: { select: { id: true, email: true, phoneNumber: true, shelterProfile: true } } };
 }>;
 
 // Animal enrichi avec isBookmarked
 type AnimalWithBookmark = AnimalWithRelations & { isBookmarked: boolean };
+
+type UserPayload = RequestWithUser["user"];
 
 @Injectable()
 export class AnimalsService {
@@ -25,7 +27,7 @@ export class AnimalsService {
       weight: dto.weight ? new Prisma.Decimal(dto.weight) : null,
       height: dto.height,
       animalStatus: dto.animalStatus,
-      photos: dto.photos,
+      photos: dto.photos === null ? Prisma.DbNull : dto.photos,
       acceptOtherAnimals: dto.acceptOtherAnimals,
       acceptChildren: dto.acceptChildren,
       needGarden: dto.needGarden,
@@ -83,7 +85,7 @@ export class AnimalsService {
  
    const isBookmarked = !!animal.bookmarks?.length;
  
-   // On supprime bookmarks du retour si tu veux éviter de l’exposer
+   // On supprime bookmarks du retour pour éviter de l’exposer
    const { bookmarks, ...rest } = animal;
    return { ...rest, isBookmarked };
  }
@@ -105,8 +107,9 @@ export class AnimalsService {
     });
   }
 
-  async update(id: number, updateAnimalDto: UpdateAnimalDto, user: any) {
+  async update(id: number, updateAnimalDto: UpdateAnimalDto, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
+
     if (!animal) throw new NotFoundException("Animal introuvable");
     
     // Vérification IDOR : Bloquer si l'utilisateur n'est pas Admin ET n'est pas le propriétaire
@@ -114,15 +117,33 @@ export class AnimalsService {
       throw new ForbiddenException("Vous ne pouvez modifier que vos animaux.");
     }
   
-    const data: any = {};
-    Object.entries(updateAnimalDto).forEach(([key, value]) => {
-      if (value !== undefined) data[key] = value;
-    });
+    // ⚡ Déstructuration élégante et séparation des champs complexes
+    const { weight, speciesId, photos, ...restDto } = updateAnimalDto;
+
+    const data: Prisma.AnimalUpdateInput = {
+      ...restDto,
+    };
+    
+    // Traitement spécifique des champs complexes
+    if (weight !== undefined) {
+      data.weight = weight ? new Prisma.Decimal(weight) : null;
+    }
+
+    if (speciesId !== undefined) {
+      data.species = { connect: { id: speciesId } };
+    }
+
+    if (photos !== undefined) {
+      // ⚡ Correction de l'erreur Prisma avec les champs JSON nullables
+      data.photos = photos === null ? Prisma.DbNull : photos;
+    }
+
     return this.prisma.animal.update({ where: { id }, data });
   }
 
-  async remove(id: number, user: any) {
+  async remove(id: number, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
+
     if (!animal) throw new NotFoundException("Animal introuvable");
     
     // Vérification IDOR

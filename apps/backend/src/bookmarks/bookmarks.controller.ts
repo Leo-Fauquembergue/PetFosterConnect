@@ -17,6 +17,8 @@ import {
   type CreateBookmarkDto,
   CreateBookmarkSchema,
 } from "@projet/shared-types";
+// ⚡ Typage strict de l'objet Request
+import type { RequestWithUser } from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { BookmarksService } from "./bookmarks.service";
@@ -38,7 +40,10 @@ export class BookmarksController {
   @ApiResponse({ status: 401, description: "Non authentifié" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
   @UsePipes(new ZodPipe(CreateBookmarkSchema))
-  async toggle(@Req() req: any, @Body() dto: CreateBookmarkDto) {
+  async toggle(
+    @Req() req: RequestWithUser, // ⚡ Retrait du any
+    @Body() dto: CreateBookmarkDto
+  ) {
     // 🔒 L'ID utilisateur est extrait de force depuis le JWT, usurpation impossible
     return this.bookmarksService.toggle(req.user.id, dto.animalId);
   }
@@ -50,7 +55,7 @@ export class BookmarksController {
     description: "Liste des favoris retournée avec succès",
   })
   @ApiResponse({ status: 401, description: "Non authentifié" })
-  async getMyBookmarks(@Req() req: any) {
+  async getMyBookmarks(@Req() req: RequestWithUser) { // ⚡ Retrait du any
     // 🔒 L'ID utilisateur est extrait de force depuis le JWT, usurpation impossible
     return this.bookmarksService.findAllByUser(req.user.id);
   }

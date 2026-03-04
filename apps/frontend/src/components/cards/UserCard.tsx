@@ -1,24 +1,10 @@
-import type { IndividualProfile, ShelterProfile } from "@projet/shared-types/src/profile.schema";
-
-interface User {
-  id: number;
-  email: string;
-  role: "individual" | "shelter" | "admin";
-  phoneNumber?: string;
-  address?: string;
-  individualProfile?: IndividualProfile | null;
-  shelterProfile?: ShelterProfile | null;
-}
-
-interface UserCardProps {
-  user: User;
-}
+import type { UserCardProps } from "@projet/shared-types";
 
 export default function UserCard({ user }: UserCardProps) {
   return (
     <div className="w-full max-w-sm bg-white rounded-xl shadow-md p-6">
       {/* Header */}
-      <h3 className="text-xl font-bold text-gray-800 mb-2">{user.email}</h3>   
+      <h3 className="text-xl font-bold text-gray-800 mb-2">{user.email}</h3>
 
       {/* Infos générales */}
       {user.phoneNumber && (
@@ -33,28 +19,28 @@ export default function UserCard({ user }: UserCardProps) {
       )}
 
       {/* Profil particulier */}
-        {user.role === "individual" && (
-          <div className="mt-4">
-            <h4 className="text-md font-bold text-success mb-2">Profil particulier</h4>
-            {user.individualProfile ? (
-              <ul className="text-sm text-gray-700 space-y-1">
-                <li>Logement : {user.individualProfile.housingType ?? "Non renseigné"}</li>
-                <li>Surface : {user.individualProfile.surface ?? "?"} m²</li>
-                <li>Jardin : {user.individualProfile.haveGarden ? "Oui" : "Non"}</li>
-                <li>Animaux : {user.individualProfile.haveAnimals ? "Oui" : "Non"}</li>
-                <li>Enfants : {user.individualProfile.haveChildren ? "Oui" : "Non"}</li>
-                <li>Famille d’accueil : {user.individualProfile.availableFamily ? "Oui" : "Non"}</li>
-                {user.individualProfile.availableFamily && user.individualProfile.availableTime && (
-                  <li>Disponibilité: {new Date(user.individualProfile.availableTime).toLocaleDateString("fr-FR")}</li>
-                )}
-              </ul>
-            ) : (
-              <p className="text-sm text-gray-500 italic">
-                Profil non renseigné. Cliquez sur Modifier pour le compléter.
-              </p>
-            )}
-          </div>
-        )}
+      {user.role === "individual" && (
+        <div className="mt-4">
+          <h4 className="text-md font-bold text-success mb-2">Profil particulier</h4>
+          {user.individualProfile ? (
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>Logement : {user.individualProfile.housingType ?? "Non renseigné"}</li>
+              <li>Surface : {user.individualProfile.surface ?? "?"} m²</li>
+              <li>Jardin : {user.individualProfile.haveGarden ? "Oui" : "Non"}</li>
+              <li>Animaux : {user.individualProfile.haveAnimals ? "Oui" : "Non"}</li>
+              <li>Enfants : {user.individualProfile.haveChildren ? "Oui" : "Non"}</li>
+              <li>Famille d’accueil : {user.individualProfile.availableFamily ? "Oui" : "Non"}</li>
+              {user.individualProfile.availableFamily && user.individualProfile.availableTime && (
+                <li>Disponibilité: {new Date(user.individualProfile.availableTime).toLocaleDateString("fr-FR")}</li>
+              )}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-500 italic">
+              Profil non renseigné. Cliquez sur Modifier pour le compléter.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Profil refuge */}
       {user.role === "shelter" && (

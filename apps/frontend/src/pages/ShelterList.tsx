@@ -3,7 +3,10 @@ import ShelterCard from "../components/cards/ShelterCard";
 import Loader from "../components/ui/Loader";
 import { Home } from "lucide-react";
 import { toast } from "react-toastify";
-import { shelterApi, type ShelterWithRelations } from "../api/shelterApi";
+import { shelterApi } from "../api/shelterApi";
+// ⚡ CORRECTION : Import du type depuis le package partagé et de AxiosError pour le catch
+import type { ShelterWithRelations } from "@projet/shared-types";
+import { AxiosError } from "axios";
 
 const SheltersPage = () => {
   const [shelters, setShelters] = useState<ShelterWithRelations[]>([]);
@@ -15,9 +18,10 @@ const SheltersPage = () => {
       try {
         const data = await shelterApi.getAllShelters();
         setShelters(data);
-      } catch (err: any) {
+      } catch (err: unknown) { // ⚡ Fin du type 'any'
         setError(true);
-        const errorMessage = err.response?.data?.message || "Impossible de charger les refuges.";
+        const axiosError = err as AxiosError<{ message: string }>;
+        const errorMessage = axiosError.response?.data?.message || "Impossible de charger les refuges.";
         toast.error(errorMessage);
       } finally {
         setLoading(false);
