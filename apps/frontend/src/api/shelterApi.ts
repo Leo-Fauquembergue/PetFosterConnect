@@ -1,9 +1,9 @@
-import api from "./api";
-import type { 
-  ShelterWithRelations, 
-  ShelterDetailResponse, 
-  AnimalWithRelations 
+import type {
+  AnimalWithRelations,
+  ShelterDetailResponse,
+  ShelterWithRelations,
 } from "@projet/shared-types";
+import api from "./api";
 
 export const shelterApi = {
   getAllShelters: async (): Promise<ShelterWithRelations[]> => {

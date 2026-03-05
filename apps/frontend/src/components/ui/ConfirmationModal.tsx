@@ -37,15 +37,12 @@ export default function ConfirmationModal({
 
       {/* Contenu de la modale */}
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform transition-all scale-100 animate-in fade-in zoom-in-95 duration-200">
-        
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded-full ${
-                variant === "danger"
-                  ? "bg-red-100 text-red-600"
-                  : "bg-orange-100 text-orange-600"
+                variant === "danger" ? "bg-red-100 text-red-600" : "bg-orange-100 text-orange-600"
               }`}
             >
               <AlertTriangle className="w-5 h-5" />

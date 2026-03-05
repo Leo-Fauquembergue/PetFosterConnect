@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { ApplicationsService } from './applications.service';
-import { ApplicationsController } from './applications.controller';
-import { EmailsModule } from '../emails/emails.module';
+import { Module } from "@nestjs/common";
+import { EmailsModule } from "../emails/emails.module";
+import { ApplicationsController } from "./applications.controller";
+import { ApplicationsService } from "./applications.service";
 
 @Module({
   imports: [EmailsModule],

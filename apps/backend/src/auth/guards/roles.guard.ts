@@ -1,7 +1,7 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { UserRole } from '@prisma/client';
-import { ROLES_KEY } from '../decorators/roles.decorators';
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { UserRole } from "@prisma/client";
+import { ROLES_KEY } from "../decorators/roles.decorators";
 
 /**
  * Guard vérifiant si l'utilisateur connecté possède le rôle requis pour accéder à la ressource.

@@ -13,7 +13,7 @@ export const SpeciesSchema = z.object({
   name: z.string().max(50),
   createdAt: z.date(),
   updatedAt: z.date().nullable().optional(),
-  deletedAt: z.date().nullable().optional(), 
+  deletedAt: z.date().nullable().optional(),
 });
 
 export type Species = z.infer<typeof SpeciesSchema>;
@@ -23,7 +23,7 @@ export const AnimalSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1).max(100),
   age: z.string().max(50).nullable().optional(),
-   // ou string si tu veux "3 mois"
+  // ou string si tu veux "3 mois"
   description: z.string().nullable().optional(),
 
   // Caractéristiques physiques
@@ -51,7 +51,6 @@ export const AnimalSchema = z.object({
   deletedAt: z.date().nullable().optional(),
 });
 
-
 export type Animal = z.infer<typeof AnimalSchema>;
 
 // DTOs
@@ -59,7 +58,7 @@ export type Animal = z.infer<typeof AnimalSchema>;
 // CREATE : Création d'une fiche (Par le Refuge)
 export const CreateAnimalSchema = AnimalSchema.omit({
   id: true,
-  pfcUserId: true, 
+  pfcUserId: true,
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
@@ -71,13 +70,11 @@ export const CreateAnimalSchema = AnimalSchema.omit({
 export type CreateAnimalDto = z.infer<typeof CreateAnimalSchema>;
 
 // UPDATE : Modification d'une fiche
-export const UpdateAnimalSchema = AnimalSchema
-  .omit({
-    id: true,
-    pfcUserId: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .partial();
+export const UpdateAnimalSchema = AnimalSchema.omit({
+  id: true,
+  pfcUserId: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial();
 
 export type UpdateAnimalDto = z.infer<typeof UpdateAnimalSchema>;

@@ -1,18 +1,26 @@
-import { render, screen, fireEvent, waitFor, type RenderResult } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { MemoryRouter } from "react-router-dom";
-import AuthPage from "./AuthPage";
-import { AuthProvider } from "../auth/AuthContext";
-import { authApi } from "../api/authApi";
 import { UserRole } from "@projet/shared-types";
+import { fireEvent, type RenderResult, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { toast } from "react-toastify";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { authApi } from "../api/authApi";
+import { AuthProvider } from "../auth/AuthContext";
+import AuthPage from "./AuthPage";
 
 // Mock de l'API
 vi.mock("../api/authApi", () => ({
   authApi: {
     login: vi.fn(),
     register: vi.fn(),
-    getMe: vi.fn().mockResolvedValue({ id: 1, email: "test@test.com", role: "individual", phoneNumber: "0600000000", address: "Paris" }),
+    getMe: vi
+      .fn()
+      .mockResolvedValue({
+        id: 1,
+        email: "test@test.com",
+        role: "individual",
+        phoneNumber: "0600000000",
+        address: "Paris",
+      }),
   },
 }));
 
@@ -57,7 +65,13 @@ describe("AuthPage - LoginForm", () => {
             () =>
               resolve({
                 access_token: "fake-jwt-token",
-                user: { id: 1, email: "test@test.com", role: UserRole.individual, phoneNumber: "0600000000", address: "Paris" } as any,
+                user: {
+                  id: 1,
+                  email: "test@test.com",
+                  role: UserRole.individual,
+                  phoneNumber: "0600000000",
+                  address: "Paris",
+                } as any,
               }),
             50
           )
@@ -101,7 +115,10 @@ describe("AuthPage - LoginForm", () => {
       expect(authApi.login).toHaveBeenCalled();
       expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument();
       // CORRECTION : S'assurer que le message d'erreur s'est bien affiché pour le Edge Case
-      expect(toast.error).toHaveBeenCalledWith("Email ou mot de passe incorrect !", expect.any(Object));
+      expect(toast.error).toHaveBeenCalledWith(
+        "Email ou mot de passe incorrect !",
+        expect.any(Object)
+      );
     });
   });
 });

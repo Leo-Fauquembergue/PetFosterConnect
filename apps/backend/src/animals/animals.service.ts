@@ -1,12 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
-import { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
-import type { RequestWithUser } from "@projet/shared-types";
-import { PrismaService } from "../prisma/prisma.service";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
+import type { RequestWithUser } from "@projet/shared-types";
+import { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
+import { PrismaService } from "../prisma/prisma.service";
 
 // Animal avec relations species + shelterProfile
 type AnimalWithRelations = Prisma.AnimalGetPayload<{
-  include: { species: true; shelter: { select: { id: true, email: true, phoneNumber: true, shelterProfile: true } } };
+  include: {
+    species: true;
+    shelter: { select: { id: true; email: true; phoneNumber: true; shelterProfile: true } };
+  };
 }>;
 
 // Animal enrichi avec isBookmarked
@@ -32,7 +35,7 @@ export class AnimalsService {
       acceptChildren: dto.acceptChildren,
       needGarden: dto.needGarden,
       treatment: dto.treatment,
-      shelter: { connect: { id: userId } },   // relation vers PfcUser
+      shelter: { connect: { id: userId } }, // relation vers PfcUser
       species: { connect: { id: dto.speciesId } }, // relation vers Species
     };
     return this.prisma.animal.create({ data });
@@ -40,13 +43,13 @@ export class AnimalsService {
 
   async findAll(includeDeleted = false, limit?: number) {
     return this.prisma.animal.findMany({
-      where: { 
+      where: {
         // Si includeDeleted est false, on ne veut que deletedAt: null
-        deletedAt: includeDeleted ? undefined : null 
+        deletedAt: includeDeleted ? undefined : null,
       },
       take: limit, // On applique la limite si elle est fournie
-      orderBy: { 
-        createdAt: 'desc' // On trie toujours du plus récent au plus ancien
+      orderBy: {
+        createdAt: "desc", // On trie toujours du plus récent au plus ancien
       },
       include: {
         species: true,
@@ -56,54 +59,55 @@ export class AnimalsService {
             email: true,
             phoneNumber: true,
             shelterProfile: true, // Sélection explicite et sûre
-          }
+          },
         },
       },
     });
   }
 
- async findOne(id: number, userId?: number): Promise<AnimalWithBookmark> {
-   const animal = await this.prisma.animal.findUnique({
-     where: { id },
-     include: {
-       species: true,
-       shelter: {
-         select: {
-           id: true,
-           email: true,
-           phoneNumber: true,
-           shelterProfile: true,
-         }
-       },
-       bookmarks: userId ? { where: { pfcUserId: userId } } : false,
-     },
-   });
+  async findOne(id: number, userId?: number): Promise<AnimalWithBookmark> {
+    const animal = await this.prisma.animal.findUnique({
+      where: { id },
+      include: {
+        species: true,
+        shelter: {
+          select: {
+            id: true,
+            email: true,
+            phoneNumber: true,
+            shelterProfile: true,
+          },
+        },
+        bookmarks: userId ? { where: { pfcUserId: userId } } : false,
+      },
+    });
 
-   if (!animal || animal.deletedAt) {
-     throw new NotFoundException(`Animal ${id} non trouvé ou supprimé`);
-   }
- 
-   const isBookmarked = !!animal.bookmarks?.length;
- 
-   // On supprime bookmarks du retour pour éviter de l’exposer
-   const { bookmarks, ...rest } = animal;
-   return { ...rest, isBookmarked };
- }
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException(`Animal ${id} non trouvé ou supprimé`);
+    }
+
+    const isBookmarked = !!animal.bookmarks?.length;
+
+    // On supprime bookmarks du retour pour éviter de l’exposer
+    const { bookmarks, ...rest } = animal;
+    return { ...rest, isBookmarked };
+  }
 
   async findAllByShelter(userId: number) {
     return this.prisma.animal.findMany({
       where: { pfcUserId: userId },
       include: {
         species: true, // "Va chercher le nom de l'espèce"
-        shelter: {     // "Va chercher les infos du refuge"
+        shelter: {
+          // "Va chercher les infos du refuge"
           select: {
             id: true,
             email: true,
             phoneNumber: true,
             shelterProfile: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
@@ -111,19 +115,19 @@ export class AnimalsService {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
     if (!animal) throw new NotFoundException("Animal introuvable");
-    
+
     // Vérification IDOR : Bloquer si l'utilisateur n'est pas Admin ET n'est pas le propriétaire
-    if (user.role !== 'admin' && animal.pfcUserId !== user.id) {
+    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
       throw new ForbiddenException("Vous ne pouvez modifier que vos animaux.");
     }
-  
+
     // ⚡ Déstructuration élégante et séparation des champs complexes
     const { weight, speciesId, photos, ...restDto } = updateAnimalDto;
 
     const data: Prisma.AnimalUpdateInput = {
       ...restDto,
     };
-    
+
     // Traitement spécifique des champs complexes
     if (weight !== undefined) {
       data.weight = weight ? new Prisma.Decimal(weight) : null;
@@ -145,9 +149,9 @@ export class AnimalsService {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
     if (!animal) throw new NotFoundException("Animal introuvable");
-    
+
     // Vérification IDOR
-    if (user.role !== 'admin' && animal.pfcUserId !== user.id) {
+    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
       throw new ForbiddenException("Action interdite sur cet animal.");
     }
 

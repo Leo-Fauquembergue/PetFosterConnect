@@ -19,15 +19,15 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import type { CreateAnimalDto, UpdateAnimalDto, RequestWithUser } from "@projet/shared-types";
+import { UserRole } from "@prisma/client";
+import type { CreateAnimalDto, RequestWithUser, UpdateAnimalDto } from "@projet/shared-types";
 import { CreateAnimalSchema, UpdateAnimalSchema } from "@projet/shared-types";
+import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { OptionalJwtAuthGuard } from "../auth/guards/optional-jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { Roles } from "../auth/decorators/roles.decorators";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { AnimalsService } from "./animals.service";
-import { UserRole } from "@prisma/client";
 
 @ApiTags("animals")
 @Controller("animals")
@@ -43,10 +43,7 @@ export class AnimalsController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 401, description: "Non authentifié" })
   @ApiResponse({ status: 403, description: "Accès refusé" })
-  create(
-    @Body(new ZodPipe(CreateAnimalSchema)) dto: CreateAnimalDto,
-    @Req() req: RequestWithUser
-  ) {
+  create(@Body(new ZodPipe(CreateAnimalSchema)) dto: CreateAnimalDto, @Req() req: RequestWithUser) {
     return this.animalsService.create(dto, req.user.id);
   }
 
@@ -65,7 +62,7 @@ export class AnimalsController {
   findAll(@Query("limit") limit?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : undefined;
     const safeLimit = parsedLimit && !Number.isNaN(parsedLimit) ? Math.min(parsedLimit, 50) : 50;
-    
+
     return this.animalsService.findAll(false, safeLimit);
   }
 

@@ -1,36 +1,41 @@
+import type { IndividualProfile, ShelterProfile, User } from "@projet/shared-types";
+import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-// On n'importe plus "api" directement, on utilise ton fichier centralisé !
+import { toast } from "react-toastify";
 import { userApi } from "../../api/userApi";
+import UserCard from "../../components/cards/UserCard";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
-import UserCard from "../../components/cards/UserCard";
-import { toast } from "react-toastify";
+
+// ⚡ Typage strict englobant les relations Prisma optionnelles
+type UserWithProfiles = User & {
+  individualProfile?: IndividualProfile | null;
+  shelterProfile?: ShelterProfile | null;
+};
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
-  // On garde "any" ici pour ne pas bloquer sur les relations (individualProfile / shelterProfile)
-  const [user, setUser] = useState<any | null>(null);
+
+  // ⚡ Fin du festival du `any`
+  const [user, setUser] = useState<UserWithProfiles | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState<any>({});
+  // ⚡ Typage du state formulaire
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     const fetchUser = async () => {
       if (!id) return;
-
       try {
-        // ⚡ Utilisation de ta méthode API propre
         const data = await userApi.getProfile(Number(id));
-        
-        // On force le type en any localement pour lire les relations sans erreur TS
-        const userData: any = data;
+        const userData = data as UserWithProfiles;
+
         setUser(userData);
 
-        // Gestion des formulaires selon le rôle
         if (userData.role === "individual") {
           setFormData({
             email: userData.email ?? "",
@@ -55,10 +60,13 @@ export default function UserProfilePage() {
             logo: userData.shelterProfile?.logo ?? "",
           });
         }
-
         setLoading(false);
-      } catch (err: any) {
-        const errorMessage = err.response?.data?.message || "Impossible de charger le profil.";
+      } catch (err: unknown) {
+        // ⚡ Vrai Type Guard pour éviter les crashs sur des erreurs natives
+        let errorMessage = "Impossible de charger le profil.";
+        if (isAxiosError(err)) {
+          errorMessage = err.response?.data?.message || errorMessage;
+        }
         toast.error(errorMessage);
         setLoading(false);
       }
@@ -69,33 +77,43 @@ export default function UserProfilePage() {
   if (loading) return <p>Chargement...</p>;
   if (!user) return <p>Utilisateur introuvable</p>;
 
-  const handleChange = (field: string, value: any) => {
-    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: unknown) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
+    setIsSubmitting(true);
 
     const { password, ...profileData } = formData;
 
     try {
-        let updatedUser: any; 
-        
-        if (user.role === "individual") {
-          updatedUser = await userApi.updateIndividualProfile(user.id, profileData);
-        } else {
-          updatedUser = await userApi.updateShelterProfile(user.id, profileData);
-        }
+      let updatedUser: UserWithProfiles;
 
-        setUser({ ...user, ...updatedUser });
-        setIsEditing(false);
-        toast.success("Profil mis à jour avec succès !");
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Impossible de mettre à jour le profil.";
+      // Les données sont castées ici car les formulaires enfants valident la structure
+      if (user.role === "individual") {
+        updatedUser = (await userApi.updateIndividualProfile(
+          user.id as number,
+          profileData as any
+        )) as UserWithProfiles;
+      } else {
+        updatedUser = (await userApi.updateShelterProfile(
+          user.id as number,
+          profileData as any
+        )) as UserWithProfiles;
+      }
+
+      setUser({ ...user, ...updatedUser });
+      setIsEditing(false);
+      toast.success("Profil mis à jour avec succès !");
+    } catch (err: unknown) {
+      let errorMessage = "Impossible de mettre à jour le profil.";
+      if (isAxiosError(err)) {
+        errorMessage = err.response?.data?.message || errorMessage;
+      }
       toast.error(errorMessage);
     } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
+      setIsSubmitting(false);
     }
   };
 
@@ -113,18 +131,18 @@ export default function UserProfilePage() {
               Modifier
             </button>
 
-            {/* Bloc mot de passe toujours accessible */}
             <div className="mt-6 border-t pt-4">
               <h2 className="text-lg font-semibold">Modifier le mot de passe</h2>
-              <PasswordForm userId={user.id} />
+              {/* Le cast est safe car un user retourné par la DB a toujours un ID */}
+              <PasswordForm userId={user.id as number} />
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {user.role === "individual" ? (
-              <IndividualProfileForm formData={formData} onChange={handleChange} />
+              <IndividualProfileForm formData={formData as any} onChange={handleChange} />
             ) : (
-              <ShelterProfileForm formData={formData} onChange={handleChange} />
+              <ShelterProfileForm formData={formData as any} onChange={handleChange} />
             )}
 
             <div className="flex justify-between">
@@ -135,12 +153,12 @@ export default function UserProfilePage() {
               >
                 Annuler
               </button>
-              <button 
-                type="submit" 
-                disabled={isSubmitting} // ⚡ AJOUT
+              <button
+                type="submit"
+                disabled={isSubmitting}
                 className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting ? "Sauvegarde..." : "Sauvegarder"} 
+                {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
               </button>
             </div>
           </form>

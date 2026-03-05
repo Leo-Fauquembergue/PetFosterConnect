@@ -31,7 +31,10 @@ export default function UserCard({ user }: UserCardProps) {
               <li>Enfants : {user.individualProfile.haveChildren ? "Oui" : "Non"}</li>
               <li>Famille d’accueil : {user.individualProfile.availableFamily ? "Oui" : "Non"}</li>
               {user.individualProfile.availableFamily && user.individualProfile.availableTime && (
-                <li>Disponibilité: {new Date(user.individualProfile.availableTime).toLocaleDateString("fr-FR")}</li>
+                <li>
+                  Disponibilité:{" "}
+                  {new Date(user.individualProfile.availableTime).toLocaleDateString("fr-FR")}
+                </li>
               )}
             </ul>
           ) : (
@@ -51,7 +54,9 @@ export default function UserCard({ user }: UserCardProps) {
               <p className="text-sm font-semibold text-gray-800">
                 {user.shelterProfile.shelterName || "Nom non renseigné"}
               </p>
-              <p className="text-xs text-gray-500">SIRET : {user.shelterProfile.siret || "Non renseigné"}</p>
+              <p className="text-xs text-gray-500">
+                SIRET : {user.shelterProfile.siret || "Non renseigné"}
+              </p>
               <p className="text-sm text-gray-600 italic line-clamp-3">
                 {user.shelterProfile.description || "Aucune description fournie."}
               </p>

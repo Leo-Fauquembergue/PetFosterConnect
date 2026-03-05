@@ -12,10 +12,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     return (
       <div className="flex flex-col gap-1 w-full">
-        <label
-          htmlFor={selectId}
-          className="text-sm font-medium text-gray-700 font-openSans mb-1"
-        >
+        <label htmlFor={selectId} className="text-sm font-medium text-gray-700 font-openSans mb-1">
           {label}
         </label>
         <select

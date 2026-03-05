@@ -1,28 +1,23 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UsePipes,
+  Get,
+  Param,
   ParseIntPipe,
-  UseGuards,
+  Patch,
+  Post,
   Req,
+  UseGuards,
+  UsePipes,
 } from "@nestjs/common";
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from "@nestjs/swagger";
-import * as sharedTypes from "@projet/shared-types";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { UserRole } from "@prisma/client";
 import type { RequestWithUser } from "@projet/shared-types";
+import * as sharedTypes from "@projet/shared-types";
+import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { Roles } from "../auth/decorators/roles.decorators";
-import { UserRole } from "@prisma/client";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { ApplicationsService } from "./applications.service";
 
@@ -81,12 +76,7 @@ export class ApplicationsController {
     @Param("candidateId", ParseIntPipe) candidateId: number,
     @Body() updateDto: sharedTypes.UpdateApplicationStatusDto
   ) {
-    return this.applicationsService.updateStatus(
-      candidateId,
-      animalId,
-      updateDto,
-      req.user
-    );
+    return this.applicationsService.updateStatus(candidateId, animalId, updateDto, req.user);
   }
 
   @Delete(":animalId/:candidateId")

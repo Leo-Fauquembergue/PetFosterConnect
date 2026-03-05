@@ -1,14 +1,14 @@
+import { UserRole } from "@projet/shared-types";
 import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./auth/AuthContext.tsx";
-import { UserRole } from "@projet/shared-types";
 import "react-toastify/dist/ReactToastify.css";
 
+import ProtectedRoute from "./auth/ProtectedRoute.tsx";
 // Layouts
 import AdminLayout from "./components/layout/AdminLayout";
 import PublicLayout from "./components/layout/PublicLayout";
 import UserSidebarLayout from "./components/layout/UserSidebarLayout.tsx";
-
 // Pages
 import About from "./pages/About";
 import AnimalDetail from "./pages/AnimalDetail";
@@ -22,7 +22,9 @@ import Home from "./pages/Home.tsx";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import ProtectedRoute from "./auth/ProtectedRoute.tsx";
+import ApplicationsReceived from "./pages/profile/ApplicationsReceived.tsx";
+import ApplicationsSent from "./pages/profile/ApplicationsSent.tsx";
+import BookmarksPage from "./pages/profile/Bookmarks.tsx";
 import AnimalForm from "./pages/profile/CreateEditAnimalPage.tsx";
 import ShelterAnimalList from "./pages/profile/ShelterAnimalList";
 import UserProfilePage from "./pages/profile/UserProfile";
@@ -30,9 +32,6 @@ import ShelterAnimalPage from "./pages/ShelterAnimal";
 import ShelterDetailPage from "./pages/ShelterDetail";
 import SheltersPage from "./pages/ShelterList";
 import Unauthorized from "./pages/Unauthorized";
-import ApplicationsSent from "./pages/profile/ApplicationsSent.tsx";
-import ApplicationsReceived from "./pages/profile/ApplicationsReceived.tsx";
-import BookmarksPage from "./pages/profile/Bookmarks.tsx";
 
 function App() {
   return (
@@ -53,7 +52,7 @@ function App() {
           <Route path="/refuges/:id/animaux" element={<ShelterAnimalPage />} />
 
           {/* ESPACE UTILISATEUR */}
-          <Route 
+          <Route
             element={
               <ProtectedRoute>
                 <UserSidebarLayout />
@@ -77,8 +76,8 @@ function App() {
 
         {/* ZONE ADMIN */}
         {/* Sécurisation globale du layout Admin avec le bon nom de prop et l'Enum */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute allowedRoles={[UserRole.admin]}>
               <AdminLayout />

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import BackBanner from "../components/ui/BackBanner";
-import { shelterApi } from "../api/shelterApi";
 // ⚡ CORRECTION : Import du type depuis le package partagé
 import type { ShelterDetailResponse } from "@projet/shared-types";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { shelterApi } from "../api/shelterApi";
+import BackBanner from "../components/ui/BackBanner";
 import Loader from "../components/ui/Loader";
 
 const RefugeDetailPage = () => {
@@ -19,7 +19,8 @@ const RefugeDetailPage = () => {
       try {
         const data = await shelterApi.getShelterById(Number(id));
         setShelter(data);
-      } catch (err: unknown) { // ⚡ Fin du any implicite
+      } catch (err: unknown) {
+        // ⚡ Fin du any implicite
         setError(true);
       } finally {
         setLoading(false);
@@ -29,10 +30,16 @@ const RefugeDetailPage = () => {
   }, [id]);
 
   if (loading) return <Loader text="Chargement du refuge..." />;
-  
-  if (error) return <p className="text-center text-red-500 my-12 font-medium">Erreur lors du chargement du refuge.</p>;
-  
-  if (!shelter) return <p className="text-center text-gray-500 my-12 font-medium">Refuge introuvable</p>;
+
+  if (error)
+    return (
+      <p className="text-center text-red-500 my-12 font-medium">
+        Erreur lors du chargement du refuge.
+      </p>
+    );
+
+  if (!shelter)
+    return <p className="text-center text-gray-500 my-12 font-medium">Refuge introuvable</p>;
 
   return (
     <div className="bg-bgapp font-openSans text-gray-800">
@@ -47,9 +54,7 @@ const RefugeDetailPage = () => {
           style={{ borderColor: "#2D6A4F" }}
         >
           <img
-            src={
-              shelter.logo ?? "https://placehold.co/150x150?text=Pas+de+logo"
-            }
+            src={shelter.logo ?? "https://placehold.co/150x150?text=Pas+de+logo"}
             alt={`${shelter.shelterName} logo`}
             className="w-32 h-32 rounded-full object-cover bg-gray-200"
           />
@@ -61,9 +66,7 @@ const RefugeDetailPage = () => {
             <p className="text-sm text-gray-600">
               <span className="font-semibold">Description :</span>
             </p>
-            {shelter.description && (
-              <p className="text-gray-800">{shelter.description}</p>
-            )}
+            {shelter.description && <p className="text-gray-800">{shelter.description}</p>}
           </div>
         </div>
 

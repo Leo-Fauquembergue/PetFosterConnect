@@ -1,19 +1,19 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
-import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AnimalsModule } from "./animals/animals.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { AuthModule } from "./auth/auth.module";
-import { HealthController } from "./health/health.controller";
-import { PrismaModule } from "./prisma/prisma.module";
-import { UsersModule } from "./users/users.module";
-import { SheltersModule } from "./shelters/shelters.module";
 import { ApplicationsModule } from "./applications/applications.module";
-import { SpeciesModule } from './species/species.module';
+import { AuthModule } from "./auth/auth.module";
 import { BookmarksModule } from "./bookmarks/bookmarks.module";
 import { EmailsModule } from "./emails/emails.module";
+import { HealthController } from "./health/health.controller";
+import { PrismaModule } from "./prisma/prisma.module";
+import { SheltersModule } from "./shelters/shelters.module";
+import { SpeciesModule } from "./species/species.module";
+import { UsersModule } from "./users/users.module";
 
 /**
  * MODULE RACINE (ROOT MODULE)
@@ -28,10 +28,12 @@ import { EmailsModule } from "./emails/emails.module";
     ConfigModule.forRoot({
       isGlobal: true, // Recommandé : rend le .env accessible dans tous les futurs modules
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     UsersModule,
     AnimalsModule,
@@ -40,7 +42,7 @@ import { EmailsModule } from "./emails/emails.module";
     ApplicationsModule,
     SpeciesModule,
     BookmarksModule,
-    EmailsModule
+    EmailsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

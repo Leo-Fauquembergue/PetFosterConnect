@@ -8,7 +8,7 @@ export class ZodPipe implements PipeTransform {
 
   transform(value: unknown, metadata: ArgumentMetadata) {
     // Si ce n'est pas le body, on laisse passer sans valider
-    if (metadata.type !== 'body') {
+    if (metadata.type !== "body") {
       return value;
     }
 

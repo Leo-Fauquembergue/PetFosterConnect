@@ -1,7 +1,7 @@
-import { SetMetadata } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { SetMetadata } from "@nestjs/common";
+import { UserRole } from "@prisma/client";
 
-export const ROLES_KEY = 'roles';
+export const ROLES_KEY = "roles";
 
 /**
  * Décorateur personnalisé pour définir les rôles autorisés sur une route ou un contrôleur.

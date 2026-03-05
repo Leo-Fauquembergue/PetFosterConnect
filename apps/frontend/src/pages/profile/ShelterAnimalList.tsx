@@ -1,15 +1,14 @@
 import type { AnimalWithRelations } from "@projet/shared-types";
+import { AxiosError } from "axios";
 import { Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { AxiosError } from "axios";
+import { animalApi } from "../../api/animalApi";
+import { shelterApi } from "../../api/shelterApi";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
-
-import { shelterApi } from "../../api/shelterApi";
-import { animalApi } from "../../api/animalApi";
 
 // Dictionnaire pour la traduction des statuts
 const statusLabels: Record<string, string> = {
@@ -36,7 +35,8 @@ export default function ShelterAnimalList() {
         setAnimals(data);
       } catch (error) {
         const axiosError = error as AxiosError<{ message: string }>;
-        const errorMessage = axiosError.response?.data?.message || "Erreur de chargement des animaux.";
+        const errorMessage =
+          axiosError.response?.data?.message || "Erreur de chargement des animaux.";
         toast.error(errorMessage);
       } finally {
         setLoading(false);
@@ -52,19 +52,11 @@ export default function ShelterAnimalList() {
     try {
       if (type === "delete") {
         await animalApi.deleteAnimal(animalId);
-        setAnimals(
-          animals.map((a) =>
-            a.id === animalId ? { ...a, deletedAt: new Date() } : a
-          )
-        );
+        setAnimals(animals.map((a) => (a.id === animalId ? { ...a, deletedAt: new Date() } : a)));
         toast.success("Animal supprimé");
       } else {
         await animalApi.updateAnimal(animalId, { deletedAt: null });
-        setAnimals(
-          animals.map((a) =>
-            a.id === animalId ? { ...a, deletedAt: null } : a
-          )
-        );
+        setAnimals(animals.map((a) => (a.id === animalId ? { ...a, deletedAt: null } : a)));
         toast.success("Animal restauré");
       }
     } catch (_error) {
@@ -78,9 +70,7 @@ export default function ShelterAnimalList() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800 font-montserrat">
-          Gestion des Animaux
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800 font-montserrat">Gestion des Animaux</h1>
       </div>
 
       {/* Tableau */}
@@ -99,14 +89,9 @@ export default function ShelterAnimalList() {
           <tbody className="divide-y divide-gray-100 text-sm">
             {animals.length > 0 ? (
               animals.map((animal) => (
-                <tr
-                  key={animal.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
+                <tr key={animal.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-gray-500">#{animal.id}</td>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {animal.name}
-                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{animal.name}</td>
                   <td className="px-6 py-4">{animal.species?.name ?? "-"}</td>
                   <td className="px-6 py-4 hidden sm:table-cell text-gray-500">
                     {animal.age ?? "-"}
@@ -114,17 +99,15 @@ export default function ShelterAnimalList() {
                   <td className="px-6 py-4">
                     {/* ⚡ AJOUT : Remplacement des variantes pour matcher le nouveau comportement */}
                     <Badge
-                      label={
-                        statusLabels[animal.animalStatus] ?? animal.animalStatus
-                      }
+                      label={statusLabels[animal.animalStatus] ?? animal.animalStatus}
                       variant={
                         animal.animalStatus === "available"
                           ? "success"
                           : animal.animalStatus === "adopted"
-                          ? "info"
-                          : animal.animalStatus === "foster_care"
-                          ? "warning"
-                          : "error"
+                            ? "info"
+                            : animal.animalStatus === "foster_care"
+                              ? "warning"
+                              : "error"
                       }
                     />
                   </td>
@@ -142,8 +125,7 @@ export default function ShelterAnimalList() {
                       <button
                         type="button"
                         onClick={() =>
-                          animal.id &&
-                          setActionToConfirm({ type: "restore", id: animal.id })
+                          animal.id && setActionToConfirm({ type: "restore", id: animal.id })
                         }
                         className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors"
                         title="Restaurer"
@@ -154,8 +136,7 @@ export default function ShelterAnimalList() {
                       <button
                         type="button"
                         onClick={() =>
-                          animal.id &&
-                          setActionToConfirm({ type: "delete", id: animal.id })
+                          animal.id && setActionToConfirm({ type: "delete", id: animal.id })
                         }
                         className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
                         title="Supprimer"
@@ -181,11 +162,7 @@ export default function ShelterAnimalList() {
         isOpen={!!actionToConfirm}
         onClose={() => setActionToConfirm(null)}
         onConfirm={handleConfirmAction}
-        title={
-          actionToConfirm?.type === "delete"
-            ? "Supprimer l'animal ?"
-            : "Restaurer l'animal ?"
-        }
+        title={actionToConfirm?.type === "delete" ? "Supprimer l'animal ?" : "Restaurer l'animal ?"}
         message={
           actionToConfirm?.type === "delete"
             ? "Cette action placera l'animal dans la corbeille."

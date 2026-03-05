@@ -15,7 +15,8 @@ export default function Button({
   ...props // ...props contient type, onClick, disabled, etc.
 }: ButtonProps) {
   // J'ai ajouté "disabled:opacity-50 disabled:cursor-not-allowed" pour un meilleur rendu visuel quand le bouton charge
-  const baseStyles = "px-6 py-2 rounded-lg font-semibold transition duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyles =
+    "px-6 py-2 rounded-lg font-semibold transition duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
     primary: "bg-primary text-white hover:bg-orange-600",

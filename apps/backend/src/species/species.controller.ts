@@ -1,25 +1,20 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
   Body,
-  UseGuards,
+  Controller,
+  Delete,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
 } from "@nestjs/common";
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiBearerAuth,
-} from "@nestjs/swagger";
-import { SpeciesService } from "./species.service";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { UserRole } from "@prisma/client";
+import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { Roles } from "../auth/decorators/roles.decorators";
-import { UserRole } from "@prisma/client";
+import { SpeciesService } from "./species.service";
 
 @ApiTags("species")
 @Controller("species")
@@ -50,10 +45,7 @@ export class SpeciesController {
   @Roles(UserRole.admin)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Modifier une espèce (Admin uniquement)" })
-  async update(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() updateDto: { name: string }
-  ) {
+  async update(@Param("id", ParseIntPipe) id: number, @Body() updateDto: { name: string }) {
     return this.speciesService.update(id, updateDto);
   }
 

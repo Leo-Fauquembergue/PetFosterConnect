@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AnimalCard from "../components/cards/AnimalCard"; 
+import { toast } from "react-toastify";
+import { animalApi } from "../api/animalApi";
+import { shelterApi } from "../api/shelterApi";
+import AnimalCard from "../components/cards/AnimalCard";
 import ShelterCard from "../components/cards/ShelterCard";
 import Button from "../components/ui/Button";
 import Loader from "../components/ui/Loader";
-import { toast } from "react-toastify";
-
-import { animalApi } from "../api/animalApi";
-import { shelterApi } from "../api/shelterApi";
 
 // TYPES D'AFFICHAGE (UI) - Les seuls dont ce composant a besoin !
 type DisplayAnimal = {
@@ -37,7 +36,7 @@ export default function Home() {
         // Appels parallèles, le typage est géré nativement par les services !
         const [animalsData, sheltersData] = await Promise.all([
           animalApi.getLatestAnimals(),
-          shelterApi.getFeaturedShelters()
+          shelterApi.getFeaturedShelters(),
         ]);
 
         // MAPPING ANIMAUX
@@ -95,18 +94,22 @@ export default function Home() {
           {/* Texte Hero */}
           <div className="flex-1 text-center md:text-left text-white">
             <h1 className="text-4xl md:text-5xl font-bold font-montserrat mb-6 leading-tight">
-              Offrez-leur un foyer, <br/>
+              Offrez-leur un foyer, <br />
               <span className="text-primary-light text-orange-300">même temporaire.</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-100 mb-8 max-w-lg mx-auto md:mx-0">
-              Pet Foster Connect met en relation les refuges saturés avec des familles d'accueil et des adoptants aimants.
+              Pet Foster Connect met en relation les refuges saturés avec des familles d'accueil et
+              des adoptants aimants.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link to="/animaux">
                 <Button variant="primary">Je deviens Famille d'Accueil</Button>
               </Link>
               <Link to="/animaux">
-                <button type="button" className="px-6 py-2 rounded-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-secondary transition">
+                <button
+                  type="button"
+                  className="px-6 py-2 rounded-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-secondary transition"
+                >
                   Voir les animaux
                 </button>
               </Link>
@@ -114,10 +117,10 @@ export default function Home() {
           </div>
           {/* Image Hero */}
           <div className="flex-1 flex justify-center">
-            <img 
-              src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=600&auto=format&fit=crop" 
-              alt="Chien et Chat heureux" 
-              className="rounded-2xl shadow-2xl border-4 border-white/20 w-full max-w-md object-cover transform rotate-2 hover:rotate-0 transition duration-500" 
+            <img
+              src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=600&auto=format&fit=crop"
+              alt="Chien et Chat heureux"
+              className="rounded-2xl shadow-2xl border-4 border-white/20 w-full max-w-md object-cover transform rotate-2 hover:rotate-0 transition duration-500"
             />
           </div>
         </div>
@@ -128,10 +131,15 @@ export default function Home() {
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-3xl font-bold font-montserrat text-secondary mb-2">Les Derniers Animaux</h2>
+              <h2 className="text-3xl font-bold font-montserrat text-secondary mb-2">
+                Les Derniers Animaux
+              </h2>
               <p className="text-gray-500">Ils viennent d'arriver et attendent une famille.</p>
             </div>
-            <Link to="/animaux" className="hidden md:block text-primary font-semibold hover:underline">
+            <Link
+              to="/animaux"
+              className="hidden md:block text-primary font-semibold hover:underline"
+            >
               Voir tous les animaux →
             </Link>
           </div>
@@ -146,7 +154,9 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 italic">Aucun animal à afficher pour le moment.</p>
+            <p className="text-center text-gray-500 italic">
+              Aucun animal à afficher pour le moment.
+            </p>
           )}
 
           <div className="mt-8 text-center md:hidden">
@@ -162,10 +172,15 @@ export default function Home() {
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-3xl font-bold font-montserrat text-secondary mb-2">Les Refuges Partenaires</h2>
+              <h2 className="text-3xl font-bold font-montserrat text-secondary mb-2">
+                Les Refuges Partenaires
+              </h2>
               <p className="text-gray-500">Ils s'engagent au quotidien pour le bien-être animal.</p>
             </div>
-            <Link to="/refuges" className="hidden md:block text-primary font-semibold hover:underline">
+            <Link
+              to="/refuges"
+              className="hidden md:block text-primary font-semibold hover:underline"
+            >
               Voir tous les refuges →
             </Link>
           </div>
@@ -180,7 +195,9 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 italic">Nos refuges partenaires s'affichent bientôt ici.</p>
+            <p className="text-center text-gray-500 italic">
+              Nos refuges partenaires s'affichent bientôt ici.
+            </p>
           )}
 
           <div className="mt-8 text-center md:hidden">

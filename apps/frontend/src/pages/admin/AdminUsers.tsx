@@ -1,12 +1,12 @@
-import type { User, UpdateUserDto } from "@projet/shared-types";
+import type { UpdateUserDto, User } from "@projet/shared-types";
+import { isAxiosError } from "axios";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { AxiosError } from "axios";
+import { userApi } from "../../api/userApi";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
-import { userApi } from "../../api/userApi";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -26,14 +26,18 @@ export default function AdminUsers() {
       try {
         const data = await userApi.getAllUsers();
         setUsers(data);
-      } catch (error: unknown) { // ⚡ Fin du any
-        const err = error as AxiosError<{ message: string }>;
-        const errorMessage = err.response?.data?.message || "Impossible de charger les utilisateurs.";
+      } catch (error: unknown) {
+        // ⚡ Vrai Type Guard
+        let errorMessage = "Impossible de charger les utilisateurs.";
+        if (isAxiosError(error)) {
+          errorMessage = error.response?.data?.message || errorMessage;
+        }
         toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
     };
+
     fetchUsers();
   }, []);
 
@@ -67,11 +71,12 @@ export default function AdminUsers() {
     setActionToConfirm(null);
   };
 
-  if (loading) return (
-    <div className="h-screen flex items-center justify-center">
-      <Loader text="Chargement des utilisateurs..." />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader text="Chargement des utilisateurs..." />
+      </div>
+    );
 
   return (
     <div className="space-y-6">
@@ -113,9 +118,7 @@ export default function AdminUsers() {
               <th className="px-6 py-4">ID</th>
               <th className="px-6 py-4">Email</th>
               <th className="px-6 py-4">Rôle</th>
-              <th className="px-6 py-4 hidden sm:table-cell">
-                Date Inscription
-              </th>
+              <th className="px-6 py-4 hidden sm:table-cell">Date Inscription</th>
               <th className="px-6 py-4">Statut</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
@@ -123,14 +126,9 @@ export default function AdminUsers() {
           <tbody className="divide-y divide-gray-100 text-sm">
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
+                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-gray-500">#{user.id}</td>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {user.email}
-                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{user.email}</td>
                   <td className="px-6 py-4">
                     <Badge
                       label={user.role}
@@ -157,8 +155,7 @@ export default function AdminUsers() {
                       <button
                         type="button"
                         onClick={() =>
-                          user.id &&
-                          setActionToConfirm({ type: "restore", id: user.id })
+                          user.id && setActionToConfirm({ type: "restore", id: user.id })
                         }
                         className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors inline-flex items-center gap-1"
                         title="Restaurer l'utilisateur"
@@ -169,8 +166,7 @@ export default function AdminUsers() {
                       <button
                         type="button"
                         onClick={() =>
-                          user.id &&
-                          setActionToConfirm({ type: "delete", id: user.id })
+                          user.id && setActionToConfirm({ type: "delete", id: user.id })
                         }
                         className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
                         title="Bannir l'utilisateur"

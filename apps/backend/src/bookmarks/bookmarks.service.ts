@@ -32,7 +32,7 @@ export class BookmarksService {
           },
         },
       });
-      
+
       return { bookmarked: false, message: "Retiré des favoris" };
     }
 

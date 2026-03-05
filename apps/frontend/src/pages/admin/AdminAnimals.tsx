@@ -2,10 +2,10 @@ import type { Animal } from "@projet/shared-types";
 import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { animalApi } from "../../api/animalApi";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
-import { animalApi } from "../../api/animalApi";
 
 // Type étendu pour matcher le retour API (Relations Prisma)
 type AnimalWithRelations = Animal & {
@@ -29,10 +29,11 @@ export default function AdminAnimals() {
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
-        const data = await animalApi.getAllAdmin(); 
+        const data = await animalApi.getAllAdmin();
         setAnimals(data as AnimalWithRelations[]);
       } catch (error: any) {
-        const errorMessage = error.response?.data?.message || "Impossible de charger la liste des animaux.";
+        const errorMessage =
+          error.response?.data?.message || "Impossible de charger la liste des animaux.";
         toast.error(errorMessage);
       } finally {
         setLoading(false);
@@ -43,19 +44,14 @@ export default function AdminAnimals() {
 
   // FILTRAGE
   const filteredAnimals = animals.filter((animal) => {
-    const matchesSearch = animal.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || animal.animalStatus === statusFilter;
+    const matchesSearch = animal.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || animal.animalStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   // Ouverture de la modale (au lieu de confirm)
-  const openDeleteModal = (id: number) =>
-    setActionToConfirm({ type: "delete", id });
-  const openRestoreModal = (id: number) =>
-    setActionToConfirm({ type: "restore", id });
+  const openDeleteModal = (id: number) => setActionToConfirm({ type: "delete", id });
+  const openRestoreModal = (id: number) => setActionToConfirm({ type: "restore", id });
 
   // Exécution de l'action confirmée
   const handleConfirmAction = async () => {
@@ -65,11 +61,11 @@ export default function AdminAnimals() {
 
     try {
       if (type === "delete") {
-        await animalApi.deleteAnimalAdmin(id); 
-        setAnimals(animals.map((a) => a.id === id ? { ...a, deletedAt: new Date() } : a));
+        await animalApi.deleteAnimalAdmin(id);
+        setAnimals(animals.map((a) => (a.id === id ? { ...a, deletedAt: new Date() } : a)));
         toast.success("Animal supprimé avec succès");
       } else {
-        await animalApi.updateAnimalAdmin(id, { deletedAt: null }); 
+        await animalApi.updateAnimalAdmin(id, { deletedAt: null });
         setAnimals(animals.map((a) => (a.id === id ? { ...a, deletedAt: null } : a)));
         toast.success("Animal restauré avec succès");
       }
@@ -89,9 +85,7 @@ export default function AdminAnimals() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800 font-montserrat">
-          Gestion des Animaux
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800 font-montserrat">Gestion des Animaux</h1>
       </div>
 
       {/* BARRE D'OUTILS */}
@@ -134,16 +128,9 @@ export default function AdminAnimals() {
           <tbody className="divide-y divide-gray-100 text-sm">
             {filteredAnimals.length > 0 ? (
               filteredAnimals.map((animal) => (
-                <tr
-                  key={animal.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {animal.name}
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {animal.species?.name || "Inconnu"}
-                  </td>
+                <tr key={animal.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-gray-900">{animal.name}</td>
+                  <td className="px-6 py-4 text-gray-600">{animal.species?.name || "Inconnu"}</td>
                   <td className="px-6 py-4 text-gray-500">
                     {animal.shelter?.shelterProfile?.shelterName || "Inconnu"}
                   </td>
@@ -202,11 +189,7 @@ export default function AdminAnimals() {
         isOpen={!!actionToConfirm}
         onClose={() => setActionToConfirm(null)}
         onConfirm={handleConfirmAction}
-        title={
-          actionToConfirm?.type === "delete"
-            ? "Supprimer l'animal ?"
-            : "Restaurer l'animal ?"
-        }
+        title={actionToConfirm?.type === "delete" ? "Supprimer l'animal ?" : "Restaurer l'animal ?"}
         message={
           actionToConfirm?.type === "delete"
             ? "Cette action placera l'animal dans la corbeille. Il ne sera plus visible du public."
