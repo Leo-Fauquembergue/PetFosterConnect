@@ -1,4 +1,4 @@
-import { UserRole } from "@projet/shared-types";
+import { type User, UserRole } from "@projet/shared-types";
 import { fireEvent, type RenderResult, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -12,15 +12,13 @@ vi.mock("../api/authApi", () => ({
   authApi: {
     login: vi.fn(),
     register: vi.fn(),
-    getMe: vi
-      .fn()
-      .mockResolvedValue({
-        id: 1,
-        email: "test@test.com",
-        role: "individual",
-        phoneNumber: "0600000000",
-        address: "Paris",
-      }),
+    getMe: vi.fn().mockResolvedValue({
+      id: 1,
+      email: "test@test.com",
+      role: "individual",
+      phoneNumber: "0600000000",
+      address: "Paris",
+    }),
   },
 }));
 
@@ -71,7 +69,7 @@ describe("AuthPage - LoginForm", () => {
                   role: UserRole.individual,
                   phoneNumber: "0600000000",
                   address: "Paris",
-                } as any,
+                } as unknown as User,
               }),
             50
           )
@@ -101,6 +99,7 @@ describe("AuthPage - LoginForm", () => {
 
   it("doit gérer les erreurs de l'API (ex: identifiants incorrects) et déverrouiller le bouton avec notification visuelle", async () => {
     vi.mocked(authApi.login).mockRejectedValueOnce({
+      isAxiosError: true, // ⚡ C'est LA clé pour que axios.isAxiosError() retourne true dans AuthPage.tsx
       response: { status: 401, data: { message: "Unauthorized" } },
     });
 

@@ -27,7 +27,6 @@ export default function AdminUsers() {
         const data = await userApi.getAllUsers();
         setUsers(data);
       } catch (error: unknown) {
-        // ⚡ Vrai Type Guard
         let errorMessage = "Impossible de charger les utilisateurs.";
         if (isAxiosError(error)) {
           errorMessage = error.response?.data?.message || errorMessage;
@@ -37,7 +36,6 @@ export default function AdminUsers() {
         setLoading(false);
       }
     };
-
     fetchUsers();
   }, []);
 
@@ -59,16 +57,21 @@ export default function AdminUsers() {
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u)));
         toast.success("Utilisateur banni");
       } else {
-        // ⚡ CORRECTION TYPAGE : Substitution du 'as any' brut par 'as unknown as UpdateUserDto'
-        // garantissant la validation TypeScript tout en autorisant l'envoi du flag désiré au back.
-        await userApi.updateUser(id, { deletedAt: null } as unknown as UpdateUserDto);
+        await userApi.updateUser(id, { deletedAt: null } as Partial<UpdateUserDto> & {
+          deletedAt: null;
+        });
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: null } : u)));
         toast.success("Utilisateur restauré");
       }
-    } catch (_error) {
-      toast.error("Une erreur est survenue");
+    } catch (error: unknown) {
+      let errorMessage = "Une erreur est survenue lors de l'opération.";
+      if (isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+      toast.error(errorMessage);
+    } finally {
+      setActionToConfirm(null);
     }
-    setActionToConfirm(null);
   };
 
   if (loading)

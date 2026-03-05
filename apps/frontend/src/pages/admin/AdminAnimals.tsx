@@ -1,4 +1,5 @@
 import type { Animal } from "@projet/shared-types";
+import axios from "axios";
 import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -31,9 +32,11 @@ export default function AdminAnimals() {
       try {
         const data = await animalApi.getAllAdmin();
         setAnimals(data as AnimalWithRelations[]);
-      } catch (error: any) {
-        const errorMessage =
-          error.response?.data?.message || "Impossible de charger la liste des animaux.";
+      } catch (error: unknown) {
+        let errorMessage = "Impossible de charger la liste des animaux.";
+        if (axios.isAxiosError<{ message: string }>(error)) {
+          errorMessage = error.response?.data?.message || errorMessage;
+        }
         toast.error(errorMessage);
       } finally {
         setLoading(false);

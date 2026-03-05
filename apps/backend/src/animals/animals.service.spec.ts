@@ -1,4 +1,6 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
+import type { CreateAnimalDto, RequestWithUser, UpdateAnimalDto } from "@projet/shared-types";
+import { PrismaService } from "../prisma/prisma.service";
 import { AnimalsService } from "./animals.service";
 
 describe("AnimalsService", () => {
@@ -15,8 +17,8 @@ describe("AnimalsService", () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Justification : Mock partiel du PrismaClient
-    service = new AnimalsService(mockPrisma as any);
+    // ⚡ Disparition du eslint-disable-next-line
+    service = new AnimalsService(mockPrisma as unknown as PrismaService);
   });
 
   describe("findOne", () => {
@@ -45,16 +47,17 @@ describe("AnimalsService", () => {
 
   describe("create", () => {
     it("devrait créer un animal et formater correctement les relations Prisma", async () => {
+      // ⚡ Typage strict DTO
       const dto = {
         name: "Pongo",
         speciesId: 10,
         weight: 12.5,
-      };
+      } as CreateAnimalDto;
       const userId = 5;
 
       mockPrisma.animal.create.mockResolvedValue({ id: 100, ...dto });
 
-      const result = await service.create(dto as any, userId);
+      const result = await service.create(dto, userId);
 
       expect(mockPrisma.animal.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -89,16 +92,17 @@ describe("AnimalsService", () => {
   });
 
   describe("update", () => {
-    const dto = { name: "Rex Junior" };
+    // ⚡ Typage strict DTO
+    const dto = { name: "Rex Junior" } as UpdateAnimalDto;
 
     it("devrait modifier les données de l animal si l'utilisateur est le propriétaire", async () => {
-      const user = { id: 5, role: "shelter" };
+      const user = { id: 5, email: "refuge@test.com", role: "shelter" } as RequestWithUser["user"];
       const animal = { id: 1, pfcUserId: 5, name: "Rex" };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
       mockPrisma.animal.update.mockResolvedValue({ ...animal, name: "Rex Junior" });
 
-      const result = await service.update(1, dto as any, user);
+      const result = await service.update(1, dto, user);
 
       expect(mockPrisma.animal.update).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -108,39 +112,47 @@ describe("AnimalsService", () => {
     });
 
     it("devrait modifier les données si l'utilisateur est Admin (même non propriétaire)", async () => {
-      const admin = { id: 99, role: "admin" };
+      const admin = { id: 99, email: "admin@test.com", role: "admin" } as RequestWithUser["user"];
       const animal = { id: 1, pfcUserId: 5, name: "Rex" };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
       mockPrisma.animal.update.mockResolvedValue({ ...animal, name: "Rex Junior" });
 
-      const result = await service.update(1, dto as any, admin);
+      const result = await service.update(1, dto, admin);
 
       expect(mockPrisma.animal.update).toHaveBeenCalled();
       expect(result.name).toBe("Rex Junior");
     });
 
     it("devrait lever une ForbiddenException (Faille IDOR bloquée) si l'utilisateur n'est pas Admin ni propriétaire", async () => {
-      const attacker = { id: 42, role: "shelter" };
+      const attacker = {
+        id: 42,
+        email: "hacker@test.com",
+        role: "shelter",
+      } as RequestWithUser["user"];
       const animal = { id: 1, pfcUserId: 5, name: "Rex" };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
 
-      await expect(service.update(1, dto as any, attacker)).rejects.toThrow(ForbiddenException);
+      await expect(service.update(1, dto, attacker)).rejects.toThrow(ForbiddenException);
       expect(mockPrisma.animal.update).not.toHaveBeenCalled();
     });
 
     it("devrait lever une NotFoundException si l'animal n'existe pas (Update)", async () => {
       mockPrisma.animal.findUnique.mockResolvedValue(null);
-      await expect(service.update(99, dto as any, { id: 5, role: "shelter" })).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        service.update(99, dto, {
+          id: 5,
+          email: "refuge@test.com",
+          role: "shelter",
+        } as RequestWithUser["user"])
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe("remove", () => {
     it('devrait faire un "soft delete" si l\'utilisateur est propriétaire', async () => {
-      const user = { id: 5, role: "shelter" };
+      const user = { id: 5, email: "refuge@test.com", role: "shelter" } as RequestWithUser["user"];
       const animal = { id: 1, pfcUserId: 5 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
@@ -155,7 +167,11 @@ describe("AnimalsService", () => {
     });
 
     it("devrait lever une ForbiddenException (Faille IDOR bloquée) lors de la suppression par un non-propriétaire", async () => {
-      const attacker = { id: 42, role: "shelter" };
+      const attacker = {
+        id: 42,
+        email: "hacker@test.com",
+        role: "shelter",
+      } as RequestWithUser["user"];
       const animal = { id: 1, pfcUserId: 5 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
@@ -166,9 +182,13 @@ describe("AnimalsService", () => {
 
     it("devrait lever une NotFoundException si l'animal n'existe pas (Remove)", async () => {
       mockPrisma.animal.findUnique.mockResolvedValue(null);
-      await expect(service.remove(99, { id: 5, role: "shelter" })).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        service.remove(99, {
+          id: 5,
+          email: "refuge@test.com",
+          role: "shelter",
+        } as RequestWithUser["user"])
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

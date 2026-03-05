@@ -30,5 +30,5 @@ export default function ProtectedRoute({ allowedRoles, children }: ProtectedRout
   }
 
   // S'il encapsule un composant, on le retourne, sinon on rend les sous-routes (Outlet)
-  return children ? <>{children}</> : <Outlet />;
+  return children ? children : <Outlet />;
 }

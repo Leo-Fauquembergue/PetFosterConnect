@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type LoginDto, LoginSchema, type RegisterDto, RegisterSchema } from "@projet/shared-types";
+import axios from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -90,12 +91,17 @@ function LoginForm() {
         autoClose: 2000,
       });
       navigate("/");
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        toast.error("Email ou mot de passe incorrect !", { position: "top-right" });
+    } catch (error: unknown) {
+      if (axios.isAxiosError<{ message: string }>(error)) {
+        if (error.response?.status === 401) {
+          toast.error("Email ou mot de passe incorrect !", { position: "top-right" });
+        } else {
+          const errorMessage =
+            error.response?.data?.message || "Erreur serveur. Veuillez réessayer.";
+          toast.error(errorMessage, { position: "top-right" });
+        }
       } else {
-        const errorMessage = error.response?.data?.message || "Erreur serveur. Veuillez réessayer.";
-        toast.error(errorMessage, { position: "top-right" });
+        toast.error("Erreur serveur. Veuillez réessayer.", { position: "top-right" });
       }
     } finally {
       setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
@@ -157,13 +163,19 @@ function RegisterForm() {
         autoClose: 2000,
       });
       navigate("/");
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        toast.error("Cet email est déjà utilisé", { position: "top-right" });
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message: string }>(err)) {
+        if (err.response?.status === 409) {
+          toast.error("Cet email est déjà utilisé", { position: "top-right" });
+        } else {
+          const errorMessage =
+            err.response?.data?.message || "Erreur lors de l'inscription. Veuillez réessayer.";
+          toast.error(errorMessage, { position: "top-right" });
+        }
       } else {
-        const errorMessage =
-          err.response?.data?.message || "Erreur lors de l'inscription. Veuillez réessayer.";
-        toast.error(errorMessage, { position: "top-right" });
+        toast.error("Erreur lors de l'inscription. Veuillez réessayer.", {
+          position: "top-right",
+        });
       }
     } finally {
       setIsSubmitting(false); // ⚡ DÉVERROUILLAGE

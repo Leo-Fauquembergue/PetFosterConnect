@@ -21,17 +21,11 @@ export default function ConfirmationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop (fond grisé) rendu accessible */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity cursor-pointer"
+      {/* Backdrop rendu avec un bouton html sémantique (résout l'erreur Biome) */}
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity w-full h-full border-none cursor-default"
         onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            onClose();
-          }
-        }}
-        role="button"
-        tabIndex={0}
         aria-label="Fermer la modale"
       />
 

@@ -1,12 +1,18 @@
 import { NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
 import { BookmarksService } from "./bookmarks.service";
 
 describe("BookmarksService", () => {
   let service: BookmarksService;
-  let mockPrisma: any;
+
+  // ⚡ Typage strict pour remplacer le "any"
+  let mockPrisma: {
+    animal: { findUnique: jest.Mock };
+    bookmark: { findUnique: jest.Mock; create: jest.Mock; delete: jest.Mock };
+  };
 
   beforeEach(async () => {
-    // 1. On crée un mock très explicite
+    // 1. On crée un mock très explicite et typé
     mockPrisma = {
       animal: {
         findUnique: jest.fn(),
@@ -19,9 +25,8 @@ describe("BookmarksService", () => {
     };
 
     // 2. On instancie le service normalement
-    // On passe le mock directement au constructeur pour être SÛR qu'il soit utilisé
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Justification : Mock partiel du PrismaClient
-    service = new BookmarksService(mockPrisma as any);
+    // On passe le mock typé comme as unknown as PrismaService pour satisfaire TS sans perdre l'auto-complétion
+    service = new BookmarksService(mockPrisma as unknown as PrismaService);
   });
 
   it("devrait lever une erreur si animal inexistant", async () => {

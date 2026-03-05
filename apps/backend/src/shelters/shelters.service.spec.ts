@@ -38,8 +38,10 @@ describe("SheltersService", () => {
 
       const result = await service.findAll();
       expect(result).toHaveLength(1);
-      // CORRECTION : Vérification formelle du non-leak
-      expect((result[0] as any).user?.password).toBeUndefined();
+      // CORRECTION : Vérification formelle du non-leak sans "any"
+      expect(
+        (result[0] as unknown as { user?: { password?: string } }).user?.password
+      ).toBeUndefined();
     });
   });
 
@@ -54,8 +56,10 @@ describe("SheltersService", () => {
 
       const result = await service.findOne(1);
       expect(result.shelterName).toBe("SPA");
-      // CORRECTION : Vérification formelle du non-leak
-      expect((result as any).user?.password).toBeUndefined();
+      // CORRECTION : Vérification formelle du non-leak sans "any"
+      expect(
+        (result as unknown as { user?: { password?: string } }).user?.password
+      ).toBeUndefined();
     });
 
     it("doit lever une erreur si le refuge n existe pas", async () => {
@@ -73,7 +77,11 @@ describe("SheltersService", () => {
         shelterName: "SPA Modifiée",
       });
 
-      const result = await service.update(1, dto as any);
+      // Typage déduit intelligemment à partir des paramètres requis par service.update
+      const result = await service.update(
+        1,
+        dto as unknown as Parameters<typeof service.update>[1]
+      );
 
       expect(mockPrisma.shelterProfile.update).toHaveBeenCalledWith({
         where: { pfcUserId: 1 },
