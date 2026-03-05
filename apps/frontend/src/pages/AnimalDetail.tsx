@@ -48,7 +48,7 @@ export default function AnimalDetail() {
         if (data.photos && data.photos.length > 0) {
           setSelectedPhoto(data.photos[0]);
         }
-      } catch (err) {
+      } catch (_err) {
         setError("Impossible de charger les détails de l'animal.");
       } finally {
         setLoading(false);
@@ -58,18 +58,21 @@ export default function AnimalDetail() {
   }, [id]);
 
   const handleError = (err: unknown) => {
-    const axiosError = err as AxiosError<{ message: any }>;
+    const axiosError = err as AxiosError<{ message: unknown }>;
     const errorData = axiosError.response?.data?.message;
 
-    if (errorData?.errors?.message) {
-      try {
-        const parsedZodError = JSON.parse(errorData.errors.message);
-        if (parsedZodError[0]?.message) {
-          toast.error(parsedZodError[0].message);
-          return;
+    if (errorData && typeof errorData === "object" && "errors" in errorData) {
+      const errObj = errorData as { errors: { message: string } };
+      if (errObj.errors?.message) {
+        try {
+          const parsedZodError = JSON.parse(errObj.errors.message);
+          if (parsedZodError[0]?.message) {
+            toast.error(parsedZodError[0].message);
+            return;
+          }
+        } catch (_e) {
+          // Ignorer l'erreur de parsing et passer au fallback
         }
-      } catch (e) {
-        // Ignorer l'erreur de parsing et passer au fallback
       }
     }
 

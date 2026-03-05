@@ -19,7 +19,7 @@ const ShelterAnimalsPage = () => {
       try {
         const data = await shelterApi.getShelterById(Number(id));
         setShelter(data);
-      } catch (err) {
+      } catch (_err) {
         setError(true);
       } finally {
         setLoading(false);

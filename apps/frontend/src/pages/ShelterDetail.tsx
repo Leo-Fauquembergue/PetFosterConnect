@@ -19,7 +19,7 @@ const RefugeDetailPage = () => {
       try {
         const data = await shelterApi.getShelterById(Number(id));
         setShelter(data);
-      } catch (err: unknown) {
+      } catch (_err: unknown) {
         // ⚡ Fin du any implicite
         setError(true);
       } finally {

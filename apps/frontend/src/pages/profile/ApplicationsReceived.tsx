@@ -15,7 +15,7 @@ export default function ApplicationsReceived() {
       try {
         const data = await applicationApi.getReceivedApplications();
         setApplications(data);
-      } catch (err: unknown) {
+      } catch (_err: unknown) {
         toast.error("Erreur lors du chargement des demandes reçues.");
       } finally {
         setLoading(false);
@@ -77,7 +77,7 @@ export default function ApplicationsReceived() {
         prev.filter((app) => !(app.animalId === animalId && app.pfcUserId === candidateId))
       );
       toast.success("Demande archivée avec succès !");
-    } catch (err: unknown) {
+    } catch (_err: unknown) {
       toast.error("Erreur lors de l'archivage.");
     } finally {
       setActionLoadingId(null);

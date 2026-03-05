@@ -1,5 +1,5 @@
 import { UserRole } from "@projet/shared-types"; // Import de l'Enum
-import { Home, LogOut, PawPrint, UserCircle } from "lucide-react";
+import { Home, LogOut, PawPrint, UserCircle, X } from "lucide-react";
 import { CiFolderOn } from "react-icons/ci";
 import { LuPlus } from "react-icons/lu";
 import { NavLink, Outlet } from "react-router-dom";
@@ -30,18 +30,10 @@ export default function UserSidebarLayout() {
         <button
           type="button"
           className="md:hidden absolute top-4 right-4"
-          onClick={close} // Utilisation de close
+          onClick={close}
+          aria-label="Fermer le menu"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-7 h-7"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="w-7 h-7 text-gray-700" />
         </button>
 
         <div>
@@ -174,7 +166,14 @@ export default function UserSidebarLayout() {
         </div>
       </aside>
       {/* Overlay (mobile only) */}
-      {isOpen && <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={close} />}
+      {isOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/40 z-40 md:hidden w-full h-full border-none cursor-default"
+          onClick={close}
+          aria-label="Fermer le menu"
+        />
+      )}
       {/* Contenu principal */}
       <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
         <Outlet />

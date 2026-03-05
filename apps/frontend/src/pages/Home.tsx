@@ -67,7 +67,7 @@ export default function Home() {
           location: s.user?.address || "Localisation non renseignée",
         }));
         setShelters(featuredShelters);
-      } catch (error: any) {
+      } catch (_error: unknown) {
         toast.error("Impossible de charger les dernières annonces.");
       } finally {
         setLoading(false);

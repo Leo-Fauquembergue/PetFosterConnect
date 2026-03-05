@@ -1,5 +1,11 @@
-import type { IndividualProfile, ShelterProfile, User } from "@projet/shared-types";
-import { isAxiosError } from "axios";
+import type {
+  IndividualProfile,
+  ShelterProfile,
+  UpdateUserWithIndividualProfileDto,
+  UpdateUserWithShelterProfileDto,
+  User,
+} from "@projet/shared-types";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -15,17 +21,44 @@ type UserWithProfiles = User & {
   shelterProfile?: ShelterProfile | null;
 };
 
+// Typage unifié du state formData englobant les deux DTOs
+type ProfileFormData = Partial<
+  UpdateUserWithIndividualProfileDto & UpdateUserWithShelterProfileDto
+>;
+
+// ⚡ Types stricts attendus par les composants enfants pour satisfaire TS2322
+type ExpectedIndividualProps = {
+  email: string;
+  phoneNumber: string;
+  address: string;
+  surface: number;
+  housingType: string;
+  haveGarden: boolean;
+  haveAnimals: boolean;
+  haveChildren: boolean;
+  availableFamily: boolean;
+  availableTime?: string;
+};
+
+type ExpectedShelterProps = {
+  logo: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+  shelterName: string;
+  siret: string;
+  description: string;
+};
+
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  // ⚡ Fin du festival du `any`
   const [user, setUser] = useState<UserWithProfiles | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ⚡ Typage du state formulaire
-  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [formData, setFormData] = useState<ProfileFormData>({});
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -33,7 +66,6 @@ export default function UserProfilePage() {
       try {
         const data = await userApi.getProfile(Number(id));
         const userData = data as UserWithProfiles;
-
         setUser(userData);
 
         if (userData.role === "individual") {
@@ -62,9 +94,8 @@ export default function UserProfilePage() {
         }
         setLoading(false);
       } catch (err: unknown) {
-        // ⚡ Vrai Type Guard pour éviter les crashs sur des erreurs natives
         let errorMessage = "Impossible de charger le profil.";
-        if (isAxiosError(err)) {
+        if (axios.isAxiosError(err)) {
           errorMessage = err.response?.data?.message || errorMessage;
         }
         toast.error(errorMessage);
@@ -85,21 +116,18 @@ export default function UserProfilePage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const { password, ...profileData } = formData;
-
     try {
       let updatedUser: UserWithProfiles;
 
-      // Les données sont castées ici car les formulaires enfants valident la structure
       if (user.role === "individual") {
         updatedUser = (await userApi.updateIndividualProfile(
           user.id as number,
-          profileData as any
+          formData as UpdateUserWithIndividualProfileDto
         )) as UserWithProfiles;
       } else {
         updatedUser = (await userApi.updateShelterProfile(
           user.id as number,
-          profileData as any
+          formData as UpdateUserWithShelterProfileDto
         )) as UserWithProfiles;
       }
 
@@ -108,7 +136,7 @@ export default function UserProfilePage() {
       toast.success("Profil mis à jour avec succès !");
     } catch (err: unknown) {
       let errorMessage = "Impossible de mettre à jour le profil.";
-      if (isAxiosError(err)) {
+      if (axios.isAxiosError(err)) {
         errorMessage = err.response?.data?.message || errorMessage;
       }
       toast.error(errorMessage);
@@ -133,18 +161,22 @@ export default function UserProfilePage() {
 
             <div className="mt-6 border-t pt-4">
               <h2 className="text-lg font-semibold">Modifier le mot de passe</h2>
-              {/* Le cast est safe car un user retourné par la DB a toujours un ID */}
               <PasswordForm userId={user.id as number} />
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {user.role === "individual" ? (
-              <IndividualProfileForm formData={formData as any} onChange={handleChange} />
+              <IndividualProfileForm
+                formData={formData as ExpectedIndividualProps}
+                onChange={(field, value) => handleChange(field, value)}
+              />
             ) : (
-              <ShelterProfileForm formData={formData as any} onChange={handleChange} />
+              <ShelterProfileForm
+                formData={formData as ExpectedShelterProps}
+                onChange={(field, value) => handleChange(field, value)}
+              />
             )}
-
             <div className="flex justify-between">
               <button
                 type="button"

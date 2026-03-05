@@ -1,5 +1,6 @@
 import type { AnimalWithRelations } from "@projet/shared-types";
-import { PawPrint } from "lucide-react";
+import axios from "axios";
+import { PawPrint, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -20,9 +21,12 @@ const AnimalList = () => {
         const data = await animalApi.getAllAnimals();
         setAnimals(data);
         setFilteredAnimals(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(true);
-        const errorMessage = err.response?.data?.message || "Impossible de charger les animaux.";
+        let errorMessage = "Impossible de charger les animaux.";
+        if (axios.isAxiosError(err)) {
+          errorMessage = err.response?.data?.message || errorMessage;
+        }
         toast.error(errorMessage);
       } finally {
         setLoading(false);
@@ -84,7 +88,7 @@ const AnimalList = () => {
           <>
             {/* Barre de recherche */}
             <div className="mb-6">
-              <div className="relative max-w">
+              <div className="relative max-w-md">
                 <input
                   type="text"
                   placeholder="Rechercher par nom"
@@ -92,59 +96,30 @@ const AnimalList = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <svg
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <title>Search icon</title>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                {searchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <title>Clear search icon</title>
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                )}
+                {/* ⚡ Le SVG a été remplacé par l'icône Search de lucide-react */}
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                {filteredAnimals.length} résultat
-                {filteredAnimals.length > 1 ? "s" : ""} trouvé
-                {filteredAnimals.length > 1 ? "s" : ""}
-              </p>
             </div>
 
-            {/* Grille des animaux */}
-            {filteredAnimals.length === 0 ? (
+            {/* Grille d'animaux */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredAnimals.map((animal) => (
+                <Link
+                  key={animal.id}
+                  to={`/animaux/${animal.id}`}
+                  className="block transition-transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl"
+                >
+                  <AnimalCard {...animal} />
+                </Link>
+              ))}
+            </div>
+
+            {/* Message si aucun résultat de recherche */}
+            {filteredAnimals.length === 0 && searchTerm && (
               <div className="text-center py-12">
-                <p className="text-xl text-gray-500">
-                  Aucun animal ne correspond à votre recherche
+                <p className="text-gray-500">
+                  Aucun animal ne correspond à votre recherche "{searchTerm}"
                 </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-                {filteredAnimals.map((animal) => (
-                  <Link to={`/animaux/${animal.id}`} key={animal.id}>
-                    <AnimalCard {...animal} />
-                  </Link>
-                ))}
               </div>
             )}
           </>

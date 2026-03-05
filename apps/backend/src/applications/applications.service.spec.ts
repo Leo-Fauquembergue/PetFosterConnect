@@ -17,9 +17,11 @@ describe("ApplicationsService", () => {
       create: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     animal: {
       findUnique: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -50,8 +52,9 @@ describe("ApplicationsService", () => {
         animalId: 10,
         message: "Je veux adopter",
         applicationType: "adoption",
-      } as CreateApplicationDto; // ⚡ Typage propre !
+      } as CreateApplicationDto;
 
+      // ⚡ Typage propre !
       const userId = 5;
 
       mockPrisma.application.create.mockResolvedValue({
@@ -80,7 +83,11 @@ describe("ApplicationsService", () => {
     const statusDto = { applicationStatus: "approved" } as UpdateApplicationStatusDto;
 
     it("doit mettre à jour le statut si l'utilisateur est le propriétaire de l'animal", async () => {
-      const shelterOwner = { id: 42, role: "shelter" } as RequestWithUser["user"];
+      const shelterOwner = {
+        id: 42,
+        email: "refuge@test.com",
+        role: "shelter",
+      } as RequestWithUser["user"];
       const fakeAnimal = { id: animalId, pfcUserId: 42 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
@@ -92,7 +99,11 @@ describe("ApplicationsService", () => {
     });
 
     it("doit lever une ForbiddenException (Faille IDOR bloquée) si un refuge tente de modifier la demande d'un autre refuge", async () => {
-      const attackerShelter = { id: 999, role: "shelter" };
+      const attackerShelter = {
+        id: 999,
+        email: "hacker@test.com",
+        role: "shelter",
+      } as RequestWithUser["user"];
       const fakeAnimal = { id: animalId, pfcUserId: 42 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
@@ -105,7 +116,11 @@ describe("ApplicationsService", () => {
     });
 
     it("doit mettre à jour le statut si l'utilisateur est Admin (Privilège absolu)", async () => {
-      const adminUser = { id: 99, role: "admin" };
+      const adminUser = {
+        id: 99,
+        email: "admin@test.com",
+        role: "admin",
+      } as RequestWithUser["user"];
       const fakeAnimal = { id: animalId, pfcUserId: 42 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
@@ -119,7 +134,11 @@ describe("ApplicationsService", () => {
 
   describe("remove (Sécurité IDOR)", () => {
     it("doit lever une ForbiddenException si un utilisateur non propriétaire tente d'archiver une demande", async () => {
-      const attacker = { id: 999, role: "shelter" };
+      const attacker = {
+        id: 999,
+        email: "hacker@test.com",
+        role: "shelter",
+      } as RequestWithUser["user"];
       const fakeAnimal = { id: 10, pfcUserId: 42 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);

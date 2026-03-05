@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { toast } from "react-toastify";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { animalApi } from "../api/animalApi";
 import { applicationApi } from "../api/applicationApi";
 import AnimalDetail from "./AnimalDetail";
@@ -71,8 +71,8 @@ describe("AnimalDetail - Formulaire de demande", () => {
   };
 
   it("doit remplir le formulaire et appeler la soumission d'adoption avec les bonnes données", async () => {
-    (animalApi.getAnimalById as any).mockResolvedValueOnce(mockAnimal);
-    (applicationApi.createApplication as any).mockResolvedValueOnce({});
+    (animalApi.getAnimalById as Mock).mockResolvedValueOnce(mockAnimal);
+    (applicationApi.createApplication as Mock).mockResolvedValueOnce({});
 
     renderComponent();
 
@@ -101,10 +101,10 @@ describe("AnimalDetail - Formulaire de demande", () => {
   });
 
   it("doit afficher une erreur si la demande échoue (ex: message manquant rejeté par le backend)", async () => {
-    (animalApi.getAnimalById as any).mockResolvedValueOnce(mockAnimal);
+    (animalApi.getAnimalById as Mock).mockResolvedValueOnce(mockAnimal);
 
     // On simule un rejet de l'API (ex: Zod retourne 400 pour champ vide)
-    (applicationApi.createApplication as any).mockRejectedValueOnce({
+    (applicationApi.createApplication as Mock).mockRejectedValueOnce({
       response: { data: { message: "Le message de motivation est obligatoire" } },
     });
 
