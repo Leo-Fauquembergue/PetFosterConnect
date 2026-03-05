@@ -8,9 +8,9 @@ export const api = axios.create({
 // Liste des endpoints API (Backend)
 // Ce sont les appels vers le serveur qui ne doivent pas déclencher de redirection
 const NO_REDIRECT_API_ROUTES = [
-  "/auth/login",    // Endpoint backend
+  "/auth/login", // Endpoint backend
   "/auth/register", // Endpoint backend
-  "/auth/me",       // Ajout de cette exception vitale pour éviter la boucle de redirection au 1er rendu
+  "/auth/me", // Ajout de cette exception vitale pour éviter la boucle de redirection au 1er rendu
 ];
 
 api.interceptors.response.use(
@@ -20,9 +20,7 @@ api.interceptors.response.use(
     const requestUrl = error.config?.url || "";
 
     // Vérifie si la requête API concernait l'authentification
-    const isAuthApiRequest = NO_REDIRECT_API_ROUTES.some((route) =>
-      requestUrl.includes(route)
-    );
+    const isAuthApiRequest = NO_REDIRECT_API_ROUTES.some((route) => requestUrl.includes(route));
 
     if (isAuthApiRequest) {
       return Promise.reject(error);

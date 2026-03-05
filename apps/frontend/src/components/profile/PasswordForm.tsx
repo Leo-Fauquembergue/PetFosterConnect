@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { userApi } from "../../api/userApi";
@@ -12,21 +13,25 @@ export default function PasswordForm({ userId }: Props) {
     oldPassword: "",
     newPassword: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
+    setIsSubmitting(true);
 
     try {
       await userApi.updatePassword(userId, formData);
       toast.success("Mot de passe modifié avec succès !");
       setFormData({ oldPassword: "", newPassword: "" });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Erreur lors de la modification du mot de passe.";
+    } catch (err: unknown) {
+      // ⚡ Type Guard : Prévient les crashs si l'API est injoignable
+      let errorMessage = "Erreur lors de la modification du mot de passe.";
+      if (isAxiosError(err)) {
+        errorMessage = err.response?.data?.message || errorMessage;
+      }
       toast.error(errorMessage);
     } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
+      setIsSubmitting(false);
     }
   };
 
@@ -37,13 +42,11 @@ export default function PasswordForm({ userId }: Props) {
         value={formData.oldPassword}
         onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
       />
-
       <InputPassword
         label="Nouveau mot de passe"
         value={formData.newPassword}
         onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
       />
-
       <button
         type="submit"
         disabled={isSubmitting}

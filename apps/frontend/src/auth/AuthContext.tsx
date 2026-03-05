@@ -1,13 +1,7 @@
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { authApi } from "../api/authApi";
 // ⚡ Importation stricte du User
 import type { User } from "@projet/shared-types";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { authApi } from "../api/authApi";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -48,9 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ isLoggedIn, setIsLoggedIn, logout, user, setUser, isLoading }}
-    >
+    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, logout, user, setUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

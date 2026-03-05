@@ -1,10 +1,10 @@
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { EmailsService } from "./emails.service";
+import { UserRole } from "@prisma/client";
+import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { Roles } from "../auth/decorators/roles.decorators";
-import { UserRole } from "@prisma/client";
+import { EmailsService } from "./emails.service";
 
 @ApiTags("emails")
 @Controller("emails")
@@ -13,7 +13,7 @@ export class EmailsController {
 
   @Post("send")
   @UseGuards(JwtAuthGuard, RolesGuard) // 🛡️ SÉCURITÉ : Bloque les bots anonymes
-  @Roles(UserRole.admin)               // 🛡️ SÉCURITÉ : Réserve l'usage SMTP aux Admins
+  @Roles(UserRole.admin) // 🛡️ SÉCURITÉ : Réserve l'usage SMTP aux Admins
   @ApiOperation({ summary: "Envoyer un email" })
   @ApiBody({
     schema: {
@@ -49,15 +49,8 @@ export class EmailsController {
     status: 500,
     description: "Erreur lors de l'envoi de l'email",
   })
-  async sendTestEmail(
-    @Body() body: { to: string; subject: string; text: string; html: string }
-  ) {
-    const result = await this.emailsService.sendMail(
-      body.to,
-      body.subject,
-      body.text,
-      body.html
-    );
+  async sendTestEmail(@Body() body: { to: string; subject: string; text: string; html: string }) {
+    const result = await this.emailsService.sendMail(body.to, body.subject, body.text, body.html);
 
     return { message: "Email envoyé", result };
   }

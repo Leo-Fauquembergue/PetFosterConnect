@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
 import { CreateShelterProfileDto, UpdateShelterProfileDto } from "@projet/shared-types";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class SheltersService {
@@ -14,13 +14,14 @@ export class SheltersService {
     return this.prisma.shelterProfile.findMany({
       where: { user: { deletedAt: null } },
       take: limit, // Ajout de la limite
-      orderBy: { // Ajout du tri
-          user: {
-            createdAt: 'desc'
-          }
+      orderBy: {
+        // Ajout du tri
+        user: {
+          createdAt: "desc",
         },
+      },
       include: {
-        user: { 
+        user: {
           select: {
             id: true,
             email: true,
@@ -29,8 +30,8 @@ export class SheltersService {
             deletedAt: true,
             // 🛡️ CORRECTION SÉCURITÉ : Bombe Mémoire (OOM) désamorcée.
             // On remplace le chargement de toute la table Animal par un compteur.
-            _count: { select: { animals: true } }
-          }
+            _count: { select: { animals: true } },
+          },
         },
       },
     });
@@ -40,7 +41,7 @@ export class SheltersService {
     const shelter = await this.prisma.shelterProfile.findUnique({
       where: { pfcUserId: id },
       include: {
-        user: { 
+        user: {
           select: {
             id: true,
             email: true,
@@ -48,19 +49,19 @@ export class SheltersService {
             address: true,
             deletedAt: true,
             animals: {
-              include: { 
+              include: {
                 species: true,
                 shelter: {
                   select: {
                     id: true,
                     email: true,
                     phoneNumber: true,
-                    shelterProfile: true
-                  } 
-                }
-              }
-            } 
-          } 
+                    shelterProfile: true,
+                  },
+                },
+              },
+            },
+          },
         },
       },
     });

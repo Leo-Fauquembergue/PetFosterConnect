@@ -1,8 +1,8 @@
+import type { UserRole } from "@projet/shared-types";
 import type { ReactNode } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "./AuthContext";
-import type { UserRole } from "@projet/shared-types";
 import Loader from "../components/ui/Loader";
+import { useAuth } from "./AuthContext";
 
 interface ProtectedRouteProps {
   allowedRoles?: UserRole[];

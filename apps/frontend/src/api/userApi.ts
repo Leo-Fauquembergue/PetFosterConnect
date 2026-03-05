@@ -1,11 +1,11 @@
-import api from "./api";
-import type { 
-  User, 
-  UpdateUserDto, 
+import type {
   UpdatePasswordDto,
+  UpdateUserDto,
   UpdateUserWithIndividualProfileDto,
-  UpdateUserWithShelterProfileDto
+  UpdateUserWithShelterProfileDto,
+  User,
 } from "@projet/shared-types";
+import api from "./api";
 
 export const userApi = {
   getAllUsers: async (): Promise<User[]> => {
@@ -33,12 +33,18 @@ export const userApi = {
     return response.data;
   },
 
-  updateIndividualProfile: async (id: number, data: UpdateUserWithIndividualProfileDto): Promise<User> => {
+  updateIndividualProfile: async (
+    id: number,
+    data: UpdateUserWithIndividualProfileDto
+  ): Promise<User> => {
     const response = await api.put<User>(`/users/${id}/individual-profile`, data);
     return response.data;
   },
 
-  updateShelterProfile: async (id: number, data: UpdateUserWithShelterProfileDto): Promise<User> => {
+  updateShelterProfile: async (
+    id: number,
+    data: UpdateUserWithShelterProfileDto
+  ): Promise<User> => {
     const response = await api.put<User>(`/users/${id}/shelter-profile`, data);
     return response.data;
   },

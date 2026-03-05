@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import ShelterCard from "../components/cards/ShelterCard";
-import Loader from "../components/ui/Loader";
-import { Home } from "lucide-react";
-import { toast } from "react-toastify";
-import { shelterApi } from "../api/shelterApi";
 // ⚡ CORRECTION : Import du type depuis le package partagé et de AxiosError pour le catch
 import type { ShelterWithRelations } from "@projet/shared-types";
-import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
+import { Home } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { shelterApi } from "../api/shelterApi";
+import ShelterCard from "../components/cards/ShelterCard";
+import Loader from "../components/ui/Loader";
 
 const SheltersPage = () => {
   const [shelters, setShelters] = useState<ShelterWithRelations[]>([]);
@@ -18,15 +18,19 @@ const SheltersPage = () => {
       try {
         const data = await shelterApi.getAllShelters();
         setShelters(data);
-      } catch (err: unknown) { // ⚡ Fin du type 'any'
+      } catch (err: unknown) {
         setError(true);
-        const axiosError = err as AxiosError<{ message: string }>;
-        const errorMessage = axiosError.response?.data?.message || "Impossible de charger les refuges.";
+        // ⚡ Vrai Type Guard
+        let errorMessage = "Impossible de charger les refuges.";
+        if (isAxiosError(err)) {
+          errorMessage = err.response?.data?.message || errorMessage;
+        }
         toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
     };
+
     fetchShelters();
   }, []);
 
@@ -46,9 +50,7 @@ const SheltersPage = () => {
         <p className="text-xl text-error font-semibold mb-2">
           Oups ! Impossible de charger les refuges.
         </p>
-        <p className="text-gray-500">
-          Vérifiez votre connexion ou réessayez plus tard.
-        </p>
+        <p className="text-gray-500">Vérifiez votre connexion ou réessayez plus tard.</p>
       </div>
     );
   }
@@ -57,9 +59,7 @@ const SheltersPage = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Nos refuges partenaires
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Nos refuges partenaires</h1>
           <p className="text-gray-600">
             Découvrez les associations qui œuvrent chaque jour pour le bien-être animal.
           </p>
@@ -71,9 +71,7 @@ const SheltersPage = () => {
             <div className="bg-green-100 p-4 rounded-full mb-4">
               <Home className="w-12 h-12 text-secondary" />
             </div>
-            <h3 className="text-xl font-bold text-gray-700">
-              Aucun refuge trouvé
-            </h3>
+            <h3 className="text-xl font-bold text-gray-700">Aucun refuge trouvé</h3>
             <p className="text-gray-500 mt-2">
               Il semblerait qu'aucun refuge ne soit disponible pour le moment.
             </p>

@@ -15,12 +15,8 @@ const NotFound = () => {
   return (
     <div className="h-screen flex flex-col justify-center items-center bg-gray-100 text-gray-800">
       <h1 className="text-6xl font-bold mb-4">404</h1>
-      <p className="text-xl mb-2">
-        Oups ! La page que vous cherchez n'existe pas.
-      </p>
-      <p className="mb-6">
-        Vous allez être redirigé vers l'accueil dans 5 secondes.
-      </p>
+      <p className="text-xl mb-2">Oups ! La page que vous cherchez n'existe pas.</p>
+      <p className="mb-6">Vous allez être redirigé vers l'accueil dans 5 secondes.</p>
       <button
         type="button"
         onClick={() => navigate("/")}

@@ -1,24 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from "@nestjs/swagger";
-import {
-  type CreateBookmarkDto,
-  CreateBookmarkSchema,
-} from "@projet/shared-types";
+import { Body, Controller, Get, Post, Req, UseGuards, UsePipes } from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 // ⚡ Typage strict de l'objet Request
 import type { RequestWithUser } from "@projet/shared-types";
+import { type CreateBookmarkDto, CreateBookmarkSchema } from "@projet/shared-types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { BookmarksService } from "./bookmarks.service";
@@ -55,7 +39,8 @@ export class BookmarksController {
     description: "Liste des favoris retournée avec succès",
   })
   @ApiResponse({ status: 401, description: "Non authentifié" })
-  async getMyBookmarks(@Req() req: RequestWithUser) { // ⚡ Retrait du any
+  async getMyBookmarks(@Req() req: RequestWithUser) {
+    // ⚡ Retrait du any
     // 🔒 L'ID utilisateur est extrait de force depuis le JWT, usurpation impossible
     return this.bookmarksService.findAllByUser(req.user.id);
   }

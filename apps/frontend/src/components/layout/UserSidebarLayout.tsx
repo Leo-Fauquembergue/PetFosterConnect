@@ -1,11 +1,11 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { UserCircle, PawPrint, Home, LogOut } from "lucide-react";
-import { CiFolderOn } from "react-icons/ci"; 
-import { LuPlus } from "react-icons/lu";
-import { useAuth } from "../../auth/AuthContext";
-import BurgerMenu from "../ui/BurgerMenu";
-import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
 import { UserRole } from "@projet/shared-types"; // Import de l'Enum
+import { Home, LogOut, PawPrint, UserCircle } from "lucide-react";
+import { CiFolderOn } from "react-icons/ci";
+import { LuPlus } from "react-icons/lu";
+import { NavLink, Outlet } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
+import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
+import BurgerMenu from "../ui/BurgerMenu";
 
 export default function UserSidebarLayout() {
   const { user, logout } = useAuth();
@@ -14,10 +14,8 @@ export default function UserSidebarLayout() {
 
   return (
     <div className="flex h-screen relative">
-
       {/* Burger menu (mobile only) */}
       <BurgerMenu onOpen={open} /> {/* Utilisation de open */}
-
       {/* Sidebar responsive */}
       <aside
         className={`
@@ -29,23 +27,26 @@ export default function UserSidebarLayout() {
         `}
       >
         {/* Bouton fermer (mobile only) */}
-        <button type="button"
+        <button
+          type="button"
           className="md:hidden absolute top-4 right-4"
           onClick={close} // Utilisation de close
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
-            className="w-7 h-7">
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-7 h-7"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
         <div>
           <div className="p-6 border-b border-gray-100">
-            <h2 className="text-xl font-bold font-montserrat text-primary">
-              Mon espace
-            </h2>
+            <h2 className="text-xl font-bold font-montserrat text-primary">Mon espace</h2>
           </div>
 
           <nav className="p-4 space-y-2">
@@ -54,27 +55,25 @@ export default function UserSidebarLayout() {
               to={`/utilisateur/${user?.id}/profil`}
               className={({ isActive }) =>
                 `flex items-center gap-2 px-3 py-2 rounded-lg transition 
-                ${isActive 
-                    ? "bg-[#F28C28] text-white" 
-                    : "text-gray-700 hover:bg-[#F28C28]/20"}`
+                ${isActive ? "bg-[#F28C28] text-white" : "text-gray-700 hover:bg-[#F28C28]/20"}`
               }
               onClick={close}
             >
               <UserCircle className="w-5 h-5" />
               Mon Profil
             </NavLink>
-            
+
             {/* Refuge : Mes Animaux + sous-menu */}
             {user?.role === UserRole.shelter && ( // Utilisation de l'Enum
               <div className="space-y-1">
                 <NavLink
                   to={`/utilisateur/${user?.id}/animaux`}
                   className={({ isActive }) =>
-                      `flex items-center gap-2 px-3 py-2 rounded-lg transition 
-                      ${isActive 
-                          ? "bg-[#F28C28] text-white" 
-                          : "text-gray-700 hover:bg-[#F28C28]/20"}`
-                    }
+                    `flex items-center gap-2 px-3 py-2 rounded-lg transition 
+                      ${
+                        isActive ? "bg-[#F28C28] text-white" : "text-gray-700 hover:bg-[#F28C28]/20"
+                      }`
+                  }
                   onClick={close}
                 >
                   <PawPrint className="w-5 h-5" />
@@ -85,14 +84,16 @@ export default function UserSidebarLayout() {
                   <NavLink
                     to={`/utilisateur/${user?.id}/profil/animaux/creer`}
                     className={({ isActive }) =>
-                        `flex items-center gap-2 px-3 py-2 rounded-lg transition 
-                        ${isActive 
-                            ? "bg-[#F28C28] text-white" 
-                            : "text-gray-700 hover:bg-[#F28C28]/20"}`
-                      }
+                      `flex items-center gap-2 px-3 py-2 rounded-lg transition 
+                        ${
+                          isActive
+                            ? "bg-[#F28C28] text-white"
+                            : "text-gray-700 hover:bg-[#F28C28]/20"
+                        }`
+                    }
                     onClick={close}
                   >
-                    <LuPlus className="w-5 h-5"/>
+                    <LuPlus className="w-5 h-5" />
                     Ajouter un animal
                   </NavLink>
                 </div>
@@ -100,14 +101,14 @@ export default function UserSidebarLayout() {
                 <NavLink
                   to={`/utilisateur/${user?.id}/demandes-recues`}
                   className={({ isActive }) =>
-                      `flex items-center gap-2 px-3 py-2 rounded-lg transition 
-                      ${isActive 
-                        ? "bg-[#F28C28] text-white" 
-                        : "text-gray-700 hover:bg-[#F28C28]/20"}`
-                    }
+                    `flex items-center gap-2 px-3 py-2 rounded-lg transition 
+                      ${
+                        isActive ? "bg-[#F28C28] text-white" : "text-gray-700 hover:bg-[#F28C28]/20"
+                      }`
+                  }
                   onClick={close}
                 >
-                  <CiFolderOn className="w-5 h-5" /> 
+                  <CiFolderOn className="w-5 h-5" />
                   Demandes reçues
                 </NavLink>
               </div>
@@ -115,31 +116,27 @@ export default function UserSidebarLayout() {
 
             {/* Particulier : Mes Favoris */}
             {user?.role === UserRole.individual && ( // Utilisation de l'Enum
-            <NavLink
-              to={`/utilisateur/${user?.id}/favoris`}
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 rounded-lg transition 
-                ${isActive 
-                    ? "bg-[#F28C28] text-white" 
-                    : "text-gray-700 hover:bg-[#F28C28]/20"}`
-              }
-              onClick={close}
-            >
-              <PawPrint className="w-5 h-5" />
-              Mes Favoris
-            </NavLink>
+              <NavLink
+                to={`/utilisateur/${user?.id}/favoris`}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-2 rounded-lg transition 
+                ${isActive ? "bg-[#F28C28] text-white" : "text-gray-700 hover:bg-[#F28C28]/20"}`
+                }
+                onClick={close}
+              >
+                <PawPrint className="w-5 h-5" />
+                Mes Favoris
+              </NavLink>
             )}
-            
+
             {/* Particulier : Mes Demandes */}
             {user?.role === UserRole.individual && ( // Utilisation de l'Enum
               <NavLink
                 to={`/utilisateur/${user?.id}/demandes`}
                 className={({ isActive }) =>
-                    `flex items-center gap-2 px-3 py-2 rounded-lg transition 
-                    ${isActive 
-                        ? "bg-[#F28C28] text-white" 
-                        : "text-gray-700 hover:bg-[#F28C28]/20"}`
-                  }
+                  `flex items-center gap-2 px-3 py-2 rounded-lg transition 
+                    ${isActive ? "bg-[#F28C28] text-white" : "text-gray-700 hover:bg-[#F28C28]/20"}`
+                }
                 onClick={close}
               >
                 <CiFolderOn className="w-5 h-5" />
@@ -154,11 +151,9 @@ export default function UserSidebarLayout() {
           <NavLink
             to="/"
             className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 rounded-lg transition 
-                ${isActive 
-                    ? "bg-[#F28C28] text-white" 
-                    : "text-gray-700 hover:bg-[#F28C28]/20"}`
-              }
+              `flex items-center gap-2 px-3 py-2 rounded-lg transition 
+                ${isActive ? "bg-[#F28C28] text-white" : "text-gray-700 hover:bg-[#F28C28]/20"}`
+            }
             onClick={close}
           >
             <Home size={18} />
@@ -178,15 +173,8 @@ export default function UserSidebarLayout() {
           </button>
         </div>
       </aside>
-
       {/* Overlay (mobile only) */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={close}
-        />
-      )}
-
+      {isOpen && <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={close} />}
       {/* Contenu principal */}
       <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
         <Outlet />

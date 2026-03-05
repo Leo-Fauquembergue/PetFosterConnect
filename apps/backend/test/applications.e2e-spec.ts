@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
-import { UserRole } from '@prisma/client';
+import { INestApplication, ValidationPipe } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { Test, TestingModule } from "@nestjs/testing";
+import { UserRole } from "@prisma/client";
+import request from "supertest";
+import { AppModule } from "../src/app.module";
+import { PrismaService } from "../src/prisma/prisma.service";
 
-describe('Applications (E2E) - Security & IDOR', () => {
+describe("Applications (E2E) - Security & IDOR", () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let jwtService: JwtService;
@@ -37,35 +37,47 @@ describe('Applications (E2E) - Security & IDOR', () => {
     await prisma.pfcUser.deleteMany();
 
     const legitShelter = await prisma.pfcUser.create({
-      data: { email: 'legit@refuge.com', password: 'hash', role: UserRole.shelter },
+      data: { email: "legit@refuge.com", password: "hash", role: UserRole.shelter },
     });
     legitShelterId = legitShelter.id;
-    legitShelterToken = jwtService.sign({ sub: legitShelter.id, email: legitShelter.email, role: legitShelter.role });
+    legitShelterToken = jwtService.sign({
+      sub: legitShelter.id,
+      email: legitShelter.email,
+      role: legitShelter.role,
+    });
 
     const attackerShelter = await prisma.pfcUser.create({
-      data: { email: 'hacker@refuge.com', password: 'hash', role: UserRole.shelter },
+      data: { email: "hacker@refuge.com", password: "hash", role: UserRole.shelter },
     });
-    attackerShelterToken = jwtService.sign({ sub: attackerShelter.id, email: attackerShelter.email, role: attackerShelter.role });
+    attackerShelterToken = jwtService.sign({
+      sub: attackerShelter.id,
+      email: attackerShelter.email,
+      role: attackerShelter.role,
+    });
 
     const individual = await prisma.pfcUser.create({
-      data: { email: 'adoptant@test.com', password: 'hash', role: UserRole.individual },
+      data: { email: "adoptant@test.com", password: "hash", role: UserRole.individual },
     });
     individualId = individual.id;
-    individualToken = jwtService.sign({ sub: individual.id, email: individual.email, role: individual.role });
+    individualToken = jwtService.sign({
+      sub: individual.id,
+      email: individual.email,
+      role: individual.role,
+    });
 
-    const species = await prisma.species.create({ data: { name: 'Chat' } });
+    const species = await prisma.species.create({ data: { name: "Chat" } });
 
     const animal = await prisma.animal.create({
       data: {
-        name: 'Mimi',
-        age: '1 an',
-        sex: 'female',
-        animalStatus: 'available',
-        description: 'Un chat amical',
+        name: "Mimi",
+        age: "1 an",
+        sex: "female",
+        animalStatus: "available",
+        description: "Un chat amical",
         weight: 4,
         pfcUserId: legitShelterId,
         speciesId: species.id,
-      }
+      },
     });
     animalId = animal.id;
   });
@@ -74,58 +86,58 @@ describe('Applications (E2E) - Security & IDOR', () => {
     await app.close();
   });
 
-  describe('POST /applications', () => {
-    it('doit bloquer l\'accès sans token (401)', async () => {
+  describe("POST /applications", () => {
+    it("doit bloquer l'accès sans token (401)", async () => {
       await request(app.getHttpServer())
-        .post('/applications')
+        .post("/applications")
         .send({
           animalId: animalId,
-          message: 'Je souhaite adopter Mimi',
-          applicationType: 'adoption'
+          message: "Je souhaite adopter Mimi",
+          applicationType: "adoption",
         })
         .expect(401);
     });
 
-    it('doit renvoyer une erreur Zod (400) si les données sont invalides', async () => {
+    it("doit renvoyer une erreur Zod (400) si les données sont invalides", async () => {
       await request(app.getHttpServer())
-        .post('/applications')
-        .set('Authorization', `Bearer ${individualToken}`)
+        .post("/applications")
+        .set("Authorization", `Bearer ${individualToken}`)
         .send({
           animalId: "id_invalide", // Doit être un nombre
-          applicationType: 'vol'   // Invalide (adoption ou foster)
+          applicationType: "vol", // Invalide (adoption ou foster)
         })
         .expect(400);
     });
 
-    it('doit permettre à un particulier de soumettre une candidature (201)', async () => {
+    it("doit permettre à un particulier de soumettre une candidature (201)", async () => {
       const response = await request(app.getHttpServer())
-        .post('/applications')
-        .set('Authorization', `Bearer ${individualToken}`)
+        .post("/applications")
+        .set("Authorization", `Bearer ${individualToken}`)
         .send({
           animalId: animalId,
-          message: 'Je souhaite adopter Mimi',
-          applicationType: 'adoption'
+          message: "Je souhaite adopter Mimi",
+          applicationType: "adoption",
         })
         .expect(201);
 
-      expect(response.body.applicationStatus).toBe('pending');
+      expect(response.body.applicationStatus).toBe("pending");
     });
   });
 
-  describe('PATCH /applications/:animalId/:candidateId/status (Faille IDOR)', () => {
-    it('doit bloquer un refuge qui tente d\'accepter/refuser la demande d\'un AUTRE refuge (403)', async () => {
+  describe("PATCH /applications/:animalId/:candidateId/status (Faille IDOR)", () => {
+    it("doit bloquer un refuge qui tente d'accepter/refuser la demande d'un AUTRE refuge (403)", async () => {
       await request(app.getHttpServer())
         .patch(`/applications/${animalId}/${individualId}/status`)
-        .set('Authorization', `Bearer ${attackerShelterToken}`)
-        .send({ applicationStatus: 'approved' })
+        .set("Authorization", `Bearer ${attackerShelterToken}`)
+        .send({ applicationStatus: "approved" })
         .expect(403);
     });
 
-    it('doit autoriser le refuge propriétaire de l\'animal à modifier le statut (200)', async () => {
+    it("doit autoriser le refuge propriétaire de l'animal à modifier le statut (200)", async () => {
       await request(app.getHttpServer())
         .patch(`/applications/${animalId}/${individualId}/status`)
-        .set('Authorization', `Bearer ${legitShelterToken}`)
-        .send({ applicationStatus: 'approved' })
+        .set("Authorization", `Bearer ${legitShelterToken}`)
+        .send({ applicationStatus: "approved" })
         .expect(200);
     });
   });

@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { SpeciesService } from './species.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { PrismaService } from "../prisma/prisma.service";
+import { SpeciesService } from "./species.service";
 
-describe('SpeciesService', () => {
+describe("SpeciesService", () => {
   let service: SpeciesService;
   const mockPrisma = {
     species: {
@@ -15,10 +15,7 @@ describe('SpeciesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        SpeciesService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [SpeciesService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<SpeciesService>(SpeciesService);
@@ -28,13 +25,13 @@ describe('SpeciesService', () => {
     jest.clearAllMocks();
   });
 
-  describe('findAll', () => {
-    it('doit retourner la liste des espèces triées par nom', async () => {
+  describe("findAll", () => {
+    it("doit retourner la liste des espèces triées par nom", async () => {
       const mockSpecies = [
-        { id: 1, name: 'Chat' },
-        { id: 2, name: 'Chien' },
+        { id: 1, name: "Chat" },
+        { id: 2, name: "Chien" },
       ];
-      
+
       // On simule le retour de Prisma
       mockPrisma.species.findMany.mockResolvedValue(mockSpecies);
 
@@ -42,44 +39,44 @@ describe('SpeciesService', () => {
 
       // Vérification de l'appel Prisma avec le bon tri
       expect(mockPrisma.species.findMany).toHaveBeenCalledWith({
-        orderBy: { name: 'asc' },
+        orderBy: { name: "asc" },
       });
       expect(result).toEqual(mockSpecies);
     });
   });
 
-  describe('create', () => {
-    it('doit créer une nouvelle espèce', async () => {
-      const newSpecies = { id: 3, name: 'Oiseau' };
+  describe("create", () => {
+    it("doit créer une nouvelle espèce", async () => {
+      const newSpecies = { id: 3, name: "Oiseau" };
       mockPrisma.species.create.mockResolvedValue(newSpecies);
 
-      const result = await service.create({ name: 'Oiseau' });
+      const result = await service.create({ name: "Oiseau" });
 
       expect(mockPrisma.species.create).toHaveBeenCalledWith({
-        data: { name: 'Oiseau' },
+        data: { name: "Oiseau" },
       });
       expect(result).toEqual(newSpecies);
     });
   });
 
-  describe('update', () => {
-    it('doit mettre à jour une espèce', async () => {
-      const updatedSpecies = { id: 1, name: 'Félin' };
+  describe("update", () => {
+    it("doit mettre à jour une espèce", async () => {
+      const updatedSpecies = { id: 1, name: "Félin" };
       mockPrisma.species.update.mockResolvedValue(updatedSpecies);
 
-      const result = await service.update(1, { name: 'Félin' });
+      const result = await service.update(1, { name: "Félin" });
 
       expect(mockPrisma.species.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: { name: 'Félin' },
+        data: { name: "Félin" },
       });
       expect(result).toEqual(updatedSpecies);
     });
   });
 
-  describe('remove', () => {
-    it('doit supprimer une espèce', async () => {
-      const deletedSpecies = { id: 1, name: 'Chat' };
+  describe("remove", () => {
+    it("doit supprimer une espèce", async () => {
+      const deletedSpecies = { id: 1, name: "Chat" };
       mockPrisma.species.delete.mockResolvedValue(deletedSpecies);
 
       const result = await service.remove(1);

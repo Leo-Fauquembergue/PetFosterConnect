@@ -1,10 +1,10 @@
-import api from "./api";
-import type { 
-  CreateApplicationDto, 
-  UpdateApplicationStatusDto,
+import type {
+  ApplicationReceivedResponse,
   ApplicationSentResponse,
-  ApplicationReceivedResponse
+  CreateApplicationDto,
+  UpdateApplicationStatusDto,
 } from "@projet/shared-types";
+import api from "./api";
 
 export const applicationApi = {
   createApplication: async (data: CreateApplicationDto) => {
@@ -32,10 +32,7 @@ export const applicationApi = {
     animalId: number,
     data: UpdateApplicationStatusDto
   ) => {
-    const response = await api.patch(
-      `/applications/${animalId}/${candidateId}/status`,
-      data
-    );
+    const response = await api.patch(`/applications/${animalId}/${candidateId}/status`, data);
     return response.data;
   },
 

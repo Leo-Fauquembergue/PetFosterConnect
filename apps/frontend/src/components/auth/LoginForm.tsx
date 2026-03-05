@@ -1,8 +1,8 @@
-import { useState } from "react";
 import type { LoginDto } from "@projet/shared-types";
+import { useState } from "react";
+import Button from "../ui/Button";
 import Input from "../ui/Input";
 import InputPassword from "../ui/InputPassword";
-import Button from "../ui/Button";
 
 interface LoginFormProps {
   onSubmit: (credentials: LoginDto) => void;
@@ -37,12 +37,7 @@ const LoginForm = ({ onSubmit, isLoading }: LoginFormProps) => {
         placeholder="••••••••"
       />
 
-      <Button
-        type="submit"
-        disabled={isLoading}
-        fullWidth
-        className="mt-2"
-      >
+      <Button type="submit" disabled={isLoading} fullWidth className="mt-2">
         {isLoading ? "Connexion en cours..." : "Se connecter"}
       </Button>
     </form>

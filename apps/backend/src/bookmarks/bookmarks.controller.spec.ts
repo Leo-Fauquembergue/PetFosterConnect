@@ -1,8 +1,9 @@
-import { BookmarksController } from './bookmarks.controller';
+import type { RequestWithUser } from "@projet/shared-types";
+import { BookmarksController } from "./bookmarks.controller";
 
 // On empêche NestJS d'exécuter les décorateurs qui font planter Jest
-jest.mock('@nestjs/common', () => ({
-  ...jest.requireActual('@nestjs/common'),
+jest.mock("@nestjs/common", () => ({
+  ...jest.requireActual("@nestjs/common"),
   Post: () => jest.fn(),
   Get: () => jest.fn(),
   Body: () => jest.fn(),
@@ -12,8 +13,9 @@ jest.mock('@nestjs/common', () => ({
   Controller: () => jest.fn(),
 }));
 
-describe('BookmarksController', () => {
+describe("BookmarksController", () => {
   let controller: BookmarksController;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockService: any;
 
   beforeEach(() => {
@@ -23,15 +25,15 @@ describe('BookmarksController', () => {
       findAllByUser: jest.fn().mockResolvedValue([]),
     };
 
-    // Instanciation manuelle (sans TestingModule pour éviter le crash des décorateurs)
+    // Instanciation manuelle
     controller = new BookmarksController(mockService);
   });
 
-  it('devrait appeler toggle avec les bonnes informations', async () => {
-    const req = { user: { id: 1 } };
+  it("devrait appeler toggle avec les bonnes informations", async () => {
+    const req = { user: { id: 1 } } as Partial<RequestWithUser>;
     const dto = { animalId: 10 };
 
-    const result = await controller.toggle(req as any, dto);
+    const result = await controller.toggle(req as RequestWithUser, dto);
 
     expect(mockService.toggle).toHaveBeenCalledWith(1, 10);
     expect(result).toEqual({ bookmarked: true });

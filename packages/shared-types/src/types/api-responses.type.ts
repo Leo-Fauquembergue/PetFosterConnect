@@ -1,7 +1,7 @@
 import type { AnimalWithRelations } from "../animal-with-relation.schema";
 import type { ApplicationStatus, ApplicationType } from "../application.schema";
-import type { User } from "../user.schema";
 import type { IndividualProfile, ShelterProfile } from "../profile.schema";
+import type { User } from "../user.schema";
 
 // --- APPLICATIONS ---
 

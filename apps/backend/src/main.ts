@@ -1,10 +1,10 @@
-import { ValidationPipe, UnauthorizedException } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
-import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/http-exception.filter'; // 🛡️ SÉCURITÉ
+import { UnauthorizedException, ValidationPipe } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import { AppModule } from "./app.module";
+import { AllExceptionsFilter } from "./common/filters/http-exception.filter"; // 🛡️ SÉCURITÉ
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,45 +19,46 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       const allowedOrigins = [
-        'http://localhost:5173', // Dev local
-        'http://localhost:3000',
+        "http://localhost:5173", // Dev local
+        "http://localhost:3000",
         process.env.FRONTEND_URL, // Prod stricte Vercel (à définir dans ton .env de production sur Render)
       ].filter(Boolean);
 
       // 🛡️ SÉCURITÉ : Tolère l'absence d'origine en dev, mais stricte en prod
-      if (allowedOrigins.includes(origin as string) || (!origin && process.env.NODE_ENV !== 'production')) {
+      if (
+        allowedOrigins.includes(origin as string) ||
+        (!origin && process.env.NODE_ENV !== "production")
+      ) {
         return callback(null, true);
       }
 
-      callback(new UnauthorizedException('Not allowed by CORS'));
+      callback(new UnauthorizedException("Not allowed by CORS"));
     },
     credentials: true, // Requis pour tes cookies/sessions Vercel <-> Render
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
   });
 
   // DOCUMENTATION SWAGGER
   const config = new DocumentBuilder()
-    .setTitle('API Adoption Animaux')
-    .setDescription(
-      "Documentation complète de l'API pour la plateforme d'adoption d'animaux",
-    )
-    .setVersion('1.0')
-    .addTag('animals', 'Gestion des animaux')
-    .addTag('applications', "Gestion des demandes d'adoption")
-    .addTag('auth', 'Authentification et autorisation')
-    .addTag('bookmarks', 'Gestion des favoris')
-    .addTag('emails', "Envoi d'emails")
-    .addTag('shelters', 'Gestion des refuges')
-    .addTag('species', 'Liste des espèces')
-    .addTag('users', 'Gestion des utilisateurs')
-    .addTag('health', "État de santé de l'API")
-    .addTag('app', 'Routes générales')
+    .setTitle("API Adoption Animaux")
+    .setDescription("Documentation complète de l'API pour la plateforme d'adoption d'animaux")
+    .setVersion("1.0")
+    .addTag("animals", "Gestion des animaux")
+    .addTag("applications", "Gestion des demandes d'adoption")
+    .addTag("auth", "Authentification et autorisation")
+    .addTag("bookmarks", "Gestion des favoris")
+    .addTag("emails", "Envoi d'emails")
+    .addTag("shelters", "Gestion des refuges")
+    .addTag("species", "Liste des espèces")
+    .addTag("users", "Gestion des utilisateurs")
+    .addTag("health", "État de santé de l'API")
+    .addTag("app", "Routes générales")
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup("api", app, document);
 
   // 🛡️ SÉCURITÉ : Application du filtre global d'exceptions
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -68,7 +69,7 @@ async function bootstrap() {
       whitelist: true, // Nettoie les champs non prévus
       forbidNonWhitelisted: true, // Rejette si des champs inconnus sont envoyés
       transform: true, // Convertit les types automatiquement (ex: id string -> number)
-    }),
+    })
   );
 
   await app.listen(process.env.PORT ?? 3001);

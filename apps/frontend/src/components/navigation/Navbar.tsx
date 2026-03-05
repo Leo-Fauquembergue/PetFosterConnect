@@ -1,6 +1,6 @@
+import { UserRole } from "@projet/shared-types";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
-import { UserRole } from "@projet/shared-types";
 import { useDisclosure } from "../../hooks/useDisclosure";
 
 const Navbar = () => {
@@ -22,9 +22,7 @@ const Navbar = () => {
   }
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `text-sm font-medium text-white transition hover:underline ${
-      isActive ? "underline" : ""
-    }`;
+    `text-sm font-medium text-white transition hover:underline ${isActive ? "underline" : ""}`;
 
   const handleLogout = async () => {
     await logout();
@@ -54,20 +52,13 @@ const Navbar = () => {
               Déconnexion
             </NavLink>
           ) : (
-            <NavLink
-              to="/connexion"
-              className="text-sm font-medium text-white hover:underline"
-            >
+            <NavLink to="/connexion" className="text-sm font-medium text-white hover:underline">
               Connexion / Inscription
             </NavLink>
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={toggle}
-          className="md:hidden text-white text-2xl ml-auto"
-        >
+        <button type="button" onClick={toggle} className="md:hidden text-white text-2xl ml-auto">
           ☰
         </button>
       </div>
@@ -76,12 +67,7 @@ const Navbar = () => {
         <div className="absolute top-full left-0 w-full bg-secondary z-50 shadow-lg md:hidden">
           <div className="flex flex-col gap-4 p-4">
             {links.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                onClick={close}
-                className={linkClass}
-              >
+              <NavLink key={link.to} to={link.to} onClick={close} className={linkClass}>
                 {link.label}
               </NavLink>
             ))}

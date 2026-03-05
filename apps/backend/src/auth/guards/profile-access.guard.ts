@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from "@nestjs/common";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 
 @Injectable()
 export class ProfileAccessGuard implements CanActivate {
@@ -11,7 +6,7 @@ export class ProfileAccessGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     const user = request.user; // Injecté par JwtStrategy
-    
+
     // 🛡️ SÉCURITÉ : Empêche le crash (Erreur 500) si le JwtAuthGuard a été oublié
     if (!user) {
       throw new ForbiddenException("Accès interdit : utilisateur non authentifié");
@@ -34,6 +29,8 @@ export class ProfileAccessGuard implements CanActivate {
       return true;
     }
 
-    throw new ForbiddenException("Accès interdit : vous ne pouvez modifier que votre propre ressource");
+    throw new ForbiddenException(
+      "Accès interdit : vous ne pouvez modifier que votre propre ressource"
+    );
   }
 }

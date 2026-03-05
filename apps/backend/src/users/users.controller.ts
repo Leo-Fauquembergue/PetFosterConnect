@@ -10,13 +10,8 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { UserRole } from "@prisma/client";
 // ⚡ Import des types uniquement pour le typage (compile-time)
 import type {
   UpdatePasswordDto,
@@ -27,15 +22,14 @@ import * as sharedTypes from "@projet/shared-types";
 // ⚡ Import des schémas globaux (runtime)
 import {
   UpdatePasswordSchema,
+  UpdateUserSchema, // 🛡️ SÉCURITÉ : Import ajouté pour le PATCH
   UpdateUserWithIndividualProfileSchema,
   UpdateUserWithShelterProfileSchema,
-  UpdateUserSchema, // 🛡️ SÉCURITÉ : Import ajouté pour le PATCH
 } from "@projet/shared-types";
+import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { Roles } from "../auth/decorators/roles.decorators";
-import { UserRole } from "@prisma/client";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { UsersService } from "./users.service";
 
@@ -53,7 +47,10 @@ export class UsersController {
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Profil utilisateur retourné avec succès" })
   @ApiResponse({ status: 401, description: "Non authentifié" })
-  @ApiResponse({ status: 403, description: "Accès refusé - vous ne pouvez voir que votre propre profil" })
+  @ApiResponse({
+    status: 403,
+    description: "Accès refusé - vous ne pouvez voir que votre propre profil",
+  })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   getProfile(@Param("id") id: string) {
     return this.usersService.getProfile(Number(id));
@@ -150,7 +147,7 @@ export class UsersController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   update(
-    @Param("id") id: string, 
+    @Param("id") id: string,
     @Body(new ZodPipe(UpdateUserSchema)) body: sharedTypes.UpdateUserDto // 🛡️ SÉCURITÉ : Application du pipe Zod
   ) {
     return this.usersService.update(Number(id), body);

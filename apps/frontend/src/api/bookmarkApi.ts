@@ -8,5 +8,5 @@ export const bookmarkApi = {
   getMyBookmarks: async () => {
     const response = await api.get("/bookmarks/me");
     return response.data;
-  }
+  },
 };

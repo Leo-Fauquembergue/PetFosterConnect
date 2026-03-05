@@ -1,35 +1,35 @@
-import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { Injectable, Logger } from "@nestjs/common";
+import * as nodemailer from "nodemailer";
 
 @Injectable()
 export class EmailsService {
   private transporter;
   private readonly logger = new Logger(EmailsService.name);
-  private readonly baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  private readonly baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
   constructor() {
     if (process.env.SMTP_HOST) {
-        this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: false,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
-        this.logger.log("📧 Configuration SMTP chargée depuis .env");
+      this.transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT),
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+      this.logger.log("📧 Configuration SMTP chargée depuis .env");
     } else {
-        this.logger.log("👻 Pas de config SMTP détectée, création d'un compte Ethereal...");
-        nodemailer.createTestAccount().then((account) => {
-            this.transporter = nodemailer.createTransport({
-                host: account.smtp.host,
-                port: account.smtp.port,
-                secure: account.smtp.secure,
-                auth: { user: account.user, pass: account.pass },
-            });
-            this.logger.log(`✨ Prêt ! Les emails seront visibles sur : https://ethereal.email/login`);
+      this.logger.log("👻 Pas de config SMTP détectée, création d'un compte Ethereal...");
+      nodemailer.createTestAccount().then((account) => {
+        this.transporter = nodemailer.createTransport({
+          host: account.smtp.host,
+          port: account.smtp.port,
+          secure: account.smtp.secure,
+          auth: { user: account.user, pass: account.pass },
         });
+        this.logger.log(`✨ Prêt ! Les emails seront visibles sur : https://ethereal.email/login`);
+      });
     }
   }
 
@@ -102,10 +102,20 @@ export class EmailsService {
   // -------------------------------
 
   async sendAcceptanceEmail(to: string, firstname: string, animalName: string) {
-    return this.sendMail(to, 'Votre candidature a été acceptée', 'Félicitations, votre demande a été validée !', this.acceptTemplate(firstname, animalName));
+    return this.sendMail(
+      to,
+      "Votre candidature a été acceptée",
+      "Félicitations, votre demande a été validée !",
+      this.acceptTemplate(firstname, animalName)
+    );
   }
 
   async sendRejectionEmail(to: string, firstname: string, animalName: string) {
-    return this.sendMail(to, 'Votre candidature a été refusée', 'Nous sommes désolés, votre demande n’a pas été retenue.', this.rejectTemplate(firstname, animalName));
+    return this.sendMail(
+      to,
+      "Votre candidature a été refusée",
+      "Nous sommes désolés, votre demande n’a pas été retenue.",
+      this.rejectTemplate(firstname, animalName)
+    );
   }
 }

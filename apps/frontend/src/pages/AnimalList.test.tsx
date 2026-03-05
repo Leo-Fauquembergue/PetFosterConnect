@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { MemoryRouter } from "react-router-dom";
-import AnimalList from "./AnimalList";
-import { animalApi } from "../api/animalApi";
 import type { AnimalWithRelations } from "@projet/shared-types";
+import { render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { animalApi } from "../api/animalApi";
+import AnimalList from "./AnimalList";
 
 // Mock de l'API
 vi.mock("../api/animalApi", () => ({

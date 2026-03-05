@@ -1,8 +1,8 @@
+import { type RegisterDto, UserRole } from "@projet/shared-types";
 import { useState } from "react";
-import { UserRole, type RegisterDto } from "@projet/shared-types";
+import Button from "../ui/Button";
 import Input from "../ui/Input";
 import InputPassword from "../ui/InputPassword";
-import Button from "../ui/Button";
 import Radio from "../ui/Radio";
 
 interface RegisterFormProps {
@@ -13,10 +13,12 @@ interface RegisterFormProps {
 const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+
   // ⚡ CORRECTION TYPAGE : On limite strictement le state aux rôles autorisés par RegisterDto
-  const [role, setRole] = useState<typeof UserRole.individual | typeof UserRole.shelter>(UserRole.individual);
-  
+  const [role, setRole] = useState<typeof UserRole.individual | typeof UserRole.shelter>(
+    UserRole.individual
+  );
+
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [siret, setSiret] = useState("");
@@ -99,7 +101,7 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
             value={shelterName}
             onChange={(e) => setShelterName(e.target.value)}
           />
-          
+
           <Input
             label="SIRET (14 chiffres)"
             type="text"
@@ -111,12 +113,7 @@ const RegisterForm = ({ onSubmit, isLoading }: RegisterFormProps) => {
         </div>
       )}
 
-      <Button
-        type="submit"
-        disabled={isLoading}
-        fullWidth
-        className="mt-4"
-      >
+      <Button type="submit" disabled={isLoading} fullWidth className="mt-4">
         {isLoading ? "Inscription en cours..." : "Créer mon compte"}
       </Button>
     </form>

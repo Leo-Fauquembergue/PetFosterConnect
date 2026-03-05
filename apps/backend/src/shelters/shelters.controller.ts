@@ -1,32 +1,32 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
   Put,
-  Delete,
-  Param,
-  Body,
-  UsePipes,
   Query,
   UseGuards,
+  UsePipes,
 } from "@nestjs/common";
 import {
-  ApiTags,
+  ApiBearerAuth,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBearerAuth,
+  ApiResponse,
+  ApiTags,
 } from "@nestjs/swagger";
+import { UserRole } from "@prisma/client";
 import * as sharedTypes from "@projet/shared-types";
 import { AnimalsService } from "../animals/animals.service";
+import { Roles } from "../auth/decorators/roles.decorators";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { SheltersService } from "./shelters.service";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
-import { Roles } from "../auth/decorators/roles.decorators";
-import { UserRole } from "@prisma/client";
 
 @ApiTags("shelters")
 @Controller("shelters")
@@ -64,7 +64,7 @@ export class SheltersController {
     const parsedLimit = limit ? parseInt(limit, 10) : undefined;
     // 🛡️ PATCH DoS : Plafond strict à 50 et fallback sécurisé si NaN
     const safeLimit = parsedLimit && !Number.isNaN(parsedLimit) ? Math.min(parsedLimit, 50) : 50;
-    
+
     // On passe safeLimit au service
     return this.sheltersService.findAll(safeLimit);
   }
@@ -100,10 +100,7 @@ export class SheltersController {
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
   @UsePipes(new ZodPipe(sharedTypes.UpdateShelterProfileSchema))
-  update(
-    @Param("id") id: string,
-    @Body() body: sharedTypes.UpdateShelterProfileDto
-  ) {
+  update(@Param("id") id: string, @Body() body: sharedTypes.UpdateShelterProfileDto) {
     return this.sheltersService.update(Number(id), body);
   }
 

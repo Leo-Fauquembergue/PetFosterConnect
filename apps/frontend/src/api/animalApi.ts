@@ -1,10 +1,10 @@
-import api from "./api";
-import type { 
-  Animal, 
-  AnimalWithRelations, 
-  CreateAnimalDto, 
-  UpdateAnimalDto 
+import type {
+  Animal,
+  AnimalWithRelations,
+  CreateAnimalDto,
+  UpdateAnimalDto,
 } from "@projet/shared-types";
+import api from "./api";
 
 export const animalApi = {
   getAllAnimals: async (): Promise<AnimalWithRelations[]> => {

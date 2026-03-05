@@ -1,14 +1,14 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { CreateAnimalSchema } from "@projet/shared-types";
+import { AxiosError } from "axios";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
 import { speciesApi } from "../../api/speciesApi";
+import Checkbox from "../../components/ui/Checkbox";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
-import Checkbox from "../../components/ui/Checkbox";
-import { AxiosError } from "axios";
 
 type FormData = {
   name: string;
@@ -31,7 +31,7 @@ export default function AnimalForm() {
   const location = useLocation();
   const animal = location.state?.animal;
   const [species, setSpecies] = useState<{ id: number; name: string }[]>([]);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
@@ -57,7 +57,8 @@ export default function AnimalForm() {
         setSpecies(data);
       } catch (error) {
         const err = error as AxiosError<{ message: string }>;
-        const errorMessage = err.response?.data?.message || "Erreur lors du chargement des espèces.";
+        const errorMessage =
+          err.response?.data?.message || "Erreur lors du chargement des espèces.";
         toast.error(errorMessage);
       }
     };
@@ -70,7 +71,7 @@ export default function AnimalForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     setIsSubmitting(true);
 
     const parsedData = {
@@ -195,9 +196,7 @@ export default function AnimalForm() {
 
             {/* Caractéristiques physiques */}
             <div className="mb-6 w-full space-y-4">
-              <h2 className="text-xl font-bold text-success mb-2">
-                Caractéristiques physiques
-              </h2>
+              <h2 className="text-xl font-bold text-success mb-2">Caractéristiques physiques</h2>
               <Input
                 label="Poids (kg)"
                 type="number"
@@ -238,9 +237,7 @@ export default function AnimalForm() {
 
             {/* Santé */}
             <div className="mb-6 w-full space-y-4">
-              <h2 className="text-xl font-bold text-success mb-2">
-                Soins & Traitements
-              </h2>
+              <h2 className="text-xl font-bold text-success mb-2">Soins & Traitements</h2>
               <Input
                 label="Traitement médical"
                 type="text"

@@ -1,10 +1,10 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import AnimalDetail from "./AnimalDetail";
+import { toast } from "react-toastify";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { animalApi } from "../api/animalApi";
 import { applicationApi } from "../api/applicationApi";
-import { toast } from "react-toastify";
+import AnimalDetail from "./AnimalDetail";
 
 // Mocks des APIs
 vi.mock("../api/animalApi", () => ({
@@ -102,7 +102,7 @@ describe("AnimalDetail - Formulaire de demande", () => {
 
   it("doit afficher une erreur si la demande échoue (ex: message manquant rejeté par le backend)", async () => {
     (animalApi.getAnimalById as any).mockResolvedValueOnce(mockAnimal);
-    
+
     // On simule un rejet de l'API (ex: Zod retourne 400 pour champ vide)
     (applicationApi.createApplication as any).mockRejectedValueOnce({
       response: { data: { message: "Le message de motivation est obligatoire" } },

@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
+import { UserRole } from "@prisma/client";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { COOKIE_NAME } from "../../constants";
-import { UserRole } from "@prisma/client";
 
 // ⚡ Définition stricte du payload
 export interface JwtPayload {
@@ -30,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // ⚡ On remplace `any` par l'interface `JwtPayload`
   async validate(payload: JwtPayload) {
     return {
-      // L'astuce chirurgicale : on force la conversion du 'sub' (String ou Number) en Number 
+      // L'astuce chirurgicale : on force la conversion du 'sub' (String ou Number) en Number
       // pour que tout le reste de l'application (Guards, Prisma) reçoive un entier valide.
       id: Number(payload.sub),
       email: payload.email,

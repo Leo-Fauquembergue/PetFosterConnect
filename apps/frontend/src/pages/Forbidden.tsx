@@ -10,8 +10,8 @@ const Forbidden = () => {
       <p className="text-xl mb-2">Accès interdit.</p>
 
       <p className="mb-6 text-center max-w-md">
-        Vous êtes bien connecté, mais vous n’avez pas les autorisations
-        nécessaires pour accéder à cette page.
+        Vous êtes bien connecté, mais vous n’avez pas les autorisations nécessaires pour accéder à
+        cette page.
       </p>
 
       <div className="flex gap-4">

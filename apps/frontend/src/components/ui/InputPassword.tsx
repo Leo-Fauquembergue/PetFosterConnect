@@ -9,7 +9,7 @@ type InputPasswordProps = React.InputHTMLAttributes<HTMLInputElement> & {
 const InputPassword = forwardRef<HTMLInputElement, InputPasswordProps>(
   ({ label, error, className = "", id, ...props }, ref) => {
     const [show, setShow] = useState(false);
-    
+
     // Génération d'ID unique pour l'accessibilité
     const generatedId = useId();
     const inputId = id || generatedId;
@@ -37,7 +37,7 @@ const InputPassword = forwardRef<HTMLInputElement, InputPasswordProps>(
             `}
             {...props}
           />
-          
+
           <button
             type="button"
             onClick={() => setShow(!show)}

@@ -1,10 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  type LoginDto,
-  LoginSchema,
-  type RegisterDto,
-  RegisterSchema,
-} from "@projet/shared-types";
+import { type LoginDto, LoginSchema, type RegisterDto, RegisterSchema } from "@projet/shared-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -28,9 +23,7 @@ export default function AuthPage() {
         <div className="hidden md:flex md:w-1/2 bg-secondary items-center justify-center p-12 text-white relative overflow-hidden">
           <div className="relative z-10 text-center">
             <h2 className="text-3xl font-bold font-montserrat mb-4">
-              {isLoginView
-                ? "Heureux de vous revoir !"
-                : "Rejoignez l'aventure !"}
+              {isLoginView ? "Heureux de vous revoir !" : "Rejoignez l'aventure !"}
             </h2>
             <p className="text-gray-100 font-openSans mb-8">
               {isLoginView
@@ -125,10 +118,7 @@ function LoginForm() {
         error={errors.password?.message}
       />
       <div className="text-right">
-        <Link
-          to="/forgot-password"
-          className="text-xs text-gray-500 hover:text-primary transition"
-        >
+        <Link to="/forgot-password" className="text-xs text-gray-500 hover:text-primary transition">
           Mot de passe oublié ?
         </Link>
       </div>
@@ -171,7 +161,8 @@ function RegisterForm() {
       if (err.response?.status === 409) {
         toast.error("Cet email est déjà utilisé", { position: "top-right" });
       } else {
-        const errorMessage = err.response?.data?.message || "Erreur lors de l'inscription. Veuillez réessayer.";
+        const errorMessage =
+          err.response?.data?.message || "Erreur lors de l'inscription. Veuillez réessayer.";
         toast.error(errorMessage, { position: "top-right" });
       }
     } finally {
@@ -181,12 +172,7 @@ function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <Input
-        label="Email"
-        type="email"
-        {...register("email")}
-        error={errors.email?.message}
-      />
+      <Input label="Email" type="email" {...register("email")} error={errors.email?.message} />
       <InputPassword
         label="Mot de passe"
         {...register("password")}
@@ -196,12 +182,7 @@ function RegisterForm() {
       {/* Champs conditionnels */}
       {selectedRole === "shelter" && (
         <>
-          <Input
-            label="Siret"
-            type="text"
-            {...register("siret")}
-            error={errors.siret?.message}
-          />
+          <Input label="Siret" type="text" {...register("siret")} error={errors.siret?.message} />
           <Input
             label="Nom du refuge"
             type="text"
@@ -213,9 +194,7 @@ function RegisterForm() {
 
       <div className="flex flex-col gap-2">
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-sm font-medium text-gray-700">
-            Vous êtes :
-          </legend>
+          <legend className="text-sm font-medium text-gray-700">Vous êtes :</legend>
           <div className="flex gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -236,9 +215,7 @@ function RegisterForm() {
               <span className="text-sm">Association</span>
             </label>
           </div>
-          {errors.role && (
-            <span className="text-xs text-error">{errors.role.message}</span>
-          )}
+          {errors.role && <span className="text-xs text-error">{errors.role.message}</span>}
         </fieldset>
       </div>
 
