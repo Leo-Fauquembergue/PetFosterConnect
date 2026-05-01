@@ -1,7 +1,7 @@
 import type { ApplicationSentResponse } from "@projet/shared-types";
-import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { applicationApi } from "../../api/applicationApi";
 import Loader from "../../components/ui/Loader";
 
@@ -16,9 +16,10 @@ export default function ApplicationsSent() {
         setApplications(data);
       })
       .catch((error: unknown) => {
-        const err = error as AxiosError<{ message: string }>;
-        const errorMessage =
-          err.response?.data?.message || "Erreur lors du chargement de vos candidatures.";
+        const errorMessage = extractErrorMessage(
+          error,
+          "Erreur lors du chargement de vos candidatures."
+        );
         toast.error(errorMessage);
       })
       .finally(() => setLoading(false));

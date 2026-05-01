@@ -1,7 +1,7 @@
 import type { ApplicationReceivedResponse } from "@projet/shared-types";
-import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { applicationApi } from "../../api/applicationApi";
 import Loader from "../../components/ui/Loader";
 
@@ -56,9 +56,7 @@ export default function ApplicationsReceived() {
         )
       );
     } catch (err: unknown) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Impossible de mettre à jour la candidature.";
+      const errorMessage = extractErrorMessage(err, "Impossible de mettre à jour la candidature.");
       toast.error(`⚠️ Erreur: ${errorMessage}`, { autoClose: 5000 });
     } finally {
       setActionLoadingId(null);

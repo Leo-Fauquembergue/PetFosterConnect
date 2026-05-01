@@ -1,11 +1,11 @@
 import type { AnimalWithRelations } from "@projet/shared-types";
-import { AxiosError } from "axios";
 import { Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
 import { shelterApi } from "../../api/shelterApi";
+import { extractErrorMessage } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
@@ -34,9 +34,7 @@ export default function ShelterAnimalList() {
         const data = await shelterApi.getShelterAnimals(Number(id));
         setAnimals(data);
       } catch (error) {
-        const axiosError = error as AxiosError<{ message: string }>;
-        const errorMessage =
-          axiosError.response?.data?.message || "Erreur de chargement des animaux.";
+        const errorMessage = extractErrorMessage(error, "Erreur de chargement des animaux.");
         toast.error(errorMessage);
       } finally {
         setLoading(false);

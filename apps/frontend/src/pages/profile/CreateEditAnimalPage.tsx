@@ -1,10 +1,10 @@
 import { CreateAnimalSchema } from "@projet/shared-types";
-import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
 import { speciesApi } from "../../api/speciesApi";
+import { extractErrorMessage } from "../../api/api";
 import Checkbox from "../../components/ui/Checkbox";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
@@ -56,9 +56,7 @@ export default function AnimalForm() {
         const data = await speciesApi.getAllSpecies();
         setSpecies(data);
       } catch (error) {
-        const err = error as AxiosError<{ message: string }>;
-        const errorMessage =
-          err.response?.data?.message || "Erreur lors du chargement des espèces.";
+        const errorMessage = extractErrorMessage(error, "Erreur lors du chargement des espèces.");
         toast.error(errorMessage);
       }
     };
@@ -92,11 +90,10 @@ export default function AnimalForm() {
       }
       navigate(-1);
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
-      if (err && typeof err === "object" && ("issues" in err || "errors" in err)) {
+      if (error && typeof error === "object" && ("issues" in error || "errors" in error)) {
         toast.error("Formulaire invalide : veuillez vérifier les champs.");
       } else {
-        const errorMessage = err.response?.data?.message || "Erreur lors de l'enregistrement.";
+        const errorMessage = extractErrorMessage(error, "Erreur lors de l'enregistrement.");
         toast.error(errorMessage);
       }
     } finally {

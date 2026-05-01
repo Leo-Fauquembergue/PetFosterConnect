@@ -1,9 +1,9 @@
 import type { UpdateUserDto, User } from "@projet/shared-types";
-import { isAxiosError } from "axios";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { userApi } from "../../api/userApi";
+import { extractErrorMessage } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
@@ -27,10 +27,7 @@ export default function AdminUsers() {
         const data = await userApi.getAllUsers();
         setUsers(data);
       } catch (error: unknown) {
-        let errorMessage = "Impossible de charger les utilisateurs.";
-        if (isAxiosError(error)) {
-          errorMessage = error.response?.data?.message || errorMessage;
-        }
+        const errorMessage = extractErrorMessage(error, "Impossible de charger les utilisateurs.");
         toast.error(errorMessage);
       } finally {
         setLoading(false);
@@ -64,10 +61,7 @@ export default function AdminUsers() {
         toast.success("Utilisateur restauré");
       }
     } catch (error: unknown) {
-      let errorMessage = "Une erreur est survenue lors de l'opération.";
-      if (isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || errorMessage;
-      }
+      const errorMessage = extractErrorMessage(error, "Une erreur est survenue lors de l'opération.");
       toast.error(errorMessage);
     } finally {
       setActionToConfirm(null);

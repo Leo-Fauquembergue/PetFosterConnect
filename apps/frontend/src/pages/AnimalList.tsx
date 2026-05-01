@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../api/animalApi";
+import { extractErrorMessage } from "../api/api";
 import AnimalCard from "../components/cards/AnimalCard";
 import Loader from "../components/ui/Loader";
 
@@ -26,10 +27,7 @@ const AnimalList = () => {
           return;
         }
         setError(true);
-        let errorMessage = "Impossible de charger les animaux.";
-        if (axios.isAxiosError(err)) {
-          errorMessage = err.response?.data?.message || errorMessage;
-        }
+        const errorMessage = extractErrorMessage(err, "Impossible de charger les animaux.");
         toast.error(errorMessage);
       } finally {
         setLoading(false);

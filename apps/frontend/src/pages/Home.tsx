@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../api/animalApi";
 import { shelterApi } from "../api/shelterApi";
+import { extractErrorMessage } from "../api/api";
 import AnimalCard from "../components/cards/AnimalCard";
 import ShelterCard from "../components/cards/ShelterCard";
 import Button from "../components/ui/Button";
@@ -67,8 +68,9 @@ export default function Home() {
           location: s.user?.address || "Localisation non renseignée",
         }));
         setShelters(featuredShelters);
-      } catch (_error: unknown) {
-        toast.error("Impossible de charger les dernières annonces.");
+      } catch (error: unknown) {
+        const errorMessage = extractErrorMessage(error, "Impossible de charger les dernières annonces.");
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }

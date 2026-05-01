@@ -1,5 +1,4 @@
 import type { AnimalDetailResponse } from "@projet/shared-types";
-import { AxiosError } from "axios";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { AlertCircle, Heart } from "lucide-react";
@@ -10,6 +9,7 @@ import { toast } from "react-toastify";
 import { animalApi } from "../api/animalApi";
 import { applicationApi } from "../api/applicationApi";
 import { bookmarkApi } from "../api/bookmarkApi";
+import { extractErrorMessage } from "../api/api";
 import SiteLogo from "../assets/Logo.png";
 import { useAuth } from "../auth/AuthContext";
 import BackBanner from "../components/ui/BackBanner";
@@ -58,25 +58,8 @@ export default function AnimalDetail() {
   }, [id]);
 
   const handleError = (err: unknown) => {
-    const axiosError = err as AxiosError<{ message: unknown }>;
-    const errorData = axiosError.response?.data?.message;
-
-    if (errorData && typeof errorData === "object" && "errors" in errorData) {
-      const errObj = errorData as { errors: { message: string } };
-      if (errObj.errors?.message) {
-        try {
-          const parsedZodError = JSON.parse(errObj.errors.message);
-          if (parsedZodError[0]?.message) {
-            toast.error(parsedZodError[0].message);
-            return;
-          }
-        } catch (_e) {
-          // Ignorer l'erreur de parsing et passer au fallback
-        }
-      }
-    }
-
-    toast.error(typeof errorData === "string" ? errorData : "Erreur lors de la demande");
+    const errorMessage = extractErrorMessage(err, "Erreur lors de la demande");
+    toast.error(errorMessage);
   };
 
   const handleAdopt = async (e: React.FormEvent) => {
@@ -125,8 +108,8 @@ export default function AnimalDetail() {
       setIsFavorite(responseData.bookmarked);
       toast.success(responseData.message);
     } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      toast.error(axiosError.response?.data?.message || "Erreur réseau");
+      const errorMessage = extractErrorMessage(err, "Erreur réseau");
+      toast.error(errorMessage);
     }
   };
 

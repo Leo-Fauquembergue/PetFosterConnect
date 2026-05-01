@@ -5,11 +5,11 @@ import type {
   UpdateUserWithShelterProfileDto,
   User,
 } from "@projet/shared-types";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { userApi } from "../../api/userApi";
+import { extractErrorMessage } from "../../api/api";
 import UserCard from "../../components/cards/UserCard";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
@@ -94,10 +94,7 @@ export default function UserProfilePage() {
         }
         setLoading(false);
       } catch (err: unknown) {
-        let errorMessage = "Impossible de charger le profil.";
-        if (axios.isAxiosError(err)) {
-          errorMessage = err.response?.data?.message || errorMessage;
-        }
+        const errorMessage = extractErrorMessage(err, "Impossible de charger le profil.");
         toast.error(errorMessage);
         setLoading(false);
       }
@@ -135,10 +132,7 @@ export default function UserProfilePage() {
       setIsEditing(false);
       toast.success("Profil mis à jour avec succès !");
     } catch (err: unknown) {
-      let errorMessage = "Impossible de mettre à jour le profil.";
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.message || errorMessage;
-      }
+      const errorMessage = extractErrorMessage(err, "Impossible de mettre à jour le profil.");
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

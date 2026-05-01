@@ -1,9 +1,9 @@
-// ⚡ Typage strict pour éviter les erreurs d'objets ou les AxiosError brutes
+// ⚡ Typage strict pour éviter les erreurs d'objets ou les erreurs brutes
 import type { AnimalWithRelations } from "@projet/shared-types";
-import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { bookmarkApi } from "../../api/bookmarkApi";
 import { useAuth } from "../../auth/AuthContext";
 import Loader from "../../components/ui/Loader";
@@ -29,10 +29,7 @@ export default function BookmarksPage() {
       .getMyBookmarks()
       .then((data) => setBookmarks(data))
       .catch((err: unknown) => {
-        // ⚡ Fin du any
-        const axiosError = err as AxiosError<{ message: string }>;
-        const errorMessage =
-          axiosError.response?.data?.message || "Impossible de charger vos favoris ❌";
+        const errorMessage = extractErrorMessage(err, "Impossible de charger vos favoris ❌");
         toast.error(errorMessage, { position: "top-right" });
       })
       .finally(() => setLoading(false));
@@ -50,10 +47,7 @@ export default function BookmarksPage() {
         autoClose: 2000,
       });
     } catch (err: unknown) {
-      // ⚡ Fin du any
-      const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Erreur lors de la mise à jour du favori ❌";
+      const errorMessage = extractErrorMessage(err, "Erreur lors de la mise à jour du favori ❌");
       toast.error(errorMessage, { position: "top-right" });
     } finally {
       setDeletingId(null);

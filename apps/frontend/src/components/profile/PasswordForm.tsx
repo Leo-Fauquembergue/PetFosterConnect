@@ -1,6 +1,6 @@
-import { isAxiosError } from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
 import InputPassword from "../ui/InputPassword";
 
@@ -24,11 +24,7 @@ export default function PasswordForm({ userId }: Props) {
       toast.success("Mot de passe modifié avec succès !");
       setFormData({ oldPassword: "", newPassword: "" });
     } catch (err: unknown) {
-      // ⚡ Type Guard : Prévient les crashs si l'API est injoignable
-      let errorMessage = "Erreur lors de la modification du mot de passe.";
-      if (isAxiosError(err)) {
-        errorMessage = err.response?.data?.message || errorMessage;
-      }
+      const errorMessage = extractErrorMessage(err, "Erreur lors de la modification du mot de passe.");
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

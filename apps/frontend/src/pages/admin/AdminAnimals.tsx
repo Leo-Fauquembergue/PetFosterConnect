@@ -1,9 +1,9 @@
 import type { Animal } from "@projet/shared-types";
-import axios from "axios";
 import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
+import { extractErrorMessage } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
@@ -33,10 +33,7 @@ export default function AdminAnimals() {
         const data = await animalApi.getAllAdmin();
         setAnimals(data as AnimalWithRelations[]);
       } catch (error: unknown) {
-        let errorMessage = "Impossible de charger la liste des animaux.";
-        if (axios.isAxiosError<{ message: string }>(error)) {
-          errorMessage = error.response?.data?.message || errorMessage;
-        }
+        const errorMessage = extractErrorMessage(error, "Impossible de charger la liste des animaux.");
         toast.error(errorMessage);
       } finally {
         setLoading(false);

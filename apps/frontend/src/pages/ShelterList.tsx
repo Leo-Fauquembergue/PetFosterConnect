@@ -1,10 +1,10 @@
-// ⚡ CORRECTION : Import du type depuis le package partagé et de AxiosError pour le catch
+// ⚡ CORRECTION : Import du type depuis le package partagé et utilisation du helper pour les erreurs
 import type { ShelterWithRelations } from "@projet/shared-types";
-import { isAxiosError } from "axios";
 import { Home } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { shelterApi } from "../api/shelterApi";
+import { extractErrorMessage } from "../api/api";
 import ShelterCard from "../components/cards/ShelterCard";
 import Loader from "../components/ui/Loader";
 
@@ -20,11 +20,7 @@ const SheltersPage = () => {
         setShelters(data);
       } catch (err: unknown) {
         setError(true);
-        // ⚡ Vrai Type Guard
-        let errorMessage = "Impossible de charger les refuges.";
-        if (isAxiosError(err)) {
-          errorMessage = err.response?.data?.message || errorMessage;
-        }
+        const errorMessage = extractErrorMessage(err, "Impossible de charger les refuges.");
         toast.error(errorMessage);
       } finally {
         setLoading(false);
