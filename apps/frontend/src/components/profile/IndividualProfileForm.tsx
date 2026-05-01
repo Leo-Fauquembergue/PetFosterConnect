@@ -1,18 +1,10 @@
+import type { UpdateUserWithIndividualProfileDto } from "@projet/shared-types";
 import Checkbox from "../ui/Checkbox";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 
 type Props = {
-  formData: {
-    email: string;
-    phoneNumber: string;
-    address: string;
-    surface: number;
-    housingType: string;
-    haveGarden: boolean;
-    haveAnimals: boolean;
-    haveChildren: boolean;
-    availableFamily: boolean;
+  formData: Required<Omit<UpdateUserWithIndividualProfileDto, "availableTime">> & {
     availableTime?: string;
   };
   onChange: <K extends keyof Props["formData"]>(field: K, value: Props["formData"][K]) => void;
@@ -43,7 +35,7 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
       <div className="grid grid-cols-2 gap-4">
         <Select
           label="Type de logement"
-          value={formData.housingType}
+          value={formData.housingType || "other"}
           onChange={(e) => onChange("housingType", e.target.value)}
         >
           <option value="house">Maison</option>
@@ -53,7 +45,7 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
         <Input
           label="Surface (m²)"
           type="number"
-          value={formData.surface}
+          value={formData.surface || 0}
           onChange={(e) => onChange("surface", Number(e.target.value))}
         />
       </div>
@@ -61,17 +53,17 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
       <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded-md">
         <Checkbox
           label="J'ai un jardin clos"
-          checked={formData.haveGarden}
+          checked={formData.haveGarden || false}
           onChange={(e) => onChange("haveGarden", e.target.checked)}
         />
         <Checkbox
           label="J'ai d'autres animaux"
-          checked={formData.haveAnimals}
+          checked={formData.haveAnimals || false}
           onChange={(e) => onChange("haveAnimals", e.target.checked)}
         />
         <Checkbox
           label="J'ai des enfants à charge"
-          checked={formData.haveChildren}
+          checked={formData.haveChildren || false}
           onChange={(e) => onChange("haveChildren", e.target.checked)}
         />
       </div>
@@ -79,7 +71,7 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
       <div className="border-t pt-4">
         <Checkbox
           label="Je souhaite devenir Famille d'Accueil"
-          checked={formData.availableFamily}
+          checked={formData.availableFamily || false}
           onChange={(e) => onChange("availableFamily", e.target.checked)}
         />
         {formData.availableFamily && (

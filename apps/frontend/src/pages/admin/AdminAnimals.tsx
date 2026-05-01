@@ -1,4 +1,4 @@
-import type { Animal } from "@projet/shared-types";
+import type { AnimalWithRelations } from "@projet/shared-types";
 import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -7,12 +7,6 @@ import { extractErrorMessage } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
-
-// Type étendu pour matcher le retour API (Relations Prisma)
-type AnimalWithRelations = Animal & {
-  species: { name: string };
-  shelter: { shelterProfile: { shelterName: string } | null };
-};
 
 export default function AdminAnimals() {
   const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);

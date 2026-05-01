@@ -1,23 +1,25 @@
-import { CreateAnimalSchema } from "@projet/shared-types";
+import { type AnimalWithRelations, CreateAnimalSchema } from "@projet/shared-types";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
-import { speciesApi } from "../../api/speciesApi";
 import { extractErrorMessage } from "../../api/api";
+import { speciesApi } from "../../api/speciesApi";
 import Checkbox from "../../components/ui/Checkbox";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
 
+// On définit FormData avec des types compatibles avec les inputs React (string)
+// tout en conservant les boiléens du schéma partagé.
 type FormData = {
   name: string;
   age: string;
   description: string;
-  sex: string;
+  sex: string; // On utilise string pour le Select
   weight: string;
   height: string;
-  animalStatus: string;
+  animalStatus: string; // On utilise string pour le Select
   photos: string[];
   acceptOtherAnimals: boolean;
   acceptChildren: boolean;
@@ -29,7 +31,7 @@ type FormData = {
 export default function AnimalForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const animal = location.state?.animal;
+  const animal = location.state?.animal as AnimalWithRelations | undefined;
   const [species, setSpecies] = useState<{ id: number; name: string }[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,10 +41,10 @@ export default function AnimalForm() {
     age: animal?.age ?? "",
     description: animal?.description ?? "",
     sex: animal?.sex ?? "unknown",
-    weight: animal?.weight ?? "",
-    height: animal?.height ?? "",
+    weight: animal?.weight?.toString() ?? "",
+    height: animal?.height?.toString() ?? "",
     animalStatus: animal?.animalStatus ?? "available",
-    photos: animal?.photos ?? [],
+    photos: (animal?.photos as string[]) ?? [],
     acceptOtherAnimals: animal?.acceptOtherAnimals ?? false,
     acceptChildren: animal?.acceptChildren ?? false,
     needGarden: animal?.needGarden ?? false,

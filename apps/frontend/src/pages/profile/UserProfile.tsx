@@ -27,28 +27,11 @@ type ProfileFormData = Partial<
 >;
 
 // ⚡ Types stricts attendus par les composants enfants pour satisfaire TS2322
-type ExpectedIndividualProps = {
-  email: string;
-  phoneNumber: string;
-  address: string;
-  surface: number;
-  housingType: string;
-  haveGarden: boolean;
-  haveAnimals: boolean;
-  haveChildren: boolean;
-  availableFamily: boolean;
+type ExpectedIndividualProps = Required<Omit<UpdateUserWithIndividualProfileDto, "availableTime">> & {
   availableTime?: string;
 };
 
-type ExpectedShelterProps = {
-  logo: string;
-  email: string;
-  phoneNumber: string;
-  address: string;
-  shelterName: string;
-  siret: string;
-  description: string;
-};
+type ExpectedShelterProps = Required<UpdateUserWithShelterProfileDto>;
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();

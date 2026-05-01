@@ -1,5 +1,4 @@
-// ⚡ Typage strict pour éviter les erreurs d'objets ou les erreurs brutes
-import type { AnimalWithRelations } from "@projet/shared-types";
+import type { AnimalWithRelations, Bookmark } from "@projet/shared-types";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -9,10 +8,7 @@ import { useAuth } from "../../auth/AuthContext";
 import Loader from "../../components/ui/Loader";
 
 // Interface locale pour mapper la réponse de l'API des favoris
-export type BookmarkWithAnimal = {
-  pfcUserId: number;
-  animalId: number;
-  createdAt: Date | string;
+export type BookmarkWithAnimal = Bookmark & {
   animal: AnimalWithRelations;
 };
 

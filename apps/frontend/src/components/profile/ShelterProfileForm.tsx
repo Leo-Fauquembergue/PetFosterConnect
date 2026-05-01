@@ -1,17 +1,10 @@
+import type { UpdateUserWithShelterProfileDto } from "@projet/shared-types";
 import { CiSettings } from "react-icons/ci";
 import Input from "../ui/Input";
 import Textarea from "../ui/Textarea";
 
 type Props = {
-  formData: {
-    logo: string;
-    email: string;
-    phoneNumber: string;
-    address: string;
-    shelterName: string;
-    siret: string;
-    description: string;
-  };
+  formData: Required<UpdateUserWithShelterProfileDto>;
   onChange: <K extends keyof Props["formData"]>(field: K, value: Props["formData"][K]) => void;
 };
 
@@ -26,7 +19,7 @@ export default function ShelterProfileForm({ formData, onChange }: Props) {
       <Input
         label="URL du Logo"
         type="text"
-        value={formData.logo}
+        value={formData.logo || ""}
         onChange={(e) => onChange("logo", e.target.value)}
         placeholder="https://exemple.com/mon-logo.png"
       />
@@ -41,14 +34,14 @@ export default function ShelterProfileForm({ formData, onChange }: Props) {
       <Input
         label="Téléphone"
         type="tel"
-        value={formData.phoneNumber}
+        value={formData.phoneNumber || ""}
         onChange={(e) => onChange("phoneNumber", e.target.value)}
       />
 
       <Input
         label="Adresse complète"
         type="text"
-        value={formData.address}
+        value={formData.address || ""}
         onChange={(e) => onChange("address", e.target.value)}
       />
 
@@ -68,7 +61,7 @@ export default function ShelterProfileForm({ formData, onChange }: Props) {
 
       <Textarea
         label="Description / Présentation"
-        value={formData.description}
+        value={formData.description || ""}
         onChange={(e) => onChange("description", e.target.value)}
         rows={4}
       />

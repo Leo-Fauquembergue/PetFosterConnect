@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import type { AnimalWithRelations, ShelterWithRelations } from "@projet/shared-types";
 import { animalApi } from "../api/animalApi";
 import { shelterApi } from "../api/shelterApi";
 import { extractErrorMessage } from "../api/api";
@@ -10,9 +11,7 @@ import Button from "../components/ui/Button";
 import Loader from "../components/ui/Loader";
 
 // TYPES D'AFFICHAGE (UI) - Les seuls dont ce composant a besoin !
-type DisplayAnimal = {
-  id: number;
-  name: string;
+type DisplayAnimal = Pick<AnimalWithRelations, "id" | "name"> & {
   species: string;
   age: string;
   image: string;
@@ -20,8 +19,8 @@ type DisplayAnimal = {
 };
 
 type DisplayShelter = {
-  id: number;
-  name: string;
+  id: ShelterWithRelations["pfcUserId"];
+  name: ShelterWithRelations["shelterName"];
   image: string;
   location: string;
 };
