@@ -1,7 +1,8 @@
 import { UserRole } from "@projet/shared-types";
-import { Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { AuthProvider } from "./auth/AuthContext.tsx";
+import { useAuth } from "./auth/AuthContext.tsx";
 import "react-toastify/dist/ReactToastify.css";
 
 import ProtectedRoute from "./auth/ProtectedRoute.tsx";
@@ -34,8 +35,31 @@ import SheltersPage from "./pages/ShelterList";
 import Unauthorized from "./pages/Unauthorized";
 
 function App() {
+  const { setUser, setIsLoggedIn } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setIsLoggedIn(false);
+      navigate("/connexion");
+    };
+
+    const handleForbidden = () => {
+      navigate("/interdit");
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    window.addEventListener("auth:forbidden", handleForbidden);
+
+    return () => {
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+      window.removeEventListener("auth:forbidden", handleForbidden);
+    };
+  }, [navigate, setUser, setIsLoggedIn]);
+
   return (
-    <AuthProvider>
+    <>
       <Routes>
         {/* ZONE PUBLIQUE */}
         <Route element={<PublicLayout />}>
@@ -102,7 +126,7 @@ function App() {
         pauseOnHover
         theme="light"
       />
-    </AuthProvider>
+    </>
   );
 }
 

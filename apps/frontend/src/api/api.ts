@@ -32,11 +32,10 @@ api.interceptors.response.use(
     if (status === 401) {
       // On vérifie si l'utilisateur n'est pas DÉJÀ sur la page de connexion ou d'inscription
       if (currentPath !== "/connexion" && currentPath !== "/inscription") {
-        // Redirection vers la vraie route de connexion
-        window.location.replace("/connexion");
+        window.dispatchEvent(new CustomEvent("auth:unauthorized"));
       }
     } else if (status === 403 && currentPath !== "/interdit") {
-      window.location.replace("/interdit");
+      window.dispatchEvent(new CustomEvent("auth:forbidden"));
     }
 
     return Promise.reject(error);
