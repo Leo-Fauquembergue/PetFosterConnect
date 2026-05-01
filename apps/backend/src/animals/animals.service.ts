@@ -116,10 +116,7 @@ export class AnimalsService {
 
     if (!animal) throw new NotFoundException("Animal introuvable");
 
-    // Vérification IDOR : Bloquer si l'utilisateur n'est pas Admin ET n'est pas le propriétaire
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Vous ne pouvez modifier que vos animaux.");
-    }
+    this.checkOwnership(animal.pfcUserId, user, "Vous ne pouvez modifier que vos animaux.");
 
     // ⚡ Déstructuration élégante et séparation des champs complexes
     const { weight, speciesId, photos, ...restDto } = updateAnimalDto;
@@ -150,14 +147,21 @@ export class AnimalsService {
 
     if (!animal) throw new NotFoundException("Animal introuvable");
 
-    // Vérification IDOR
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Action interdite sur cet animal.");
-    }
+    this.checkOwnership(animal.pfcUserId, user, "Action interdite sur cet animal.");
 
     return this.prisma.animal.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
+  }
+
+  /**
+   * Vérifie si l'utilisateur est admin ou le propriétaire de la ressource.
+   * Empêche les attaques IDOR.
+   */
+  private checkOwnership(ownerId: number, user: UserPayload, message: string) {
+    if (user.role !== "admin" && ownerId !== user.id) {
+      throw new ForbiddenException(message);
+    }
   }
 }

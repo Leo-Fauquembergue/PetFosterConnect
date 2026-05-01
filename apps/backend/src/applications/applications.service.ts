@@ -99,10 +99,7 @@ export class ApplicationsService {
 
     if (!animal) throw new NotFoundException("Animal introuvable");
 
-    // Vérification IDOR stricte
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Vous ne gérez pas cet animal.");
-    }
+    this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
     return this.prisma.application.update({
       where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
@@ -119,10 +116,7 @@ export class ApplicationsService {
 
     if (!animal) throw new NotFoundException("Animal introuvable");
 
-    // Vérification IDOR stricte
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Vous ne gérez pas cet animal.");
-    }
+    this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
     return this.prisma.application.update({
       where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
@@ -136,9 +130,7 @@ export class ApplicationsService {
       // Vérification IDOR (logique extraite de updateStatus pour être dans la transaction)
       const animal = await tx.animal.findUnique({ where: { id: animalId } });
       if (!animal) throw new NotFoundException("Animal introuvable");
-      if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-        throw new ForbiddenException("Vous ne gérez pas cet animal.");
-      }
+      this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
       // Mise à jour de la demande acceptée
       const updatedApp = await tx.application.update({
@@ -254,5 +246,15 @@ export class ApplicationsService {
     }
 
     return { message: "Candidature refusée", application };
+  }
+
+  /**
+   * Vérifie si l'utilisateur est admin ou le propriétaire de la ressource.
+   * Empêche les attaques IDOR.
+   */
+  private checkOwnership(ownerId: number, user: UserPayload, message: string) {
+    if (user.role !== "admin" && ownerId !== user.id) {
+      throw new ForbiddenException(message);
+    }
   }
 }
