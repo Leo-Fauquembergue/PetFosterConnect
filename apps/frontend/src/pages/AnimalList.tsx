@@ -1,7 +1,7 @@
 import type { AnimalWithRelations } from "@projet/shared-types";
 import axios from "axios";
 import { PawPrint, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../api/animalApi";
@@ -10,18 +10,21 @@ import Loader from "../components/ui/Loader";
 
 const AnimalList = () => {
   const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [filteredAnimals, setFilteredAnimals] = useState<AnimalWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchAnimals = async () => {
       try {
-        const data = await animalApi.getAllAnimals();
+        const data = await animalApi.getAllAnimals(controller.signal);
         setAnimals(data);
-        setFilteredAnimals(data);
       } catch (err: unknown) {
+        if (axios.isCancel(err)) {
+          return;
+        }
         setError(true);
         let errorMessage = "Impossible de charger les animaux.";
         if (axios.isAxiosError(err)) {
@@ -33,15 +36,18 @@ const AnimalList = () => {
       }
     };
     fetchAnimals();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   // Filtrage en temps réel
-  useEffect(() => {
-    const filtered = animals.filter((animal) => {
+  const filteredAnimals = useMemo(() => {
+    return animals.filter((animal) => {
       const searchLower = searchTerm.toLowerCase();
       return animal.name?.toLowerCase().includes(searchLower);
     });
-    setFilteredAnimals(filtered);
   }, [searchTerm, animals]);
 
   if (loading) {
@@ -96,7 +102,6 @@ const AnimalList = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                {/* ⚡ Le SVG a été remplacé par l'icône Search de lucide-react */}
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
             </div>

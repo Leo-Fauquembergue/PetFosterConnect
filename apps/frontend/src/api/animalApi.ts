@@ -7,8 +7,8 @@ import type {
 import api from "./api";
 
 export const animalApi = {
-  getAllAnimals: async (): Promise<AnimalWithRelations[]> => {
-    const response = await api.get<AnimalWithRelations[]>("/animals");
+  getAllAnimals: async (signal?: AbortSignal): Promise<AnimalWithRelations[]> => {
+    const response = await api.get<AnimalWithRelations[]>("/animals", { signal });
     return response.data;
   },
 
