@@ -1,14 +1,14 @@
 // ⚡ Importation stricte du User
-import type { User } from "@projet/shared-types";
+import type { LoginDto, RegisterDto, User } from "@projet/shared-types";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { authApi } from "../api/authApi";
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  setIsLoggedIn: (val: boolean) => void;
   logout: () => Promise<void>;
+  login: (credentials: LoginDto) => Promise<void>;
+  register: (data: RegisterDto) => Promise<void>;
   user: User | null; // ⚡ Fin du "any"
-  setUser: (user: User | null) => void;
   isLoading: boolean;
 }
 
@@ -35,6 +35,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
+  const login = async (credentials: LoginDto) => {
+    const res = await authApi.login(credentials);
+    setUser(res.user);
+    setIsLoggedIn(true);
+  };
+
+  const register = async (data: RegisterDto) => {
+    const res = await authApi.register(data);
+    setUser(res.user);
+    setIsLoggedIn(true);
+  };
+
   const logout = async () => {
     await authApi.logout();
     setIsLoggedIn(false);
@@ -42,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, logout, user, setUser, isLoading }}>
+    <AuthContext.Provider value={{ isLoggedIn, logout, login, register, user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

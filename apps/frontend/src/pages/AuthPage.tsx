@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../api/api";
-import { authApi } from "../api/authApi";
 
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/ui/Button";
@@ -68,7 +67,7 @@ export default function AuthPage() {
 
 // LOGIN
 function LoginForm() {
-  const { setIsLoggedIn, setUser } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
@@ -83,9 +82,7 @@ function LoginForm() {
   const onSubmit = async (data: LoginDto) => {
     setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
-      const res = await authApi.login(data);
-      setIsLoggedIn(true);
-      setUser(res.user);
+      await login(data);
       toast.success("Connexion réussie !", {
         position: "top-right",
         autoClose: 2000,
@@ -144,17 +141,14 @@ function RegisterForm() {
   });
 
   const navigate = useNavigate();
-  const { setIsLoggedIn, setUser } = useAuth();
+  const { register: registerUser } = useAuth();
   const selectedRole = watch("role");
   const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
   const onSubmit = async (data: RegisterDto) => {
     setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
-      await authApi.register(data);
-      setIsLoggedIn(true);
-      const me = await authApi.getMe();
-      setUser(me);
+      await registerUser(data);
       toast.success("Compte créé avec succès 🎉", {
         position: "top-right",
         autoClose: 2000,
