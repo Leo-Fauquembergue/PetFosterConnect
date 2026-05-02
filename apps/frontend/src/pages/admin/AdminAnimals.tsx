@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
 import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
 import { useAdminAnimals } from "../../hooks/useAdminAnimals";
@@ -118,14 +119,14 @@ export default function AdminAnimals() {
                   </td>
                   <td className="px-6 py-4 text-right flex justify-end gap-2">
                     {animal.deletedAt ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() => animal.id && openRestoreModal(animal.id)}
-                        className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors inline-flex items-center gap-1"
+                        className="text-primary hover:text-primary p-2"
                         title="Restaurer"
                       >
                         <RotateCcw className="w-4 h-4" /> Restaurer
-                      </button>
+                      </Button>
                     ) : (
                       <>
                         <a
@@ -137,14 +138,14 @@ export default function AdminAnimals() {
                         >
                           <Eye className="w-5 h-5" />
                         </a>
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
                           onClick={() => animal.id && openDeleteModal(animal.id)}
-                          className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
+                          className="text-gray-400 hover:text-error p-2"
                           title="Supprimer"
                         >
                           <Trash2 className="w-5 h-5" />
-                        </button>
+                        </Button>
                       </>
                     )}
                   </td>

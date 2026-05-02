@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
 
 const Unauthorized = () => {
   const navigate = useNavigate();
@@ -18,20 +19,12 @@ const Unauthorized = () => {
       <p className="text-xl mb-2">Vous n'êtes pas autorisé à accéder à cette page.</p>
       <p className="mb-6">Vous allez être redirigé vers la page de connexion dans 5 secondes.</p>
       <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="px-4 py-2 bg-info text-white rounded hover:bg-info/90 transition"
-        >
+        <Button variant="info" onClick={() => navigate("/")}>
           Accueil
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate("/connexion")}
-          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
-        >
+        </Button>
+        <Button variant="neutral" onClick={() => navigate("/connexion")}>
           Connexion
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-import { Injectable, Logger } from "@nestjs/common";
-import * as nodemailer from "nodemailer";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { Injectable, Logger } from "@nestjs/common";
 import * as handlebars from "handlebars";
+import * as nodemailer from "nodemailer";
 
 @Injectable()
 export class EmailsService {

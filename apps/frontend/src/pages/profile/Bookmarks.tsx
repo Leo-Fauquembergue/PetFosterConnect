@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { bookmarkApi } from "../../api/bookmarkApi";
+import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import { useBookmarks } from "../../hooks/useBookmarks";
 
@@ -75,20 +76,16 @@ export default function BookmarksPage() {
                 {bm.animal?.description || "Pas de description"}
               </p>
               <div className="mt-4 flex gap-3">
-                <Link
-                  to={`/animaux/${bm.animal.id}`}
-                  className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80 transition"
-                >
-                  Voir détails
+                <Link to={`/animaux/${bm.animal.id}`}>
+                  <Button variant="primary">Voir détails</Button>
                 </Link>
-                <button
-                  type="button"
+                <Button
+                  variant="danger"
                   onClick={() => handleToggle(bm.animalId)}
                   disabled={isDeleting}
-                  className={`px-4 py-2 bg-error text-white rounded transition ${isDeleting ? "opacity-50 cursor-not-allowed" : "hover:bg-error/90"}`}
                 >
                   {isDeleting ? "Retrait..." : "Retirer des favoris"}
-                </button>
+                </Button>
               </div>
               <p className="mt-2 text-xs text-gray-400">
                 Ajouté le {new Date(bm.createdAt).toLocaleDateString("fr-FR")}

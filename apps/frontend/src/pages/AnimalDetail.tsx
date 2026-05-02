@@ -15,7 +15,7 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
-import Loader from "../components/ui/Loader";
+import Loader from "../components/ui/Loader"; // ⚡ FIX : Import correct du Loader
 import { useAnimal } from "../hooks/useAnimal";
 
 export default function AnimalDetail() {
@@ -326,13 +326,9 @@ export default function AnimalDetail() {
                   <p>Cet animal n'est actuellement plus disponible à l'adoption.</p>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={exportToPDF}
-                className="bg-primary text-white px-4 py-2 rounded"
-              >
+              <Button type="button" onClick={exportToPDF} variant="primary">
                 Exporter en PDF
-              </button>
+              </Button>
             </div>
           </div>
         </div>

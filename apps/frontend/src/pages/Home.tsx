@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { HomeAnimalCard } from "../components/cards/HomeAnimalCard";
-import { HomeShelterCard } from "../components/cards/HomeShelterCard";
+import AnimalCard from "../components/cards/AnimalCard";
+import ShelterCard from "../components/cards/ShelterCard";
 import Button from "../components/ui/Button";
 import Loader from "../components/ui/Loader";
 import { useHomeData } from "../hooks/useHomeData";
@@ -37,12 +37,7 @@ export default function Home() {
                 <Button variant="primary">Je deviens Famille d'Accueil</Button>
               </Link>
               <Link to="/animaux">
-                <button
-                  type="button"
-                  className="px-6 py-2 rounded-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-secondary transition"
-                >
-                  Voir les animaux
-                </button>
+                <Button variant="outline-white">Voir les animaux</Button>
               </Link>
             </div>
           </div>
@@ -79,7 +74,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {animals.map((animal) => (
                 <div key={animal.id} className="w-full max-w-sm">
-                  <HomeAnimalCard {...animal} />
+                  <AnimalCard {...animal} variant="home" />
                 </div>
               ))}
             </div>
@@ -119,7 +114,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {shelters.map((shelter) => (
                 <div key={shelter.id} className="w-full max-w-sm">
-                  <HomeShelterCard {...shelter} />
+                  <ShelterCard {...shelter} variant="home" />
                 </div>
               ))}
             </div>

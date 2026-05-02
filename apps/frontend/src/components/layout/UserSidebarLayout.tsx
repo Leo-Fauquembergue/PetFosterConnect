@@ -6,6 +6,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
 import BurgerMenu from "../ui/BurgerMenu";
+import Button from "../ui/Button";
 
 export default function UserSidebarLayout() {
   const { user, logout } = useAuth();
@@ -144,17 +145,17 @@ export default function UserSidebarLayout() {
             <span>Retour au site</span>
           </NavLink>
 
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={() => {
               logout();
               close();
             }}
-            className="flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-primary/20 w-full rounded-lg transition font-medium"
+            className="text-error hover:bg-primary/20 w-full justify-start px-4 py-2 text-sm font-medium"
           >
             <LogOut size={18} />
             <span>Déconnexion</span>
-          </button>
+          </Button>
         </div>
       </aside>
       {/* Overlay (mobile only) */}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { applicationApi } from "../../api/applicationApi";
+import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import { useApplicationsReceived } from "../../hooks/useApplicationsReceived";
 
@@ -137,36 +138,32 @@ export default function ApplicationsReceived() {
               <div className="mt-4 flex gap-3">
                 {app.applicationStatus === "pending" && (
                   <>
-                    <button
-                      type="button"
+                    <Button
                       disabled={isProcessing}
                       onClick={() =>
                         handleStatus(app.pfcUserId, app.animalId, "approved", app.user?.email)
                       }
-                      className={`px-4 py-2 bg-success text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-success/90"}`}
                     >
                       {isProcessing ? "..." : "Accepter"}
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="danger"
                       disabled={isProcessing}
                       onClick={() =>
                         handleStatus(app.pfcUserId, app.animalId, "rejected", app.user?.email)
                       }
-                      className={`px-4 py-2 bg-error text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-error/90"}`}
                     >
                       {isProcessing ? "..." : "Refuser"}
-                    </button>
+                    </Button>
                   </>
                 )}
-                <button
-                  type="button"
+                <Button
+                  variant="neutral"
                   disabled={isProcessing}
                   onClick={() => handleArchive(app.pfcUserId, app.animalId)}
-                  className={`px-4 py-2 bg-gray-300 text-gray-800 rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-400"}`}
                 >
                   {isProcessing ? "Traitement..." : "Archiver"}
-                </button>
+                </Button>
               </div>
 
               <p className="mt-2 text-xs text-gray-400">

@@ -31,13 +31,13 @@ export default function AuthPage() {
                 ? "Connectez-vous pour suivre vos demandes et retrouver vos favoris."
                 : "Créez un compte pour proposer votre aide ou adopter votre futur compagnon."}
             </p>
-            <button
-              type="button"
+            <Button
+              variant="outline-white"
               onClick={() => setIsLoginView(!isLoginView)}
-              className="px-6 py-2 border-2 border-white rounded-full font-bold hover:bg-white hover:text-secondary transition"
+              className="rounded-full font-bold"
             >
               {isLoginView ? "Créer un compte" : "Se connecter"}
-            </button>
+            </Button>
           </div>
         </div>
 

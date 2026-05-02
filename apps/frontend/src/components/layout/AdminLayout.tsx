@@ -1,9 +1,12 @@
 import { Home, LayoutDashboard, LogOut, Menu, PawPrint, Users, X } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import logo from "../../assets/Logo.png";
+import { useAuth } from "../../auth/AuthContext";
 import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
+import Button from "../ui/Button";
 
 export default function AdminLayout() {
+  const { logout } = useAuth();
   // Remplacement du useState par le hook
   const { isOpen, open, close } = useDisclosure();
 
@@ -53,13 +56,14 @@ export default function AdminLayout() {
           <span>Retour au site</span>
         </NavLink>
 
-        <button
-          type="button"
-          className="flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-error/10 w-full rounded-lg transition font-medium"
+        <Button
+          variant="ghost"
+          onClick={() => logout()}
+          className="text-error hover:bg-error/10 w-full justify-start px-4 py-2 text-sm font-medium"
         >
           <LogOut size={18} />
           <span>Déconnexion</span>
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -73,10 +77,10 @@ export default function AdminLayout() {
 
       {/* SIDEBAR MOBILE */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity cursor-pointer"
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity cursor-pointer w-full h-full border-none"
           onClick={close}
-          aria-hidden="true"
         />
       )}
 
@@ -115,7 +119,7 @@ export default function AdminLayout() {
           {/* Bouton Burger */}
           <button
             type="button"
-            onClick={open} // Remplacement de setIsMobileMenuOpen(true)
+            onClick={open}
             className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             aria-label="Ouvrir le menu"
           >

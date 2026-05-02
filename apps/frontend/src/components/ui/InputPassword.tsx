@@ -41,7 +41,7 @@ const InputPassword = forwardRef<HTMLInputElement, InputPasswordProps>(
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 transition-colors p-1"
             aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
             aria-controls={inputId}
           >

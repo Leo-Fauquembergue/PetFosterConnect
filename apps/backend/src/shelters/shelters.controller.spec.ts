@@ -92,7 +92,7 @@ describe("ShelterController (integration)", () => {
 
   it("5. devrait supprimer un refuge (soft-delete via UsersService)", async () => {
     await controller.remove(testUserId);
-    
+
     // Le profil utilisateur doit avoir un deletedAt
     const user = await prisma.pfcUser.findUnique({ where: { id: testUserId } });
     expect(user?.deletedAt).not.toBeNull();

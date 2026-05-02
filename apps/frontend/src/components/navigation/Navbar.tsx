@@ -58,7 +58,12 @@ const Navbar = () => {
           )}
         </div>
 
-        <button type="button" onClick={toggle} className="md:hidden text-white text-2xl ml-auto">
+        <button
+          type="button"
+          onClick={toggle}
+          className="md:hidden text-white text-2xl ml-auto p-2"
+          aria-label="Ouvrir le menu"
+        >
           ☰
         </button>
       </div>

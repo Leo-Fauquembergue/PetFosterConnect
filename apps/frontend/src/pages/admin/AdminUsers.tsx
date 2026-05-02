@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
 import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
 import { useAdminUsers } from "../../hooks/useAdminUsers";
@@ -134,29 +135,29 @@ export default function AdminUsers() {
                       variant={user.deletedAt ? "error" : "success"}
                     />
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex justify-end gap-2">
                     {user.deletedAt ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           user.id && setActionToConfirm({ type: "restore", id: user.id })
                         }
-                        className="text-primary hover:bg-primary/10 p-2 rounded-full transition-colors inline-flex items-center gap-1"
+                        className="text-primary hover:text-primary p-2"
                         title="Restaurer l'utilisateur"
                       >
                         <RotateCcw className="w-4 h-4" /> Restaurer
-                      </button>
+                      </Button>
                     ) : (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           user.id && setActionToConfirm({ type: "delete", id: user.id })
                         }
-                        className="text-gray-400 hover:text-error hover:bg-error/10 p-2 rounded-full transition-colors"
+                        className="text-gray-400 hover:text-error p-2"
                         title="Bannir l'utilisateur"
                       >
                         <Trash2 className="w-5 h-5" />
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>

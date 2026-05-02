@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
+import Button from "../ui/Button";
 import InputPassword from "../ui/InputPassword";
 
 type Props = {
@@ -46,13 +47,9 @@ export default function PasswordForm({ userId }: Props) {
         value={formData.newPassword}
         onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
       />
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-info text-white px-4 py-2 rounded hover:bg-info/90 w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
+      <Button type="submit" disabled={isSubmitting} variant="info" fullWidth className="md:w-auto">
         {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
-      </button>
+      </Button>
     </form>
   );
 }

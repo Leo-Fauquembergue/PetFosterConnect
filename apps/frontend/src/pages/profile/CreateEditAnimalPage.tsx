@@ -12,6 +12,7 @@ import type { z } from "zod";
 import { animalApi } from "../../api/animalApi";
 import { extractErrorMessage } from "../../api/api";
 import { speciesApi } from "../../api/speciesApi";
+import Button from "../../components/ui/Button";
 import Checkbox from "../../components/ui/Checkbox";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
@@ -254,20 +255,12 @@ export default function AnimalForm() {
 
             {/* Boutons */}
             <div className="border-t-2 border-gray-300 pt-6 flex justify-between w-full mt-auto">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition-colors"
-              >
+              <Button type="button" variant="neutral" onClick={() => navigate(-1)}>
                 Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-              </button>
+              </Button>
             </div>
           </div>
         </form>

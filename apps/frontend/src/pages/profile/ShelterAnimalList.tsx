@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
 import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
 import { useShelterAnimals } from "../../hooks/useShelterAnimals";
@@ -102,27 +103,27 @@ export default function ShelterAnimalList() {
                     </Link>
 
                     {animal.deletedAt ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           animal.id && setActionToConfirm({ type: "restore", id: animal.id })
                         }
-                        className="text-primary hover:bg-primary/10 p-2 rounded-full transition-colors"
+                        className="text-primary hover:text-primary p-2"
                         title="Restaurer"
                       >
                         <RotateCcw className="w-4 h-4" />
-                      </button>
+                      </Button>
                     ) : (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           animal.id && setActionToConfirm({ type: "delete", id: animal.id })
                         }
-                        className="text-gray-400 hover:text-error hover:bg-error/10 p-2 rounded-full transition-colors"
+                        className="text-gray-400 hover:text-error p-2"
                         title="Supprimer"
                       >
                         <Trash2 className="w-5 h-5" />
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>

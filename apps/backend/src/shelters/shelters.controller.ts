@@ -21,13 +21,13 @@ import {
 import { UserRole } from "@prisma/client";
 import * as sharedTypes from "@projet/shared-types";
 import { AnimalsService } from "../animals/animals.service";
-import { UsersService } from "../users/users.service";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { IdSchema, LimitSchema } from "../common/schemas/params.schema";
+import { UsersService } from "../users/users.service";
 import { SheltersService } from "./shelters.service";
 
 @ApiTags("shelters")

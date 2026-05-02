@@ -13,7 +13,7 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
-    
+
     // 🛡️ SÉCURITÉ : On bloque la connexion si l'utilisateur est soft-deleted
     if (!user || user.deletedAt) {
       throw new UnauthorizedException("Email ou mot de passe incorrect");

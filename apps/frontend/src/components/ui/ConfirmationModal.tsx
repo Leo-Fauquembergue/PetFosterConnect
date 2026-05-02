@@ -1,4 +1,5 @@
 import { AlertTriangle, X } from "lucide-react";
+import Button from "./Button";
 
 type Props = {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export default function ConfirmationModal({
       {/* Backdrop rendu avec un bouton html sémantique (résout l'erreur Biome) */}
       <button
         type="button"
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity w-full h-full border-none cursor-default"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity w-full h-full border-none cursor-default rounded-none"
         onClick={onClose}
         aria-label="Fermer la modale"
       />
@@ -46,7 +47,7 @@ export default function ConfirmationModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
+            className="text-gray-400 hover:text-gray-600 transition p-1"
             aria-label="Fermer"
           >
             <X className="w-5 h-5" />
@@ -60,25 +61,18 @@ export default function ConfirmationModal({
 
         {/* Footer (Boutons) */}
         <div className="bg-gray-50 p-4 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition"
-          >
+          <Button variant="ghost" onClick={onClose}>
             Annuler
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant={variant === "danger" ? "danger" : "primary"}
             onClick={() => {
               onConfirm();
               onClose();
             }}
-            className={`px-4 py-2 text-white font-bold rounded-lg shadow-sm transition ${
-              variant === "danger" ? "bg-error hover:bg-error/90" : "bg-primary hover:bg-primary/90"
-            }`}
           >
             Confirmer
-          </button>
+          </Button>
         </div>
       </div>
     </div>

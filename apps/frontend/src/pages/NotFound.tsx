@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -17,13 +18,9 @@ const NotFound = () => {
       <h1 className="text-6xl font-bold mb-4">404</h1>
       <p className="text-xl mb-2">Oups ! La page que vous cherchez n'existe pas.</p>
       <p className="mb-6">Vous allez être redirigé vers l'accueil dans 5 secondes.</p>
-      <button
-        type="button"
-        onClick={() => navigate("/")}
-        className="px-4 py-2 bg-info text-white rounded hover:bg-info/90 transition"
-      >
+      <Button variant="info" onClick={() => navigate("/")}>
         Retour à l'accueil
-      </button>
+      </Button>
     </div>
   );
 };

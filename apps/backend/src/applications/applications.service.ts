@@ -135,7 +135,8 @@ export class ApplicationsService {
     const { application, pendingApplications } = await this.prisma.$transaction(async (tx) => {
       // Vérification IDOR (logique extraite de updateStatus pour être dans la transaction)
       const animal = await tx.animal.findUnique({ where: { id: animalId } });
-      if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
+      if (!animal || animal.deletedAt)
+        throw new NotFoundException("Animal introuvable ou supprimé");
       this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
       // Mise à jour de la demande acceptée

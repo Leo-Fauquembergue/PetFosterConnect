@@ -12,6 +12,7 @@ import UserCard from "../../components/cards/UserCard";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
+import Button from "../../components/ui/Button";
 import { useUserProfile } from "../../hooks/useUserProfile";
 
 // ⚡ Types stricts attendus par les composants enfants
@@ -73,13 +74,9 @@ export default function UserProfilePage() {
         {!isEditing ? (
           <>
             <UserCard user={user} />
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="mt-4 bg-primary text-white px-4 py-2 rounded"
-            >
+            <Button variant="primary" onClick={() => setIsEditing(true)} className="mt-4">
               Modifier
-            </button>
+            </Button>
 
             <div className="mt-6 border-t pt-4">
               <h2 className="text-lg font-semibold">Modifier le mot de passe</h2>
@@ -99,21 +96,13 @@ export default function UserProfilePage() {
                 onChange={(field, value) => handleChange(field, value)}
               />
             )}
-            <div className="flex justify-between">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded"
-              >
+            <div className="flex justify-between gap-4">
+              <Button variant="neutral" onClick={() => setIsEditing(false)}>
                 Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="flex-grow">
                 {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
-              </button>
+              </Button>
             </div>
           </form>
         )}
