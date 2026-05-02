@@ -11,13 +11,13 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "@prisma/client";
+import { z } from "zod";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { IdSchema } from "../common/schemas/params.schema";
 import { SpeciesService } from "./species.service";
-import { z } from "zod";
 
 const NameSchema = z.object({ name: z.string().min(1) });
 

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import AnimalCard from "../components/cards/AnimalCard";
-import ShelterCard from "../components/cards/ShelterCard";
+import { HomeAnimalCard } from "../components/cards/HomeAnimalCard";
+import { HomeShelterCard } from "../components/cards/HomeShelterCard";
 import Button from "../components/ui/Button";
 import Loader from "../components/ui/Loader";
 import { useHomeData } from "../hooks/useHomeData";
@@ -79,8 +79,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {animals.map((animal) => (
                 <div key={animal.id} className="w-full max-w-sm">
-                  {/* AJOUT DE LA PROP variant="home" */}
-                  <AnimalCard {...animal} variant="home" />
+                  <HomeAnimalCard {...animal} />
                 </div>
               ))}
             </div>
@@ -120,8 +119,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {shelters.map((shelter) => (
                 <div key={shelter.id} className="w-full max-w-sm">
-                  {/* AJOUT DE LA PROP variant="home" */}
-                  <ShelterCard {...shelter} variant="home" />
+                  <HomeShelterCard {...shelter} />
                 </div>
               ))}
             </div>

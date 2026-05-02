@@ -31,7 +31,7 @@ export class ZodPipe implements PipeTransform {
     }
     if (typeof value === "object" && value !== null) {
       return Object.fromEntries(
-        Object.entries(value).map(([k, v]) => [k, this.transformValues(v)]),
+        Object.entries(value).map(([k, v]) => [k, this.transformValues(v)])
       );
     }
     return value;

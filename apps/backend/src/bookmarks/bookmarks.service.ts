@@ -48,7 +48,7 @@ export class BookmarksService {
 
   async findAllByUser(userId: number) {
     return this.prisma.bookmark.findMany({
-      where: { 
+      where: {
         pfcUserId: userId,
         // 🛡️ CORRECTION : Exclut les bookmarks d'animaux ou refuges supprimés
         animal: { deletedAt: null, shelter: { deletedAt: null } },
