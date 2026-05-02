@@ -162,8 +162,8 @@ Le backend utilise **NestJS**, **Prisma 7** et **PostgreSQL** (via Docker). L'ar
 
 - **Port** : 5432
 - **Database** : petfosterconnect
-- **User** : johndoe
-- **Password** : randompassword
+- **User** : <DB_USER>
+- **Password** : <DB_PASSWORD>
 
 ### Commandes Prisma utiles
 
