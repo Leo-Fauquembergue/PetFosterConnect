@@ -36,7 +36,7 @@ export default function AdminUsers() {
       if (type === "delete") {
         await userApi.deleteUser(id);
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u)));
-        toast.success("Utilisateur banni");
+        toast.success("Utilisateur supprimé et anonymisé");
       } else {
         await userApi.updateUser(id, { deletedAt: null } as Partial<UpdateUserDto> & {
           deletedAt: null;
@@ -178,12 +178,12 @@ export default function AdminUsers() {
         onConfirm={handleConfirmAction}
         title={
           actionToConfirm?.type === "delete"
-            ? "Bannir l'utilisateur ?"
+            ? "Supprimer et anonymiser l'utilisateur ?"
             : "Restaurer l'utilisateur ?"
         }
         message={
           actionToConfirm?.type === "delete"
-            ? "L'utilisateur ne pourra plus se connecter."
+            ? "Cette action est irréversible et conforme au RGPD. Les données personnelles seront effacées."
             : "L'utilisateur retrouvera l'accès à son compte."
         }
       />

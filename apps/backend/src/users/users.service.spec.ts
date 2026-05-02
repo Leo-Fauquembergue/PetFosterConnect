@@ -44,7 +44,7 @@ describe("UsersService", () => {
       const dto = {
         email: "test@test.com",
         password: "password123",
-        role: UserRole.individual, // ⚡ Fin du 'as any'
+        role: UserRole.individual,
         phoneNumber: "0600000000",
         address: "Paris",
       };
@@ -104,6 +104,32 @@ describe("UsersService", () => {
         data: expect.objectContaining({ email: "updated@test.com" }),
         select: expect.any(Object),
       });
+      expect(result.password).toBeUndefined();
+    });
+  });
+
+  describe("remove", () => {
+    it("doit anonymiser les données utilisateur lors de la suppression", async () => {
+      const mockUser = {
+        id: 1,
+        email: "anonymized_1_123456@deleted.com",
+        deletedAt: new Date(),
+      };
+      mockPrisma.pfcUser.update.mockResolvedValue(mockUser);
+
+      const result = (await service.remove(1)) as Partial<User>;
+
+      expect(mockPrisma.pfcUser.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 1 },
+          data: expect.objectContaining({
+            password: "DELETED",
+            phoneNumber: null,
+            address: null,
+          }),
+        })
+      );
+      expect(result.deletedAt).toBeDefined();
       expect(result.password).toBeUndefined();
     });
   });

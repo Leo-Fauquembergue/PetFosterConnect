@@ -99,10 +99,32 @@ export class UsersService {
     });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const now = new Date();
+    const anonymizedEmail = `anonymized_${id}_${now.getTime()}@deleted.com`;
+
     return this.prisma.pfcUser.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: {
+        deletedAt: now,
+        email: anonymizedEmail,
+        password: "DELETED",
+        phoneNumber: null,
+        address: null,
+        individualProfile: {
+          update: {
+            surface: 0,
+            housingType: "other",
+          },
+        },
+        shelterProfile: {
+          update: {
+            siret: "00000000000000",
+            shelterName: "DELETED",
+            description: null,
+          },
+        },
+      },
       select: safeUserSelect,
     });
   }
