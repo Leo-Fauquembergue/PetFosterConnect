@@ -36,7 +36,9 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
         <Select
           label="Type de logement"
           value={formData.housingType || "other"}
-          onChange={(e) => onChange("housingType", e.target.value as "house" | "apartment" | "other" | null)}
+          onChange={(e) =>
+            onChange("housingType", e.target.value as "house" | "apartment" | "other" | null)
+          }
         >
           <option value="house">Maison</option>
           <option value="apartment">Appartement</option>
