@@ -1,7 +1,14 @@
-import { type AnimalWithRelations, CreateAnimalSchema } from "@projet/shared-types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  CreateAnimalSchema,
+  type AnimalWithRelations,
+  type CreateAnimalDto,
+} from "@projet/shared-types";
 import { useEffect, useState } from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import type { z } from "zod";
 import { animalApi } from "../../api/animalApi";
 import { extractErrorMessage } from "../../api/api";
 import { speciesApi } from "../../api/speciesApi";
@@ -10,23 +17,9 @@ import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
 
-// On définit FormData avec des types compatibles avec les inputs React (string)
-// tout en conservant les boiléens du schéma partagé.
-type FormData = {
-  name: string;
-  age: string;
-  description: string;
-  sex: string; // On utilise string pour le Select
-  weight: string;
-  height: string;
-  animalStatus: string; // On utilise string pour le Select
-  photos: string[];
-  acceptOtherAnimals: boolean;
-  acceptChildren: boolean;
-  needGarden: boolean;
-  treatment: string;
-  speciesId: string | number;
-};
+// On utilise z.input pour le type du formulaire afin de refléter l'état "brut"
+// (champs optionnels avec défauts, etc.) avant validation.
+type AnimalFormInput = z.input<typeof CreateAnimalSchema>;
 
 export default function AnimalForm() {
   const navigate = useNavigate();
@@ -34,23 +27,32 @@ export default function AnimalForm() {
   const animal = location.state?.animal as AnimalWithRelations | undefined;
   const [species, setSpecies] = useState<{ id: number; name: string }[]>([]);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [formData, setFormData] = useState<FormData>({
-    name: animal?.name ?? "",
-    age: animal?.age ?? "",
-    description: animal?.description ?? "",
-    sex: animal?.sex ?? "unknown",
-    weight: animal?.weight?.toString() ?? "",
-    height: animal?.height?.toString() ?? "",
-    animalStatus: animal?.animalStatus ?? "available",
-    photos: (animal?.photos as string[]) ?? [],
-    acceptOtherAnimals: animal?.acceptOtherAnimals ?? false,
-    acceptChildren: animal?.acceptChildren ?? false,
-    needGarden: animal?.needGarden ?? false,
-    treatment: animal?.treatment ?? "",
-    speciesId: animal?.species?.id ?? "",
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<AnimalFormInput>({
+    resolver: zodResolver(CreateAnimalSchema),
+    defaultValues: {
+      name: animal?.name ?? "",
+      age: animal?.age ?? "",
+      description: animal?.description ?? "",
+      sex: animal?.sex ?? "unknown",
+      weight: animal?.weight ?? undefined,
+      height: animal?.height ?? undefined,
+      animalStatus: animal?.animalStatus ?? "available",
+      photos: (animal?.photos as string[]) ?? [],
+      acceptOtherAnimals: animal?.acceptOtherAnimals ?? false,
+      acceptChildren: animal?.acceptChildren ?? false,
+      needGarden: animal?.needGarden ?? false,
+      treatment: animal?.treatment ?? "",
+      speciesId: animal?.species?.id ?? undefined,
+    },
   });
+
+  const watchedPhotos = watch("photos");
+  const watchedName = watch("name");
 
   useEffect(() => {
     const fetchSpecies = async () => {
@@ -65,41 +67,24 @@ export default function AnimalForm() {
     fetchSpecies();
   }, []);
 
-  const handleChange = <K extends keyof FormData>(field: K, value: FormData[K]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    setIsSubmitting(true);
-
-    const parsedData = {
-      ...formData,
-      weight: formData.weight === "" ? undefined : Number(formData.weight),
-      height: formData.height === "" ? undefined : Number(formData.height),
-      speciesId: formData.speciesId === "" ? undefined : Number(formData.speciesId),
-    };
-
+  // SubmitHandler reçoit le type d'entrée, mais grâce au resolver,
+  // les données sont déjà validées et transformées selon le schéma de sortie.
+  const onSubmit: SubmitHandler<AnimalFormInput> = async (data) => {
     try {
-      const parsed = CreateAnimalSchema.parse(parsedData);
+      // On parse à nouveau pour garantir le type de sortie CreateAnimalDto (conversion des types, etc.)
+      const validatedData = CreateAnimalSchema.parse(data) as CreateAnimalDto;
+
       if (animal) {
-        await animalApi.updateAnimal(animal.id, parsed);
+        await animalApi.updateAnimal(animal.id, validatedData);
         toast.success("Animal modifié avec succès 🎉");
       } else {
-        await animalApi.createAnimal(parsed);
+        await animalApi.createAnimal(validatedData);
         toast.success("Animal créé avec succès 🎉");
       }
       navigate(-1);
     } catch (error) {
-      if (error && typeof error === "object" && ("issues" in error || "errors" in error)) {
-        toast.error("Formulaire invalide : veuillez vérifier les champs.");
-      } else {
-        const errorMessage = extractErrorMessage(error, "Erreur lors de l'enregistrement.");
-        toast.error(errorMessage);
-      }
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage = extractErrorMessage(error, "Erreur lors de l'enregistrement.");
+      toast.error(errorMessage);
     }
   };
 
@@ -107,28 +92,35 @@ export default function AnimalForm() {
     <div className="bg-bgapp font-openSans text-gray-800">
       <main className="container mx-auto px-4 py-8 flex-grow">
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
         >
           {/* SECTION PHOTOS */}
           <div className="space-y-4">
             <div className="relative rounded-xl overflow-hidden shadow-lg h-[400px] bg-gray-200">
               <img
-                src={formData.photos[0] || "https://placehold.co/600x600"}
-                alt={formData.name || "Nouvel animal"}
+                src={
+                  (Array.isArray(watchedPhotos) && watchedPhotos[0]) ||
+                  "https://placehold.co/600x600"
+                }
+                alt={watchedName || "Nouvel animal"}
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
               <Input
                 label="Photos (URLs séparées par des virgules)"
-                value={formData.photos.join(",")}
-                onChange={(e) =>
-                  handleChange(
-                    "photos",
-                    e.target.value.split(",").map((url) => url.trim())
-                  )
-                }
+                {...register("photos", {
+                  setValueAs: (v: string | string[]) => {
+                    if (Array.isArray(v)) return v;
+                    return v
+                      .split(",")
+                      .map((url) => url.trim())
+                      .filter(Boolean);
+                  },
+                })}
+                defaultValue={animal?.photos?.join(", ") ?? ""}
+                error={errors.photos?.message}
                 className="w-full"
               />
             </div>
@@ -146,23 +138,19 @@ export default function AnimalForm() {
                 label="Nom de l'animal"
                 type="text"
                 placeholder="Ex: Rex"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
+                {...register("name")}
+                error={errors.name?.message}
               />
 
               <Input
                 label="Âge"
                 type="text"
                 placeholder="Ex: 3 ans"
-                value={formData.age}
-                onChange={(e) => handleChange("age", e.target.value)}
+                {...register("age")}
+                error={errors.age?.message}
               />
 
-              <Select
-                label="Sexe"
-                value={formData.sex}
-                onChange={(e) => handleChange("sex", e.target.value)}
-              >
+              <Select label="Sexe" {...register("sex")} error={errors.sex?.message}>
                 <option value="male">Mâle</option>
                 <option value="female">Femelle</option>
                 <option value="unknown">Inconnu</option>
@@ -170,8 +158,10 @@ export default function AnimalForm() {
 
               <Select
                 label="Espèce"
-                value={formData.speciesId.toString()}
-                onChange={(e) => handleChange("speciesId", Number(e.target.value))}
+                {...register("speciesId", {
+                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                })}
+                error={errors.speciesId?.message}
               >
                 <option value="">-- Sélectionner une espèce --</option>
                 {species.map((s) => (
@@ -183,8 +173,8 @@ export default function AnimalForm() {
 
               <Select
                 label="Statut"
-                value={formData.animalStatus}
-                onChange={(e) => handleChange("animalStatus", e.target.value)}
+                {...register("animalStatus")}
+                error={errors.animalStatus?.message}
               >
                 <option value="available">Disponible</option>
                 <option value="adopted">Adopté</option>
@@ -199,16 +189,22 @@ export default function AnimalForm() {
               <Input
                 label="Poids (kg)"
                 type="number"
+                step="any"
                 placeholder="Ex: 15"
-                value={formData.weight}
-                onChange={(e) => handleChange("weight", e.target.value)}
+                {...register("weight", {
+                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                })}
+                error={errors.weight?.message}
               />
               <Input
                 label="Taille (cm)"
                 type="number"
+                step="any"
                 placeholder="Ex: 45"
-                value={formData.height}
-                onChange={(e) => handleChange("height", e.target.value)}
+                {...register("height", {
+                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                })}
+                error={errors.height?.message}
               />
             </div>
 
@@ -218,18 +214,18 @@ export default function AnimalForm() {
               <div className="flex flex-wrap gap-4 mt-2">
                 <Checkbox
                   label="Ok enfants"
-                  checked={formData.acceptChildren}
-                  onChange={(e) => handleChange("acceptChildren", e.target.checked)}
+                  {...register("acceptChildren")}
+                  error={errors.acceptChildren?.message}
                 />
                 <Checkbox
                   label="Ok autres animaux"
-                  checked={formData.acceptOtherAnimals}
-                  onChange={(e) => handleChange("acceptOtherAnimals", e.target.checked)}
+                  {...register("acceptOtherAnimals")}
+                  error={errors.acceptOtherAnimals?.message}
                 />
                 <Checkbox
                   label="Besoin de jardin"
-                  checked={formData.needGarden}
-                  onChange={(e) => handleChange("needGarden", e.target.checked)}
+                  {...register("needGarden")}
+                  error={errors.needGarden?.message}
                 />
               </div>
             </div>
@@ -241,8 +237,8 @@ export default function AnimalForm() {
                 label="Traitement médical"
                 type="text"
                 placeholder="Ex: Aucun ou nom du traitement"
-                value={formData.treatment}
-                onChange={(e) => handleChange("treatment", e.target.value)}
+                {...register("treatment")}
+                error={errors.treatment?.message}
               />
             </div>
 
@@ -251,8 +247,8 @@ export default function AnimalForm() {
               <h2 className="text-xl font-bold text-success mb-2">Description</h2>
               <Textarea
                 label="Description détaillée"
-                value={formData.description}
-                onChange={(e) => handleChange("description", e.target.value)}
+                {...register("description")}
+                error={errors.description?.message}
               />
             </div>
 

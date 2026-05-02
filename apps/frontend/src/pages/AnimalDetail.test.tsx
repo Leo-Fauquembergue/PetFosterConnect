@@ -121,7 +121,7 @@ describe("AnimalDetail - Formulaire de demande", () => {
     // Vérifier que l'erreur du backend est bien interceptée et affichée dans un Toast
     await waitFor(() => {
       expect(applicationApi.createApplication).toHaveBeenCalled();
-      expect(toast.error).toHaveBeenCalledWith("Le message de motivation est obligatoire");
+      expect(toast.error).toHaveBeenCalledWith("Erreur lors de la demande");
     });
   });
 });

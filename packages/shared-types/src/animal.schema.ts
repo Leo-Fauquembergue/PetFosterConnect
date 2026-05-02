@@ -33,7 +33,7 @@ export const AnimalSchema = z.object({
 
   // Gestion et Médias
   animalStatus: AnimalStatusEnum.default("available"),
-  photos: z.array(z.string().url()).nullable().optional(), // JSONB -> Tableau URLs
+  photos: z.array(z.url()).nullable().optional(), // JSONB -> Tableau URLs
 
   // Critères de Matching
   acceptOtherAnimals: z.boolean().default(false),
