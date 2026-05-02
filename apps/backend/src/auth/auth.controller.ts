@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, Res, UseGuards, UsePipes } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import type { LoginDto, RegisterDto, RequestWithUser } from "@projet/shared-types";
+import type { RequestWithUser } from "@projet/shared-types";
+import * as sharedTypes from "@projet/shared-types";
 import type { Response } from "express";
+import { ZodPipe } from "../common/pipes/zod.pipe";
 import { COOKIE_NAME } from "../constants";
 import { UsersService } from "../users/users.service";
 import { AuthService } from "./auth.service";
@@ -17,7 +19,8 @@ export class AuthController {
 
   @Post("register")
   @ApiOperation({ summary: "Inscription d'un nouvel utilisateur" })
-  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+  @UsePipes(new ZodPipe(sharedTypes.RegisterSchema))
+  async register(@Body() dto: sharedTypes.RegisterDto, @Res({ passthrough: true }) res: Response) {
     const { user, token } = await this.authService.register(dto);
     this.setCookie(res, token);
     return { user, access_token: token };
@@ -25,7 +28,8 @@ export class AuthController {
 
   @Post("login")
   @ApiOperation({ summary: "Connexion de l'utilisateur" })
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  @UsePipes(new ZodPipe(sharedTypes.LoginSchema))
+  async login(@Body() dto: sharedTypes.LoginDto, @Res({ passthrough: true }) res: Response) {
     const { user, token } = await this.authService.login(dto);
     this.setCookie(res, token);
     return { user, access_token: token };

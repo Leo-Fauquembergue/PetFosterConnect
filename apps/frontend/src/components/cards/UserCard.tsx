@@ -31,9 +31,7 @@ export default function UserCard({ user }: UserCardProps) {
               <li>Enfants : {user.individualProfile.haveChildren ? "Oui" : "Non"}</li>
               <li>Famille d’accueil : {user.individualProfile.availableFamily ? "Oui" : "Non"}</li>
               {user.individualProfile.availableFamily && user.individualProfile.availableTime && (
-                <li>
-                  Disponibilité: {user.individualProfile.availableTime}
-                </li>
+                <li>Disponibilité: {user.individualProfile.availableTime}</li>
               )}
             </ul>
           ) : (
