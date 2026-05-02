@@ -25,7 +25,7 @@ Application web de mise en relation entre refuges et familles d'accueil pour ani
 - Node.js >= 18
 - npm >= 9
 - Docker & Docker Compose
-- Port PostgreSQL : 5440
+- Port PostgreSQL : 5432
 - Port Backend : 3001
 - Port Frontend : 5173
 
@@ -50,7 +50,7 @@ npm install
 docker-compose up -d
 ```
 
-> ℹ️ La base de données est exposée sur le port **5440** pour éviter les conflits avec d'éventuelles instances PostgreSQL locales (port 5432 par défaut).
+> ℹ️ La base de données est exposée sur le port **5432** (port par défaut) pour éviter les conflits avec d'éventuelles instances PostgreSQL locales (port 5432 par défaut).
 
 ### 4. Configurer les variables d'environnement
 
@@ -62,20 +62,15 @@ cp apps/backend/.env.example apps/backend/.env
 Exemple de configuration dans `apps/backend/.env` :
 
 ```env
-DATABASE_URL="postgresql://johndoe:randompassword@localhost:5440/petfosterconnect?schema=public"
+DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/petfosterconnect?schema=public"
 PORT=3001
 ```
 
 ### 5. Initialiser Prisma
 
-#### a. Installer les dépendances de configuration Prisma 7
+Les dépendances Prisma 7 (`dotenv`, `@prisma/config`) sont déjà incluses dans le projet et installées via le `npm install` initial à la racine.
 
-```bash
-cd apps/backend
-npm install --save-dev dotenv @prisma/config
-```
-
-#### b. Lancer la migration (création des tables)
+#### a. Lancer la migration (création des tables)
 
 ```bash
 NODE_CONFIG_STRATEGY=none npx prisma migrate dev --name init_db --schema=./prisma/schema.prisma
@@ -165,7 +160,7 @@ Le backend utilise **NestJS**, **Prisma 7** et **PostgreSQL** (via Docker). L'ar
 
 ### Configuration PostgreSQL
 
-- **Port** : 5440
+- **Port** : 5432
 - **Database** : petfosterconnect
 - **User** : johndoe
 - **Password** : randompassword
