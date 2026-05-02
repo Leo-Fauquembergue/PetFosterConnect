@@ -1,4 +1,4 @@
-    import type { AnimalDetailResponse } from "@projet/shared-types";
+import type { AnimalDetailResponse } from "@projet/shared-types";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";

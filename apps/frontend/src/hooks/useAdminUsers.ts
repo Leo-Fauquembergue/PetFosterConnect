@@ -4,10 +4,7 @@ import { userApi } from "../api/userApi";
 import { useFetch } from "./useFetch";
 
 export const useAdminUsers = () => {
-  const fetcher = useCallback(
-    (signal: AbortSignal) => userApi.getAllUsers(signal),
-    []
-  );
+  const fetcher = useCallback((signal: AbortSignal) => userApi.getAllUsers(signal), []);
 
   const {
     data: users,

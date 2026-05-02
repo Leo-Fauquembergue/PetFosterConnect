@@ -17,11 +17,7 @@ export const useShelterAnimals = (shelterId: string | undefined) => {
     setData: setAnimals,
     loading,
     error,
-  } = useFetch<AnimalWithRelations[]>(
-    fetcher,
-    "Erreur de chargement des animaux.",
-    []
-  );
+  } = useFetch<AnimalWithRelations[]>(fetcher, "Erreur de chargement des animaux.", []);
 
-  return { animals, setAnimals, loading, error: !!error };
+  return { animals, setAnimals, loading, error };
 };

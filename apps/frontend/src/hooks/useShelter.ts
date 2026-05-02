@@ -17,11 +17,7 @@ export const useShelter = (id: string | undefined) => {
     setData: setShelter,
     loading,
     error,
-  } = useFetch<ShelterDetailResponse | null>(
-    fetcher,
-    "Impossible de charger le refuge.",
-    null
-  );
+  } = useFetch<ShelterDetailResponse | null>(fetcher, "Impossible de charger le refuge.", null);
 
-  return { shelter, loading, error: !!error, setShelter };
+  return { shelter, loading, error, setShelter };
 };

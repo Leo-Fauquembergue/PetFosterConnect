@@ -1,4 +1,4 @@
-  import axios from "axios";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../api/api";
@@ -10,7 +10,7 @@ export const useFetch = <T>(
 ) => {
   const [data, setData] = useState<T>(initialData);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -20,13 +20,13 @@ export const useFetch = <T>(
         setLoading(true);
         const result = await fetcher(controller.signal);
         setData(result);
-        setError(false);
+        setError(null);
       } catch (err: unknown) {
         if (axios.isCancel(err)) {
           return;
         }
-        setError(true);
         const msg = extractErrorMessage(err, errorMessage);
+        setError(msg);
         toast.error(msg);
       } finally {
         setLoading(false);

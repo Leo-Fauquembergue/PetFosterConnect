@@ -3,13 +3,11 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { bookmarkApi } from "../../api/bookmarkApi";
-import { useAuth } from "../../auth/AuthContext";
 import Loader from "../../components/ui/Loader";
 import { useBookmarks } from "../../hooks/useBookmarks";
 
 export default function BookmarksPage() {
-  const { user } = useAuth();
-  const { bookmarks, setBookmarks, loading } = useBookmarks(user?.id);
+  const { bookmarks, setBookmarks, loading } = useBookmarks();
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const handleToggle = async (animalId: number) => {
