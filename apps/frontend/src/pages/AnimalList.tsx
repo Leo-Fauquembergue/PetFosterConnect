@@ -1,6 +1,5 @@
 import { PawPrint, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import AnimalCard from "../components/cards/AnimalCard";
 import Loader from "../components/ui/Loader";
 import { useAnimals } from "../hooks/useAnimals";
@@ -76,13 +75,7 @@ const AnimalList = () => {
             {/* Grille d'animaux */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredAnimals.map((animal) => (
-                <Link
-                  key={animal.id}
-                  to={`/animaux/${animal.id}`}
-                  className="block transition-transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl"
-                >
-                  <AnimalCard {...animal} />
-                </Link>
+                <AnimalCard key={animal.id} {...animal} />
               ))}
             </div>
 

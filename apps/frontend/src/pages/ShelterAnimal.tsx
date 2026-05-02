@@ -1,9 +1,9 @@
 // ⚡ CORRECTION : Import depuis shared-types plutôt que depuis shelterApi.ts
 import type { AnimalWithRelations, ShelterDetailResponse } from "@projet/shared-types";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { shelterApi } from "../api/shelterApi";
-import _AnimalCard from "../components/cards/AnimalCard";
+import AnimalCard from "../components/cards/AnimalCard";
 import BackBanner from "../components/ui/BackBanner";
 import Loader from "../components/ui/Loader";
 
@@ -54,17 +54,16 @@ const ShelterAnimalsPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {shelter.user.animals.map((animal: AnimalWithRelations) => (
-              <Link key={animal.id} to={`/animaux/${animal.id}`}>
-                <_AnimalCard
-                  {...animal}
-                  shelter={{
-                    id: shelter.pfcUserId,
-                    shelterProfile: {
-                      shelterName: shelter.shelterName,
-                    },
-                  }}
-                />
-              </Link>
+              <AnimalCard
+                key={animal.id}
+                {...animal}
+                shelter={{
+                  id: shelter.pfcUserId,
+                  shelterProfile: {
+                    shelterName: shelter.shelterName,
+                  },
+                }}
+              />
             ))}
           </div>
         )}

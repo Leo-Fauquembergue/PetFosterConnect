@@ -1,5 +1,5 @@
 import type { AnimalWithRelations } from "@projet/shared-types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Badge from "../ui/Badge"; // Ajout de l'import du Badge pour la version "home"
 
 // 1. Types de la carte par défaut (ON UTILISE LE DTO GLOBAL ICI)
@@ -20,8 +20,6 @@ type AnimalCardHomeProps = {
 type AnimalCardProps = AnimalCardDefaultProps | AnimalCardHomeProps;
 
 const AnimalCard = (props: AnimalCardProps) => {
-  const navigate = useNavigate();
-
   // ==========================================
   // VARIANT: HOME (Ancien HomeAnimalCard)
   // ==========================================
@@ -83,18 +81,23 @@ const AnimalCard = (props: AnimalCardProps) => {
       : "https://via.placeholder.com/400x300?text=Pas+de+photo";
 
   return (
-    <div className="w-72 bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    <Link
+      to={`/animaux/${id}`}
+      className="group w-72 bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+    >
       <div className="relative h-64 w-full overflow-hidden bg-gray-100">
         <img
           src={mainPhoto}
           alt={`${name}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
         />
       </div>
 
       <div className="p-4">
-        <h3 className="text-xl font-bold text-gray-800 mb-2">{name}</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-primary transition-colors">
+          {name}
+        </h3>
         <div className="space-y-1 mb-4">
           <p className="text-sm text-gray-600">
             <span className="font-medium text-gray-800">Espèce :</span>{" "}
@@ -108,15 +111,14 @@ const AnimalCard = (props: AnimalCardProps) => {
             {shelter?.shelterProfile?.shelterName || "Chargement..."}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate(`/animaux/${id}`)}
-          className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[0.98] active:scale-95"
-        >
-          Plus d'infos
-        </button>
+        <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
+          <span className="text-primary font-semibold text-sm group-hover:underline decoration-2 underline-offset-4">
+            Plus d'infos
+          </span>
+          <span className="text-gray-300">→</span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
