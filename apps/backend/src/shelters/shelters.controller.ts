@@ -21,6 +21,7 @@ import {
 import { UserRole } from "@prisma/client";
 import * as sharedTypes from "@projet/shared-types";
 import { AnimalsService } from "../animals/animals.service";
+import { UsersService } from "../users/users.service";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
@@ -34,7 +35,8 @@ import { SheltersService } from "./shelters.service";
 export class SheltersController {
   constructor(
     private readonly sheltersService: SheltersService,
-    private readonly animalsService: AnimalsService
+    private readonly animalsService: AnimalsService,
+    private readonly usersService: UsersService
   ) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -113,6 +115,7 @@ export class SheltersController {
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
   remove(@Param("id", new ZodPipe(IdSchema)) id: number) {
-    return this.sheltersService.remove(id);
+    // 🛡️ SÉCURITÉ : On délègue à UsersService pour assurer la cascade du soft-delete
+    return this.usersService.remove(id);
   }
 }

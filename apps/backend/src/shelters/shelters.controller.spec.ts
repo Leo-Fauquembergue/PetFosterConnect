@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import * as dotenv from "dotenv";
 import { AnimalsService } from "../animals/animals.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { UsersService } from "../users/users.service";
 import { SheltersController } from "./shelters.controller";
 import { SheltersService } from "./shelters.service";
 
@@ -15,7 +16,7 @@ describe("ShelterController (integration)", () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SheltersController],
-      providers: [SheltersService, AnimalsService, PrismaService],
+      providers: [SheltersService, AnimalsService, UsersService, PrismaService],
     }).compile();
 
     controller = module.get<SheltersController>(SheltersController);
@@ -89,9 +90,12 @@ describe("ShelterController (integration)", () => {
     expect(result.shelterName).toBe("Refuge Modifié");
   });
 
-  it("5. devrait supprimer un refuge", async () => {
+  it("5. devrait supprimer un refuge (soft-delete via UsersService)", async () => {
     await controller.remove(testUserId);
-    const shelter = await prisma.shelterProfile.findUnique({ where: { pfcUserId: testUserId } });
-    expect(shelter).toBeNull();
+    
+    // Le profil utilisateur doit avoir un deletedAt
+    const user = await prisma.pfcUser.findUnique({ where: { id: testUserId } });
+    expect(user?.deletedAt).not.toBeNull();
+    expect(user?.email).toContain("anonymized");
   });
 });

@@ -1,11 +1,12 @@
 import { Module } from "@nestjs/common";
 import { AnimalsModule } from "../animals/animals.module";
+import { UsersModule } from "../users/users.module";
 import { PrismaService } from "../prisma/prisma.service";
 import { SheltersController } from "./shelters.controller";
 import { SheltersService } from "./shelters.service";
 
 @Module({
-  imports: [AnimalsModule],
+  imports: [AnimalsModule, UsersModule],
   controllers: [SheltersController],
   providers: [SheltersService, PrismaService],
 })

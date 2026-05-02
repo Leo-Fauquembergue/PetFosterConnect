@@ -97,7 +97,7 @@ export class AnimalsService {
 
   async findAllByShelter(userId: number) {
     return this.prisma.animal.findMany({
-      where: { pfcUserId: userId },
+      where: { pfcUserId: userId, deletedAt: null }, // 🛡️ FILTRE : Exclut les animaux supprimés
       include: {
         species: true, // "Va chercher le nom de l'espèce"
       },
@@ -142,9 +142,27 @@ export class AnimalsService {
 
     this.checkOwnership(animal.pfcUserId, user, "Action interdite sur cet animal.");
 
-    return this.prisma.animal.update({
-      where: { id },
-      data: { deletedAt: new Date() },
+    // ⚡ Utilisation d'une transaction pour éviter les "données fantômes"
+    // On supprime l'animal ET on rejette les candidatures en cours
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Soft-delete de l'animal
+      const updatedAnimal = await tx.animal.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+
+      // 2. Rejet automatique des candidatures 'pending' pour cet animal
+      await tx.application.updateMany({
+        where: {
+          animalId: id,
+          applicationStatus: "pending",
+        },
+        data: {
+          applicationStatus: "rejected",
+        },
+      });
+
+      return updatedAnimal;
     });
   }
 

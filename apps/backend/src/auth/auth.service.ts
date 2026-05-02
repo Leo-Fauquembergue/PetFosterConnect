@@ -13,7 +13,11 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
-    if (!user) throw new UnauthorizedException("Email ou mot de passe incorrect");
+    
+    // 🛡️ SÉCURITÉ : On bloque la connexion si l'utilisateur est soft-deleted
+    if (!user || user.deletedAt) {
+      throw new UnauthorizedException("Email ou mot de passe incorrect");
+    }
 
     const isValid = await argon2.verify(user.password, dto.password);
     if (!isValid) throw new UnauthorizedException("Email ou mot de passe incorrect");
@@ -29,6 +33,12 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
+    // 🛡️ VÉRIFICATION : L'email est-il déjà pris par un utilisateur ACTIF ?
+    const existingUser = await this.usersService.findByEmail(dto.email);
+    if (existingUser && !existingUser.deletedAt) {
+      throw new UnauthorizedException("Cet email est déjà utilisé.");
+    }
+
     const newUser = await this.usersService.create({
       email: dto.email,
       password: dto.password,

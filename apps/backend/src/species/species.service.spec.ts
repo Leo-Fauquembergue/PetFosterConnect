@@ -11,6 +11,9 @@ describe("SpeciesService", () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    animal: {
+      count: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -37,8 +40,9 @@ describe("SpeciesService", () => {
 
       const result = await service.findAll();
 
-      // Vérification de l'appel Prisma avec le bon tri
+      // Vérification de l'appel Prisma avec le bon tri et le filtre deletedAt
       expect(mockPrisma.species.findMany).toHaveBeenCalledWith({
+        where: { deletedAt: null },
         orderBy: { name: "asc" },
       });
       expect(result).toEqual(mockSpecies);
@@ -75,16 +79,25 @@ describe("SpeciesService", () => {
   });
 
   describe("remove", () => {
-    it("doit supprimer une espèce", async () => {
-      const deletedSpecies = { id: 1, name: "Chat" };
-      mockPrisma.species.delete.mockResolvedValue(deletedSpecies);
+    it("doit faire un soft-delete d une espèce", async () => {
+      const deletedSpecies = { id: 1, name: "Chat", deletedAt: new Date() };
+      mockPrisma.species.update.mockResolvedValue(deletedSpecies);
+      mockPrisma.animal.count.mockResolvedValue(0); // Aucuns animaux liés
 
       const result = await service.remove(1);
 
-      expect(mockPrisma.species.delete).toHaveBeenCalledWith({
+      expect(mockPrisma.species.update).toHaveBeenCalledWith({
         where: { id: 1 },
+        data: { deletedAt: expect.any(Date) },
       });
       expect(result).toEqual(deletedSpecies);
+    });
+
+    it("doit empêcher la suppression si des animaux sont liés", async () => {
+      mockPrisma.animal.count.mockResolvedValue(5);
+
+      await expect(service.remove(1)).rejects.toThrow();
+      expect(mockPrisma.species.update).not.toHaveBeenCalled();
     });
   });
 });

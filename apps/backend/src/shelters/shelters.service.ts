@@ -73,10 +73,4 @@ export class SheltersService {
       data,
     });
   }
-
-  async remove(id: number) {
-    return this.prisma.shelterProfile.delete({
-      where: { pfcUserId: id },
-    });
-  }
 }

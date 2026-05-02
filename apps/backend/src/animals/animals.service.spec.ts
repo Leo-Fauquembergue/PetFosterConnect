@@ -13,6 +13,10 @@ describe("AnimalsService", () => {
       create: jest.fn(),
       update: jest.fn(),
     },
+    application: {
+      updateMany: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrisma)),
   };
 
   beforeEach(async () => {
@@ -84,8 +88,8 @@ describe("AnimalsService", () => {
       const result = await service.findAllByShelter(shelterId);
 
       expect(mockPrisma.animal.findMany).toHaveBeenCalledWith({
-        where: { pfcUserId: shelterId },
-        include: expect.any(Object),
+        where: { pfcUserId: shelterId, deletedAt: null },
+        include: { species: true },
       });
       expect(result).toHaveLength(2);
     });

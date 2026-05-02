@@ -100,32 +100,77 @@ export class UsersService {
   }
 
   async remove(id: number) {
+    const user = await this.prisma.pfcUser.findUnique({
+      where: { id },
+      include: { individualProfile: true, shelterProfile: true },
+    });
+    if (!user) throw new NotFoundException("Utilisateur introuvable");
+
     const now = new Date();
     const anonymizedEmail = `anonymized_${id}_${now.getTime()}@deleted.com`;
 
-    return this.prisma.pfcUser.update({
-      where: { id },
-      data: {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Si c'est un refuge, on cascade le soft-delete sur ses animaux
+      if (user.role === "shelter") {
+        const shelterAnimals = await tx.animal.findMany({
+          where: { pfcUserId: id, deletedAt: null },
+          select: { id: true },
+        });
+
+        const animalIds = shelterAnimals.map((a) => a.id);
+
+        if (animalIds.length > 0) {
+          // Soft-delete de tous les animaux du refuge
+          await tx.animal.updateMany({
+            where: { id: { in: animalIds } },
+            data: { deletedAt: now },
+          });
+
+          // Rejet automatique de TOUTES les candidatures 'pending' pour ces animaux
+          await tx.application.updateMany({
+            where: {
+              animalId: { in: animalIds },
+              applicationStatus: "pending",
+            },
+            data: { applicationStatus: "rejected" },
+          });
+        }
+      }
+
+      // 2. Construction de l'objet d'update pour l'anonymisation
+      const updateData: Prisma.PfcUserUpdateInput = {
         deletedAt: now,
         email: anonymizedEmail,
         password: "DELETED",
         phoneNumber: null,
         address: null,
-        individualProfile: {
+      };
+
+      // On n'update les profils que s'ils existent (évite les erreurs Prisma)
+      if (user.individualProfile) {
+        updateData.individualProfile = {
           update: {
             surface: 0,
             housingType: "other",
           },
-        },
-        shelterProfile: {
+        };
+      }
+
+      if (user.shelterProfile) {
+        updateData.shelterProfile = {
           update: {
             siret: "00000000000000",
             shelterName: "DELETED",
             description: null,
           },
-        },
-      },
-      select: safeUserSelect,
+        };
+      }
+
+      return tx.pfcUser.update({
+        where: { id },
+        data: updateData,
+        select: safeUserSelect,
+      });
     });
   }
 

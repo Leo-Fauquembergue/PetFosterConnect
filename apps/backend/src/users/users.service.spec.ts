@@ -17,6 +17,14 @@ describe("UsersService", () => {
       findMany: jest.fn(),
       update: jest.fn(),
     },
+    animal: {
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    application: {
+      updateMany: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrisma)),
   };
 
   beforeEach(async () => {
@@ -110,12 +118,15 @@ describe("UsersService", () => {
 
   describe("remove", () => {
     it("doit anonymiser les données utilisateur lors de la suppression", async () => {
-      const mockUser = {
+      const mockUser = { id: 1, role: UserRole.individual };
+      mockPrisma.pfcUser.findUnique.mockResolvedValue(mockUser);
+      
+      const updatedMockUser = {
         id: 1,
         email: "anonymized_1_123456@deleted.com",
         deletedAt: new Date(),
       };
-      mockPrisma.pfcUser.update.mockResolvedValue(mockUser);
+      mockPrisma.pfcUser.update.mockResolvedValue(updatedMockUser);
 
       const result = (await service.remove(1)) as Partial<User>;
 
@@ -131,6 +142,38 @@ describe("UsersService", () => {
       );
       expect(result.deletedAt).toBeDefined();
       expect(result.password).toBeUndefined();
+    });
+
+    it("doit cascader le soft-delete sur les animaux et candidatures si c'est un refuge", async () => {
+      const shelterUser = { id: 5, role: UserRole.shelter };
+      mockPrisma.pfcUser.findUnique.mockResolvedValue(shelterUser);
+      
+      const shelterAnimals = [{ id: 10 }, { id: 11 }];
+      mockPrisma.animal.findMany.mockResolvedValue(shelterAnimals);
+      
+      const updatedShelterUser = {
+        id: 5,
+        email: "anonymized_5_123456@deleted.com",
+        deletedAt: new Date(),
+      };
+      mockPrisma.pfcUser.update.mockResolvedValue(updatedShelterUser);
+
+      await service.remove(5);
+
+      expect(mockPrisma.animal.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: [10, 11] } },
+        data: { deletedAt: expect.any(Date) },
+      });
+
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
+        where: {
+          animalId: { in: [10, 11] },
+          applicationStatus: "pending",
+        },
+        data: { applicationStatus: "rejected" },
+      });
+
+      expect(mockPrisma.pfcUser.update).toHaveBeenCalled();
     });
   });
 });

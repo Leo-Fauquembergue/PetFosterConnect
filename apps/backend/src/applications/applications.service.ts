@@ -60,7 +60,13 @@ export class ApplicationsService {
 
   findAllReceived(shelterId: number) {
     return this.prisma.application.findMany({
-      where: { animal: { pfcUserId: shelterId }, deletedAt: null },
+      where: {
+        animal: {
+          pfcUserId: shelterId,
+          deletedAt: null, // 🛡️ FILTRE : Exclut les candidatures pour animaux supprimés
+        },
+        deletedAt: null,
+      },
       select: {
         pfcUserId: true,
         animalId: true,
@@ -97,7 +103,7 @@ export class ApplicationsService {
   ) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
+    if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
 
     this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
@@ -114,7 +120,7 @@ export class ApplicationsService {
   async remove(candidateId: number, animalId: number, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
+    if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
 
     this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
@@ -129,7 +135,7 @@ export class ApplicationsService {
     const { application, pendingApplications } = await this.prisma.$transaction(async (tx) => {
       // Vérification IDOR (logique extraite de updateStatus pour être dans la transaction)
       const animal = await tx.animal.findUnique({ where: { id: animalId } });
-      if (!animal) throw new NotFoundException("Animal introuvable");
+      if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
       this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
       // Mise à jour de la demande acceptée
