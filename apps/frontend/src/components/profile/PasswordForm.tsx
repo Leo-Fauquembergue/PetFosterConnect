@@ -49,7 +49,7 @@ export default function PasswordForm({ userId }: Props) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="bg-info text-white px-4 py-2 rounded hover:bg-info/90 w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
       </button>

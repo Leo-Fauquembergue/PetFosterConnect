@@ -27,7 +27,7 @@ const InputPassword = forwardRef<HTMLInputElement, InputPasswordProps>(
             type={show ? "text" : "password"}
             className={`
               w-full px-4 py-2 pr-12 border rounded-lg outline-none transition-all
-              font-openSans text-text-main
+              font-openSans text-gray-800
               ${
                 error
                   ? "border-error focus:ring-2 focus:ring-error/20"

@@ -26,7 +26,7 @@ export default function Home() {
           <div className="flex-1 text-center md:text-left text-white">
             <h1 className="text-4xl md:text-5xl font-bold font-montserrat mb-6 leading-tight">
               Offrez-leur un foyer, <br />
-              <span className="text-primary-light text-orange-300">même temporaire.</span>
+              <span className="text-primary/70">même temporaire.</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-100 mb-8 max-w-lg mx-auto md:mx-0">
               Pet Foster Connect met en relation les refuges saturés avec des familles d'accueil et

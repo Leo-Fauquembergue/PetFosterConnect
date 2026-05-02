@@ -19,9 +19,9 @@ export default function Button({
     "px-6 py-2 rounded-lg font-semibold transition duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
-    primary: "bg-primary text-white hover:bg-orange-600",
-    secondary: "bg-secondary text-white hover:bg-green-800",
-    outline: "border-2 border-primary text-primary hover:bg-orange-50",
+    primary: "bg-primary text-white hover:bg-primary/90",
+    secondary: "bg-secondary text-white hover:bg-secondary/90",
+    outline: "border-2 border-primary text-primary hover:bg-primary/10",
   };
 
   return (

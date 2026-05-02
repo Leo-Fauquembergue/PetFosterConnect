@@ -66,7 +66,7 @@ export default function BookmarksPage() {
                 <div>
                   <Link
                     to={`/animaux/${bm.animal.id}`}
-                    className="text-xl font-semibold text-[#F28C28] hover:underline"
+                    className="text-xl font-semibold text-primary hover:underline"
                   >
                     {bm.animal?.name}
                   </Link>
@@ -79,7 +79,7 @@ export default function BookmarksPage() {
               <div className="mt-4 flex gap-3">
                 <Link
                   to={`/animaux/${bm.animal.id}`}
-                  className="px-4 py-2 bg-[#F28C28] text-white rounded hover:bg-[#F28C28]/80 transition"
+                  className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80 transition"
                 >
                   Voir détails
                 </Link>
@@ -87,7 +87,7 @@ export default function BookmarksPage() {
                   type="button"
                   onClick={() => handleToggle(bm.animalId)}
                   disabled={isDeleting}
-                  className={`px-4 py-2 bg-red-600 text-white rounded transition ${isDeleting ? "opacity-50 cursor-not-allowed" : "hover:bg-red-700"}`}
+                  className={`px-4 py-2 bg-error text-white rounded transition ${isDeleting ? "opacity-50 cursor-not-allowed" : "hover:bg-error/90"}`}
                 >
                   {isDeleting ? "Retrait..." : "Retirer des favoris"}
                 </button>

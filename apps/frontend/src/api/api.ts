@@ -11,15 +11,15 @@ export const api = axios.create({
  */
 export function extractErrorMessage(error: unknown, defaultMessage: string): string {
   if (axios.isAxiosError(error)) {
-    const errorData = error.response?.data;
-    const message = (errorData as any)?.message;
+    const errorData = error.response?.data as Record<string, unknown> | undefined;
+    const message = errorData?.message;
 
     // 1. Si message est une chaîne simple, on l'utilise
     if (typeof message === "string") return message;
 
     // 2. Si message est un objet (potentiellement des erreurs Zod)
     if (message && typeof message === "object" && "errors" in message) {
-      const errObj = message as { errors: { message: string } };
+      const errObj = message as { errors?: { message?: string } };
       if (errObj.errors?.message) {
         try {
           const parsedZodError = JSON.parse(errObj.errors.message);
@@ -33,8 +33,8 @@ export function extractErrorMessage(error: unknown, defaultMessage: string): str
     }
 
     // 3. Fallback sur la propriété .error (souvent présente dans NestJS pour certaines exceptions)
-    if (typeof (errorData as any)?.error === "string") {
-      return (errorData as any).error;
+    if (typeof errorData?.error === "string") {
+      return errorData.error;
     }
   }
   return defaultMessage;

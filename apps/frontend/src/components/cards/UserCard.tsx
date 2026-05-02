@@ -32,8 +32,7 @@ export default function UserCard({ user }: UserCardProps) {
               <li>Famille d’accueil : {user.individualProfile.availableFamily ? "Oui" : "Non"}</li>
               {user.individualProfile.availableFamily && user.individualProfile.availableTime && (
                 <li>
-                  Disponibilité:{" "}
-                  {new Date(user.individualProfile.availableTime).toLocaleDateString("fr-FR")}
+                  Disponibilité: {user.individualProfile.availableTime}
                 </li>
               )}
             </ul>

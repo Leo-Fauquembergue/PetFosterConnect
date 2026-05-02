@@ -1,6 +1,7 @@
 import type {
   UpdateUserWithIndividualProfileDto,
   UpdateUserWithShelterProfileDto,
+  UserWithProfiles,
 } from "@projet/shared-types";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
@@ -11,7 +12,7 @@ import UserCard from "../../components/cards/UserCard";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
-import { type UserWithProfiles, useUserProfile } from "../../hooks/useUserProfile";
+import { useUserProfile } from "../../hooks/useUserProfile";
 
 // ⚡ Types stricts attendus par les composants enfants
 type ExpectedIndividualProps = Required<

@@ -44,10 +44,10 @@ const ShelterCard = (props: ShelterCardProps) => {
 
           {!isHome && props.description && (
             <div className="absolute bottom-4 left-3 z-20 text-white pr-4">
-              <p className="text-sm text-white-600 ml-3 my-4 text-left">
+              <p className="text-sm text-white/80 ml-3 my-4 text-left">
                 <span className="font-semibold">Description :</span>
               </p>
-              <p className="text-sm text-white-600 ml-3 mb-4 text-left">{props.description}</p>
+              <p className="text-sm text-white/80 ml-3 mb-4 text-left">{props.description}</p>
             </div>
           )}
         </div>

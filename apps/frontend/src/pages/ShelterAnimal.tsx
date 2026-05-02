@@ -31,7 +31,7 @@ const ShelterAnimalsPage = () => {
   if (loading) return <Loader text="Chargement des animaux du refuge..." />;
   if (error)
     return (
-      <p className="text-center text-red-500 my-12 font-medium">
+      <p className="text-center text-error my-12 font-medium">
         Erreur lors du chargement des animaux.
       </p>
     );

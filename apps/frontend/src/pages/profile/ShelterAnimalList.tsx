@@ -95,7 +95,7 @@ export default function ShelterAnimalList() {
                   <td className="px-6 py-4 text-right flex gap-2 justify-end">
                     <Link
                       to={`/utilisateur/${id}/animaux/${animal.id}`}
-                      className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                      className="text-info hover:bg-info/10 p-2 rounded-full transition-colors"
                       title="Voir / Modifier"
                     >
                       <Pencil className="w-5 h-5" />
@@ -107,7 +107,7 @@ export default function ShelterAnimalList() {
                         onClick={() =>
                           animal.id && setActionToConfirm({ type: "restore", id: animal.id })
                         }
-                        className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors"
+                        className="text-primary hover:bg-primary/10 p-2 rounded-full transition-colors"
                         title="Restaurer"
                       >
                         <RotateCcw className="w-4 h-4" />
@@ -118,7 +118,7 @@ export default function ShelterAnimalList() {
                         onClick={() =>
                           animal.id && setActionToConfirm({ type: "delete", id: animal.id })
                         }
-                        className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
+                        className="text-gray-400 hover:text-error hover:bg-error/10 p-2 rounded-full transition-colors"
                         title="Supprimer"
                       >
                         <Trash2 className="w-5 h-5" />

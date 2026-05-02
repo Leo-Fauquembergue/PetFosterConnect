@@ -118,10 +118,10 @@ export default function AdminUsers() {
                       label={user.role}
                       className={
                         user.role === "admin"
-                          ? "text-purple-700"
+                          ? "text-admin"
                           : user.role === "shelter"
-                            ? "text-orange-700"
-                            : "text-blue-700"
+                            ? "text-primary"
+                            : "text-info"
                       }
                     />
                   </td>
@@ -141,7 +141,7 @@ export default function AdminUsers() {
                         onClick={() =>
                           user.id && setActionToConfirm({ type: "restore", id: user.id })
                         }
-                        className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors inline-flex items-center gap-1"
+                        className="text-primary hover:bg-primary/10 p-2 rounded-full transition-colors inline-flex items-center gap-1"
                         title="Restaurer l'utilisateur"
                       >
                         <RotateCcw className="w-4 h-4" /> Restaurer
@@ -152,7 +152,7 @@ export default function AdminUsers() {
                         onClick={() =>
                           user.id && setActionToConfirm({ type: "delete", id: user.id })
                         }
-                        className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
+                        className="text-gray-400 hover:text-error hover:bg-error/10 p-2 rounded-full transition-colors"
                         title="Bannir l'utilisateur"
                       >
                         <Trash2 className="w-5 h-5" />

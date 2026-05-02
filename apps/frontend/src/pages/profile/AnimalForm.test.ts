@@ -1,4 +1,4 @@
-    import { CreateAnimalSchema } from "@projet/shared-types";
+import { CreateAnimalSchema } from "@projet/shared-types";
 import { describe, expect, it } from "vitest";
 
 describe("Animal Form Logic - CreateAnimalSchema Validation", () => {

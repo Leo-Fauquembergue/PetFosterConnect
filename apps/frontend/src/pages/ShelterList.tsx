@@ -40,7 +40,7 @@ const SheltersPage = () => {
         {/* État vide ou liste */}
         {shelters.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="bg-green-100 p-4 rounded-full mb-4">
+            <div className="bg-secondary/10 p-4 rounded-full mb-4">
               <Home className="w-12 h-12 text-secondary" />
             </div>
             <h3 className="text-xl font-bold text-gray-700">Aucun refuge trouvé</h3>

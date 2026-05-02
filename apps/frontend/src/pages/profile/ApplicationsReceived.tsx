@@ -120,10 +120,10 @@ export default function ApplicationsReceived() {
                 <span
                   className={` inline-block px-3 py-1 rounded-full text-sm font-medium ${
                     app.applicationStatus === "pending"
-                      ? "bg-yellow-100 text-yellow-700"
+                      ? "bg-warning/10 text-warning"
                       : app.applicationStatus === "approved"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-success/10 text-success"
+                        : "bg-error/10 text-error"
                   } `}
                 >
                   {app.applicationStatus === "pending" && "En attente"}
@@ -143,7 +143,7 @@ export default function ApplicationsReceived() {
                       onClick={() =>
                         handleStatus(app.pfcUserId, app.animalId, "approved", app.user?.email)
                       }
-                      className={`px-4 py-2 bg-green-600 text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"}`}
+                      className={`px-4 py-2 bg-success text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-success/90"}`}
                     >
                       {isProcessing ? "..." : "Accepter"}
                     </button>
@@ -153,7 +153,7 @@ export default function ApplicationsReceived() {
                       onClick={() =>
                         handleStatus(app.pfcUserId, app.animalId, "rejected", app.user?.email)
                       }
-                      className={`px-4 py-2 bg-red-600 text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-red-700"}`}
+                      className={`px-4 py-2 bg-error text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-error/90"}`}
                     >
                       {isProcessing ? "..." : "Refuser"}
                     </button>

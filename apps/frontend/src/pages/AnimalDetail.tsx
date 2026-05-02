@@ -283,7 +283,7 @@ export default function AnimalDetail() {
                   Modifier
                 </Button>
               ) : hasApplied ? (
-                <p className="text-green-600 font-semibold">
+                <p className="text-success font-semibold">
                   Demande déjà réalisée pour cet animal ✅
                 </p>
               ) : animal.animalStatus === "available" ? (

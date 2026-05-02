@@ -72,7 +72,7 @@ export class EmailsService {
   private acceptTemplate(firstname: string, animalName: string): string {
     const content = `
       <p>Bonjour <b>${firstname}</b>,</p>
-      <p>Félicitations 🎉 ! Votre candidature pour l’animal <b>${animalName}</b> a été <span style="color: green; font-weight: bold;">acceptée</span>.</p>
+      <p>Félicitations 🎉 ! Votre candidature pour l’animal <b>${animalName}</b> a été <span style="color: #27AE60; font-weight: bold;">acceptée</span>.</p>
       <p>Nous vous contacterons rapidement pour organiser la suite du processus.</p>
       <div style="text-align:center; margin: 20px 0;">
         <a href="${this.baseUrl}/connexion" style="display:inline-block; padding:12px 24px; background:#F28C28; color:#fff; text-decoration:none; border-radius:5px; font-weight:bold;">
@@ -86,7 +86,7 @@ export class EmailsService {
   private rejectTemplate(firstname: string, animalName: string): string {
     const content = `
       <p>Bonjour <b>${firstname}</b>,</p>
-      <p>Nous sommes désolés 😔. Votre candidature pour l’animal <b>${animalName}</b> a été <span style="color: red; font-weight: bold;">refusée</span>.</p>
+      <p>Nous sommes désolés 😔. Votre candidature pour l’animal <b>${animalName}</b> a été <span style="color: #E74C3C; font-weight: bold;">refusée</span>.</p>
       <p>N’hésitez pas à consulter nos autres animaux disponibles, peut-être qu’un futur compagnon vous attend.</p>
       <div style="text-align:center; margin: 20px 0;">
         <a href="${this.baseUrl}/animaux" style="display:inline-block; padding:12px 24px; background:#F28C28; color:#fff; text-decoration:none; border-radius:5px; font-weight:bold;">

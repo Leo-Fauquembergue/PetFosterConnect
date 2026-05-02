@@ -48,7 +48,7 @@ const AnimalList = () => {
         {/* Gestion liste vide */}
         {animals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="bg-orange-100 p-4 rounded-full mb-4">
+            <div className="bg-primary/10 p-4 rounded-full mb-4">
               <PawPrint className="w-12 h-12 text-primary" />
             </div>
             <h3 className="text-xl font-bold text-gray-700">Aucun animal pour le moment</h3>
@@ -66,7 +66,7 @@ const AnimalList = () => {
                   placeholder="Rechercher par nom"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>

@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type LoginDto, LoginSchema, type RegisterDto, RegisterSchema } from "@projet/shared-types";
+import axios from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -92,7 +93,7 @@ function LoginForm() {
       const errorMessage = extractErrorMessage(error, "Erreur serveur. Veuillez réessayer.");
 
       // Gestion spécifique du 401 pour un message plus précis
-      if ((error as any)?.response?.status === 401) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         toast.error("Email ou mot de passe incorrect !", { position: "top-right" });
       } else {
         toast.error(errorMessage, { position: "top-right" });
@@ -161,7 +162,7 @@ function RegisterForm() {
       );
 
       // Gestion spécifique du 409
-      if ((err as any)?.response?.status === 409) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
         toast.error("Cet email est déjà utilisé", { position: "top-right" });
       } else {
         toast.error(errorMessage, { position: "top-right" });

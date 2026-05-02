@@ -11,7 +11,7 @@ const RefugeDetailPage = () => {
 
   if (error)
     return (
-      <p className="text-center text-red-500 my-12 font-medium">
+      <p className="text-center text-error my-12 font-medium">
         Erreur lors du chargement du refuge.
       </p>
     );
@@ -27,10 +27,7 @@ const RefugeDetailPage = () => {
           {shelter.shelterName}
         </h1>
 
-        <div
-          className="border-2 rounded-xl p-6 shadow-md flex flex-col md:flex-row gap-6 bg-bgapp font-openSans text-gray-800"
-          style={{ borderColor: "#2D6A4F" }}
-        >
+        <div className="border-2 border-secondary rounded-xl p-6 shadow-md flex flex-col md:flex-row gap-6 bg-bgapp font-openSans text-gray-800">
           <img
             src={shelter.logo ?? "https://placehold.co/150x150?text=Pas+de+logo"}
             alt={`${shelter.shelterName} logo`}

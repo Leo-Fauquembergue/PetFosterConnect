@@ -12,7 +12,7 @@ export default function AdminLayout() {
     `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
       isActive
         ? "bg-primary text-white shadow-md font-semibold"
-        : "text-gray-600 hover:bg-orange-50 hover:text-primary"
+        : "text-gray-600 hover:bg-primary/10 hover:text-primary"
     }`;
 
   // SIDEBAR
@@ -46,7 +46,7 @@ export default function AdminLayout() {
       <div className="p-4 border-t border-gray-100 space-y-2 bg-gray-50/50">
         <NavLink
           to="/"
-          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-500 hover:text-secondary transition rounded-md hover:bg-gray-100"
+          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-500 hover:text-secondary transition rounded-md hover:bg-secondary/10"
           onClick={close}
         >
           <Home size={18} />
@@ -55,7 +55,7 @@ export default function AdminLayout() {
 
         <button
           type="button"
-          className="flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-red-50 w-full rounded-lg transition font-medium"
+          className="flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-error/10 w-full rounded-lg transition font-medium"
         >
           <LogOut size={18} />
           <span>Déconnexion</span>

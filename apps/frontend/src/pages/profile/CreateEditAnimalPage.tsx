@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  CreateAnimalSchema,
   type AnimalWithRelations,
   type CreateAnimalDto,
+  CreateAnimalSchema,
 } from "@projet/shared-types";
 import { useEffect, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { z } from "zod";
@@ -264,7 +264,7 @@ export default function AnimalForm() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-primary text-white px-4 py-2 rounded hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Enregistrement..." : "Enregistrer"}
               </button>

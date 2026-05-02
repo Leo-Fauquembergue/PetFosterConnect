@@ -23,7 +23,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           className={`
             w-full px-4 py-2 border rounded-lg outline-none transition-all
-            font-openSans text-text-main
+            font-openSans text-gray-800
             ${
               error
                 ? "border-error focus:ring-2 focus:ring-error/20"

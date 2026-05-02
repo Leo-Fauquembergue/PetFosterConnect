@@ -5,10 +5,12 @@ import { authApi } from "../api/authApi";
 
 interface AuthContextType {
   isLoggedIn: boolean;
+  setIsLoggedIn: (value: boolean) => void;
   logout: () => Promise<void>;
   login: (credentials: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
   user: UserWithProfiles | null; // ⚡ Utilisation du type étendu
+  setUser: (user: UserWithProfiles | null) => void;
   isLoading: boolean;
 }
 
@@ -54,7 +56,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, logout, login, register, user, isLoading }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, setIsLoggedIn, logout, login, register, user, setUser, isLoading }}
+    >
       {children}
     </AuthContext.Provider>
   );

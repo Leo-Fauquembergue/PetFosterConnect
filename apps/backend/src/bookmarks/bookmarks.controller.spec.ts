@@ -49,7 +49,7 @@ describe("BookmarksController", () => {
     const req = {
       user: { id: 1, role: "individual", email: "user@test.com" },
     } as RequestWithUser;
-    const expectedResult: any[] = [];
+    const expectedResult: unknown[] = [];
     mockBookmarksService.findAllByUser.mockResolvedValue(expectedResult);
 
     const result = await controller.getMyBookmarks(req);

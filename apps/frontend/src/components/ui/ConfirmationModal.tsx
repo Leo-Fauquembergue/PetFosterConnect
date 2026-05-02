@@ -36,7 +36,7 @@ export default function ConfirmationModal({
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded-full ${
-                variant === "danger" ? "bg-red-100 text-red-600" : "bg-orange-100 text-orange-600"
+                variant === "danger" ? "bg-error/10 text-error" : "bg-primary/10 text-primary"
               }`}
             >
               <AlertTriangle className="w-5 h-5" />
@@ -74,9 +74,7 @@ export default function ConfirmationModal({
               onClose();
             }}
             className={`px-4 py-2 text-white font-bold rounded-lg shadow-sm transition ${
-              variant === "danger"
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-orange-500 hover:bg-orange-600"
+              variant === "danger" ? "bg-error hover:bg-error/90" : "bg-primary hover:bg-primary/90"
             }`}
           >
             Confirmer
