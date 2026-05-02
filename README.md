@@ -13,14 +13,14 @@ Application web de mise en relation entre refuges et familles d'accueil pour ani
 - [Documentation API (Swagger)](#documentation-api-swagger)
 - [Workflow Git](#workflow-git)
 
-## 🛠 Stack Technique
+## Stack Technique
 
 - **Backend**: NestJS + TypeScript + Prisma + PostgreSQL
 - **Frontend**: React + TypeScript + Tailwind CSS + Vite
 - **Monorepo**: npm workspaces
 - **Documentation API**: Swagger/OpenAPI
 
-## 📋 Prérequis
+## Prérequis
 
 - Node.js >= 18
 - npm >= 9
@@ -29,7 +29,7 @@ Application web de mise en relation entre refuges et familles d'accueil pour ani
 - Port Backend : 3001
 - Port Frontend : 5173
 
-## 🚀 Installation
+## Installation
 
 ### 1. Cloner le repository
 
@@ -91,11 +91,11 @@ npm run dev
 
 Accès aux services :
 
-- **Backend API**: http://localhost:3001
-- **Frontend**: http://localhost:5173
-- **Documentation Swagger**: http://localhost:3001/api
+- **Backend API**: <http://localhost:3001>
+- **Frontend**: <http://localhost:5173>
+- **Documentation Swagger**: <http://localhost:3001/api>
 
-## 📜 Scripts disponibles
+## Scripts disponibles
 
 ### Scripts globaux (depuis la racine)
 
@@ -128,9 +128,9 @@ cd apps/backend
 npx prisma studio --config=./prisma.config.ts
 ```
 
-## 📁 Structure du projet
+## Structure du projet
 
-```
+```text
 projet/
 ├── apps/
 │   ├── backend/          # API NestJS
@@ -154,7 +154,7 @@ projet/
 └── package.json
 ```
 
-## 🗄️ Base de données & Persistance
+## Base de données & Persistance
 
 Le backend utilise **NestJS**, **Prisma 7** et **PostgreSQL** (via Docker). L'architecture est conçue pour être isolée et facile à reproduire.
 
@@ -181,7 +181,7 @@ npx prisma migrate reset --schema=./prisma/schema.prisma
 npx prisma studio --config=./prisma.config.ts
 ```
 
-## 📖 Documentation API (Swagger)
+## Documentation API (Swagger)
 
 L'API est entièrement documentée avec **Swagger/OpenAPI**. Une interface interactive permet de tester tous les endpoints directement depuis le navigateur.
 
@@ -189,7 +189,7 @@ L'API est entièrement documentée avec **Swagger/OpenAPI**. Une interface inter
 
 Une fois le backend lancé, accédez à :
 
-```
+```text
 http://localhost:3001/api
 ```
 
@@ -217,7 +217,7 @@ http://localhost:3001/api
 
 ### Tester l'API avec Swagger
 
-1. Accédez à http://localhost:3001/api
+1. Accédez à <http://localhost:3001/api>
 2. Pour les routes protégées, cliquez sur le bouton **"Authorize"** 🔒
 3. Entrez votre token JWT (récupéré via `/auth/login`)
 4. Testez les endpoints directement dans l'interface
@@ -238,7 +238,7 @@ Response: { "access_token": "eyJhbGc..." }
 Cliquez sur "Authorize" et collez le token
 ```
 
-## 🔄 Workflow Git
+## Workflow Git
 
 ### 1. Créer une branche depuis `main`
 
@@ -273,7 +273,7 @@ git push origin feature/nom-feature
 
 Puis créez une Pull Request sur GitHub/GitLab.
 
-## 🐛 Dépannage
+## Dépannage
 
 ### La base de données ne démarre pas
 
@@ -304,6 +304,6 @@ Si le port 3001 ou 5173 est déjà utilisé, modifiez les fichiers de configurat
 
 Vérifiez que :
 
-1. Le backend est bien lancé sur http://localhost:3001
-2. Vous accédez bien à http://localhost:3001/api (et non /api-docs)
+1. Le backend est bien lancé sur <http://localhost:3001>
+2. Vous accédez bien à <http://localhost:3001/api> (et non /api-docs)
 3. Les décorateurs `@ApiTags()` sont bien présents dans vos contrôleurs
