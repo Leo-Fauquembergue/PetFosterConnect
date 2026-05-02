@@ -98,15 +98,6 @@ export class AnimalsService {
       where: { pfcUserId: userId },
       include: {
         species: true, // "Va chercher le nom de l'espèce"
-        shelter: {
-          // "Va chercher les infos du refuge"
-          select: {
-            id: true,
-            email: true,
-            phoneNumber: true,
-            shelterProfile: true,
-          },
-        },
       },
     });
   }

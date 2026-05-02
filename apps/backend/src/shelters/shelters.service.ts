@@ -51,14 +51,6 @@ export class SheltersService {
             animals: {
               include: {
                 species: true,
-                shelter: {
-                  select: {
-                    id: true,
-                    email: true,
-                    phoneNumber: true,
-                    shelterProfile: true,
-                  },
-                },
               },
             },
           },

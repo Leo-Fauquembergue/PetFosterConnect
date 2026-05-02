@@ -55,7 +55,15 @@ const ShelterAnimalsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {shelter.user.animals.map((animal: AnimalWithRelations) => (
               <Link key={animal.id} to={`/animaux/${animal.id}`}>
-                <_AnimalCard {...animal} />
+                <_AnimalCard
+                  {...animal}
+                  shelter={{
+                    id: shelter.pfcUserId,
+                    shelterProfile: {
+                      shelterName: shelter.shelterName,
+                    },
+                  }}
+                />
               </Link>
             ))}
           </div>
