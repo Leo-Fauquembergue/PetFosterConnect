@@ -24,15 +24,12 @@ export class AuthService {
       role: user.role,
     });
 
-    // findByEmail() retourne le user complet (avec password) → on l'exclut manuellement
-    const { password, ...userSafe } = user;
+    const userSafe = await this.usersService.getProfile(user.id);
     return { user: userSafe, token };
   }
 
   async register(dto: RegisterDto) {
-    // create() utilise safeUserSelect côté UsersService :
-    // le password n'est JAMAIS inclus dans le retour → pas besoin de le destructurer
-    const userSafe = await this.usersService.create({
+    const newUser = await this.usersService.create({
       email: dto.email,
       password: dto.password,
       role: dto.role,
@@ -41,11 +38,12 @@ export class AuthService {
     });
 
     const token = this.jwtService.sign({
-      sub: userSafe.id,
-      email: userSafe.email,
-      role: userSafe.role,
+      sub: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
     });
 
+    const userSafe = await this.usersService.getProfile(newUser.id);
     return { user: userSafe, token };
   }
 }

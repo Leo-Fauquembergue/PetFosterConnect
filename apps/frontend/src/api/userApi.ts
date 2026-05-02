@@ -4,6 +4,7 @@ import type {
   UpdateUserWithIndividualProfileDto,
   UpdateUserWithShelterProfileDto,
   User,
+  UserWithProfiles,
 } from "@projet/shared-types";
 import api from "./api";
 
@@ -28,24 +29,24 @@ export const userApi = {
     return response.data;
   },
 
-  getProfile: async (id: number, signal?: AbortSignal): Promise<User> => {
-    const response = await api.get<User>(`/users/${id}/profile`, { signal });
+  getProfile: async (id: number, signal?: AbortSignal): Promise<UserWithProfiles> => {
+    const response = await api.get<UserWithProfiles>(`/users/${id}/profile`, { signal });
     return response.data;
   },
 
   updateIndividualProfile: async (
     id: number,
     data: UpdateUserWithIndividualProfileDto
-  ): Promise<User> => {
-    const response = await api.put<User>(`/users/${id}/individual-profile`, data);
+  ): Promise<UserWithProfiles> => {
+    const response = await api.put<UserWithProfiles>(`/users/${id}/individual-profile`, data);
     return response.data;
   },
 
   updateShelterProfile: async (
     id: number,
     data: UpdateUserWithShelterProfileDto
-  ): Promise<User> => {
-    const response = await api.put<User>(`/users/${id}/shelter-profile`, data);
+  ): Promise<UserWithProfiles> => {
+    const response = await api.put<UserWithProfiles>(`/users/${id}/shelter-profile`, data);
     return response.data;
   },
 };

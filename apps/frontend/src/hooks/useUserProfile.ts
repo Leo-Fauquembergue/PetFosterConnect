@@ -1,20 +1,13 @@
 import type {
-  IndividualProfile,
-  ShelterProfile,
   UpdateUserWithIndividualProfileDto,
   UpdateUserWithShelterProfileDto,
-  User,
+  UserWithProfiles,
 } from "@projet/shared-types";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../api/api";
 import { userApi } from "../api/userApi";
-
-export type UserWithProfiles = User & {
-  individualProfile?: IndividualProfile | null;
-  shelterProfile?: ShelterProfile | null;
-};
 
 export type ProfileFormData = Partial<
   UpdateUserWithIndividualProfileDto & UpdateUserWithShelterProfileDto
@@ -37,8 +30,7 @@ export const useUserProfile = (userId: string | undefined) => {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        const data = await userApi.getProfile(Number(userId), controller.signal);
-        const userData = data as UserWithProfiles;
+        const userData = await userApi.getProfile(Number(userId), controller.signal);
         setUser(userData);
 
         if (userData.role === "individual") {

@@ -1,23 +1,21 @@
-import type { LoginDto, RegisterDto, User } from "@projet/shared-types";
+import type { LoginDto, RegisterDto, UserWithProfiles } from "@projet/shared-types";
 import api from "./api";
 
 export const authApi = {
   login: async (credentials: LoginDto) => {
-    const response = await api.post<{ access_token: string; user: User }>(
+    const response = await api.post<{ access_token: string; user: UserWithProfiles }>(
       "/auth/login",
       credentials
     );
-    // Standardisation de l'état : on force un appel à /auth/me pour garantir que le contexte React
-    // aura toujours exactement la même structure (id, email, role) qu'après un rafraîchissement
-    const meResponse = await api.get<User>("/auth/me");
-    return { access_token: response.data.access_token, user: meResponse.data };
+    return response.data;
   },
 
   register: async (data: RegisterDto) => {
-    const response = await api.post<{ access_token: string; user: User }>("/auth/register", data);
-    // Standardisation de l'état
-    const meResponse = await api.get<User>("/auth/me");
-    return { access_token: response.data.access_token, user: meResponse.data };
+    const response = await api.post<{ access_token: string; user: UserWithProfiles }>(
+      "/auth/register",
+      data
+    );
+    return response.data;
   },
 
   logout: async () => {
@@ -27,7 +25,7 @@ export const authApi = {
   },
 
   getMe: async () => {
-    const response = await api.get<User>("/auth/me");
+    const response = await api.get<UserWithProfiles>("/auth/me");
     return response.data;
   },
 };

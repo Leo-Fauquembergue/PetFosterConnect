@@ -1,5 +1,5 @@
-// ⚡ Importation stricte du User
-import type { LoginDto, RegisterDto, User } from "@projet/shared-types";
+// ⚡ Importation stricte du UserWithProfiles
+import type { LoginDto, RegisterDto, UserWithProfiles } from "@projet/shared-types";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { authApi } from "../api/authApi";
 
@@ -8,7 +8,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   login: (credentials: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
-  user: User | null; // ⚡ Fin du "any"
+  user: UserWithProfiles | null; // ⚡ Utilisation du type étendu
   isLoading: boolean;
 }
 
@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null); // ⚡ Typage du state
+  const [user, setUser] = useState<UserWithProfiles | null>(null); // ⚡ Typage du state
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

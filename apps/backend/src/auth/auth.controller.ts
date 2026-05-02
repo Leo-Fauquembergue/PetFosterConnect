@@ -50,7 +50,7 @@ export class AuthController {
   @ApiOperation({ summary: "Récupérer le profil de l'utilisateur connecté" })
   async getMe(@Req() req: RequestWithUser) {
     // Permet au Front de rafraîchir son store avec la BDD fraîche
-    return this.usersService.findOne(req.user.id);
+    return this.usersService.getProfile(req.user.id);
   }
 
   private setCookie(res: Response, token: string) {
