@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Req,
@@ -19,6 +18,7 @@ import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
+import { IdSchema } from "../common/schemas/params.schema";
 import { ApplicationsService } from "./applications.service";
 
 @ApiTags("applications")
@@ -72,8 +72,8 @@ export class ApplicationsController {
   @UsePipes(new ZodPipe(sharedTypes.UpdateApplicationStatusSchema))
   update(
     @Req() req: RequestWithUser,
-    @Param("animalId", ParseIntPipe) animalId: number,
-    @Param("candidateId", ParseIntPipe) candidateId: number,
+    @Param("animalId", new ZodPipe(IdSchema)) animalId: number,
+    @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
     @Body() updateDto: sharedTypes.UpdateApplicationStatusDto
   ) {
     return this.applicationsService.updateStatus(candidateId, animalId, updateDto, req.user);
@@ -85,8 +85,8 @@ export class ApplicationsController {
   @ApiOperation({ summary: "Archiver / Supprimer une demande" })
   remove(
     @Req() req: RequestWithUser,
-    @Param("animalId", ParseIntPipe) animalId: number,
-    @Param("candidateId", ParseIntPipe) candidateId: number
+    @Param("animalId", new ZodPipe(IdSchema)) animalId: number,
+    @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number
   ) {
     return this.applicationsService.remove(candidateId, animalId, req.user);
   }
@@ -97,8 +97,8 @@ export class ApplicationsController {
   @ApiOperation({ summary: "Accepter formellement une demande" })
   async accept(
     @Req() req: RequestWithUser,
-    @Param("candidateId", ParseIntPipe) candidateId: number,
-    @Param("animalId", ParseIntPipe) animalId: number
+    @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
+    @Param("animalId", new ZodPipe(IdSchema)) animalId: number
   ) {
     return this.applicationsService.acceptApplication(candidateId, animalId, req.user);
   }
@@ -109,8 +109,8 @@ export class ApplicationsController {
   @ApiOperation({ summary: "Refuser formellement une demande" })
   async reject(
     @Req() req: RequestWithUser,
-    @Param("candidateId", ParseIntPipe) candidateId: number,
-    @Param("animalId", ParseIntPipe) animalId: number
+    @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
+    @Param("animalId", new ZodPipe(IdSchema)) animalId: number
   ) {
     return this.applicationsService.rejectApplication(candidateId, animalId, req.user);
   }

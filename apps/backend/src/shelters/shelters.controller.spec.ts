@@ -1,8 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import * as dotenv from "dotenv";
 import { AnimalsService } from "../animals/animals.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { SheltersController } from "./shelters.controller";
 import { SheltersService } from "./shelters.service";
+
+dotenv.config({ path: ".env.test" });
 
 describe("ShelterController (integration)", () => {
   let controller: SheltersController;
@@ -55,7 +58,7 @@ describe("ShelterController (integration)", () => {
   });
 
   it("2. devrait retourner un refuge par id", async () => {
-    const result = await controller.findOne(String(testUserId));
+    const result = await controller.findOne(testUserId);
     expect(result?.shelterName).toBe("Refuge Test");
   });
 
@@ -82,12 +85,12 @@ describe("ShelterController (integration)", () => {
 
   it("4. devrait mettre à jour un refuge", async () => {
     const updates = { shelterName: "Refuge Modifié" };
-    const result = await controller.update(String(testUserId), updates);
+    const result = await controller.update(testUserId, updates);
     expect(result.shelterName).toBe("Refuge Modifié");
   });
 
   it("5. devrait supprimer un refuge", async () => {
-    await controller.remove(String(testUserId));
+    await controller.remove(testUserId);
     const shelter = await prisma.shelterProfile.findUnique({ where: { pfcUserId: testUserId } });
     expect(shelter).toBeNull();
   });

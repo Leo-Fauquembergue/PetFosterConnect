@@ -31,6 +31,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
+import { IdSchema } from "../common/schemas/params.schema";
 import { UsersService } from "./users.service";
 
 @ApiTags("users")
@@ -52,8 +53,8 @@ export class UsersController {
     description: "Accès refusé - vous ne pouvez voir que votre propre profil",
   })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  getProfile(@Param("id") id: string) {
-    return this.usersService.getProfile(Number(id));
+  getProfile(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.usersService.getProfile(id);
   }
 
   @Put(":id/individual-profile")
@@ -66,10 +67,10 @@ export class UsersController {
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   @UsePipes(new ZodPipe(UpdateUserWithIndividualProfileSchema))
   async updateIndividualProfile(
-    @Param("id") id: string,
+    @Param("id", new ZodPipe(IdSchema)) id: number,
     @Body() updateDto: UpdateUserWithIndividualProfileDto
   ) {
-    return this.usersService.updateIndividualProfile(Number(id), updateDto);
+    return this.usersService.updateIndividualProfile(id, updateDto);
   }
 
   @Put(":id/shelter-profile")
@@ -82,10 +83,10 @@ export class UsersController {
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   @UsePipes(new ZodPipe(UpdateUserWithShelterProfileSchema))
   async updateShelterProfile(
-    @Param("id") id: string,
+    @Param("id", new ZodPipe(IdSchema)) id: number,
     @Body() updateDto: UpdateUserWithShelterProfileDto
   ) {
-    return this.usersService.updateShelterProfile(Number(id), updateDto);
+    return this.usersService.updateShelterProfile(id, updateDto);
   }
 
   @Put(":id/password")
@@ -97,10 +98,10 @@ export class UsersController {
   @ApiResponse({ status: 400, description: "Données invalides ou ancien mot de passe incorrect" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   async updatePassword(
-    @Param("id") id: string,
+    @Param("id", new ZodPipe(IdSchema)) id: number,
     @Body(new ZodPipe(UpdatePasswordSchema)) dto: UpdatePasswordDto
   ) {
-    return this.usersService.updatePassword(Number(id), dto);
+    return this.usersService.updatePassword(id, dto);
   }
 
   // --- 2. ROUTES GÉNÉRIQUES CRUD (Avec paramètre dynamique) ENSUITE ---
@@ -134,8 +135,8 @@ export class UsersController {
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Utilisateur trouvé" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  findOne(@Param("id") id: string) {
-    return this.usersService.findOne(Number(id));
+  findOne(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(":id")
@@ -147,10 +148,10 @@ export class UsersController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   update(
-    @Param("id") id: string,
+    @Param("id", new ZodPipe(IdSchema)) id: number,
     @Body(new ZodPipe(UpdateUserSchema)) body: sharedTypes.UpdateUserDto // 🛡️ SÉCURITÉ : Application du pipe Zod
   ) {
-    return this.usersService.update(Number(id), body);
+    return this.usersService.update(id, body);
   }
 
   @Delete(":id")
@@ -160,7 +161,7 @@ export class UsersController {
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Utilisateur supprimé avec succès" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  remove(@Param("id") id: string) {
-    return this.usersService.remove(Number(id));
+  remove(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.usersService.remove(id);
   }
 }

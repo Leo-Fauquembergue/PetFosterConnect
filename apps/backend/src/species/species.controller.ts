@@ -4,17 +4,22 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
+  UsePipes,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "@prisma/client";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { ZodPipe } from "../common/pipes/zod.pipe";
+import { IdSchema } from "../common/schemas/params.schema";
 import { SpeciesService } from "./species.service";
+import { z } from "zod";
+
+const NameSchema = z.object({ name: z.string().min(1) });
 
 @ApiTags("species")
 @Controller("species")
@@ -36,6 +41,7 @@ export class SpeciesController {
   @Roles(UserRole.admin)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Créer une nouvelle espèce (Admin uniquement)" })
+  @UsePipes(new ZodPipe(NameSchema))
   async create(@Body() createDto: { name: string }) {
     return this.speciesService.create(createDto);
   }
@@ -45,7 +51,11 @@ export class SpeciesController {
   @Roles(UserRole.admin)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Modifier une espèce (Admin uniquement)" })
-  async update(@Param("id", ParseIntPipe) id: number, @Body() updateDto: { name: string }) {
+  @UsePipes(new ZodPipe(NameSchema))
+  async update(
+    @Param("id", new ZodPipe(IdSchema)) id: number,
+    @Body() updateDto: { name: string }
+  ) {
     return this.speciesService.update(id, updateDto);
   }
 
@@ -54,7 +64,7 @@ export class SpeciesController {
   @Roles(UserRole.admin)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Supprimer une espèce (Admin uniquement)" })
-  async remove(@Param("id", ParseIntPipe) id: number) {
+  async remove(@Param("id", new ZodPipe(IdSchema)) id: number) {
     return this.speciesService.remove(id);
   }
 }

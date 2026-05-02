@@ -3,13 +3,13 @@ import { ZodType } from "zod";
 
 @Injectable()
 export class ZodPipe implements PipeTransform {
-  // On type le constructeur avec ZodType
   constructor(private schema: ZodType) {}
 
   transform(value: unknown, metadata: ArgumentMetadata) {
-    // Si ce n'est pas le body, on laisse passer sans valider
-    if (metadata.type !== "body") {
-      return value;
+    // Si query ou param, on tente de transformer les chaînes numériques en nombres
+    // avant la validation si le schéma Zod l'attend.
+    if (metadata.type === "query" || metadata.type === "param") {
+      value = this.transformValues(value);
     }
 
     try {
@@ -20,5 +20,20 @@ export class ZodPipe implements PipeTransform {
         errors: error,
       });
     }
+  }
+
+  private transformValues(value: unknown): unknown {
+    if (typeof value === "string") {
+      const number = Number(value);
+      if (!Number.isNaN(number)) {
+        return number;
+      }
+    }
+    if (typeof value === "object" && value !== null) {
+      return Object.fromEntries(
+        Object.entries(value).map(([k, v]) => [k, this.transformValues(v)]),
+      );
+    }
+    return value;
   }
 }
