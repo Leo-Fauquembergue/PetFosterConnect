@@ -12,13 +12,13 @@ export const applicationApi = {
     return response.data;
   },
 
-  getSentApplications: async (): Promise<ApplicationSentResponse[]> => {
-    const response = await api.get("/applications/sent");
+  getSentApplications: async (signal?: AbortSignal): Promise<ApplicationSentResponse[]> => {
+    const response = await api.get("/applications/sent", { signal });
     return response.data;
   },
 
-  getReceivedApplications: async (): Promise<ApplicationReceivedResponse[]> => {
-    const response = await api.get("/applications/received");
+  getReceivedApplications: async (signal?: AbortSignal): Promise<ApplicationReceivedResponse[]> => {
+    const response = await api.get("/applications/received", { signal });
     return response.data;
   },
 

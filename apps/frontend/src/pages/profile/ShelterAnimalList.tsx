@@ -1,14 +1,12 @@
-import type { AnimalWithRelations } from "@projet/shared-types";
 import { Pencil, RotateCcw, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
-import { shelterApi } from "../../api/shelterApi";
-import { extractErrorMessage } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+import { useShelterAnimals } from "../../hooks/useShelterAnimals";
 
 // Dictionnaire pour la traduction des statuts
 const statusLabels: Record<string, string> = {
@@ -20,28 +18,12 @@ const statusLabels: Record<string, string> = {
 
 export default function ShelterAnimalList() {
   const { id } = useParams<{ id: string }>();
-  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { animals, setAnimals, loading } = useShelterAnimals(id);
 
   const [actionToConfirm, setActionToConfirm] = useState<{
     type: "delete" | "restore";
     id: number;
   } | null>(null);
-
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        const data = await shelterApi.getShelterAnimals(Number(id));
-        setAnimals(data);
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Erreur de chargement des animaux.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) fetchAnimals();
-  }, [id]);
 
   const handleConfirmAction = async () => {
     if (!actionToConfirm) return;

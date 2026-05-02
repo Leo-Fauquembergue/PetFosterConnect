@@ -1,34 +1,10 @@
-// ⚡ CORRECTION : Import du type depuis le package partagé et utilisation du helper pour les erreurs
-import type { ShelterWithRelations } from "@projet/shared-types";
 import { Home } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { shelterApi } from "../api/shelterApi";
-import { extractErrorMessage } from "../api/api";
 import ShelterCard from "../components/cards/ShelterCard";
 import Loader from "../components/ui/Loader";
+import { useShelters } from "../hooks/useShelters";
 
 const SheltersPage = () => {
-  const [shelters, setShelters] = useState<ShelterWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const fetchShelters = async () => {
-      try {
-        const data = await shelterApi.getAllShelters();
-        setShelters(data);
-      } catch (err: unknown) {
-        setError(true);
-        const errorMessage = extractErrorMessage(err, "Impossible de charger les refuges.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchShelters();
-  }, []);
+  const { shelters, loading, error } = useShelters();
 
   // État de chargement
   if (loading) {

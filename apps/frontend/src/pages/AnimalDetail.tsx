@@ -1,15 +1,13 @@
-import type { AnimalDetailResponse } from "@projet/shared-types";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { AlertCircle, Heart } from "lucide-react";
 import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { animalApi } from "../api/animalApi";
+import { extractErrorMessage } from "../api/api";
 import { applicationApi } from "../api/applicationApi";
 import { bookmarkApi } from "../api/bookmarkApi";
-import { extractErrorMessage } from "../api/api";
 import SiteLogo from "../assets/Logo.png";
 import { useAuth } from "../auth/AuthContext";
 import BackBanner from "../components/ui/BackBanner";
@@ -18,6 +16,7 @@ import Button from "../components/ui/Button";
 import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
+import { useAnimal } from "../hooks/useAnimal";
 
 export default function AnimalDetail() {
   const { userId, id } = useParams<{ userId: string; id: string }>();
@@ -25,37 +24,13 @@ export default function AnimalDetail() {
   const { user } = useAuth();
 
   const [hasApplied, setHasApplied] = useState(false);
-  const [animal, setAnimal] = useState<AnimalDetailResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { animal, loading, error, isFavorite, setIsFavorite, selectedPhoto, setSelectedPhoto } =
+    useAnimal(id);
+
   const [adoptMessage, setAdoptMessage] = useState("");
   const [fosterMessage, setFosterMessage] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    const fetchAnimal = async () => {
-      try {
-        const data = (await animalApi.getAnimalById(Number(id))) as AnimalDetailResponse;
-
-        setAnimal(data);
-        if (data.isBookmarked !== undefined) {
-          setIsFavorite(data.isBookmarked);
-        }
-
-        if (data.photos && data.photos.length > 0) {
-          setSelectedPhoto(data.photos[0]);
-        }
-      } catch (_err) {
-        setError("Impossible de charger les détails de l'animal.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) fetchAnimal();
-  }, [id]);
 
   const handleError = (err: unknown) => {
     const errorMessage = extractErrorMessage(err, "Erreur lors de la demande");

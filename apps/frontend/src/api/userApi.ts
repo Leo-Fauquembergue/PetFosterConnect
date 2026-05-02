@@ -8,8 +8,8 @@ import type {
 import api from "./api";
 
 export const userApi = {
-  getAllUsers: async (): Promise<User[]> => {
-    const response = await api.get<User[]>("/users");
+  getAllUsers: async (signal?: AbortSignal): Promise<User[]> => {
+    const response = await api.get<User[]>("/users", { signal });
     return response.data;
   },
 
@@ -28,8 +28,8 @@ export const userApi = {
     return response.data;
   },
 
-  getProfile: async (id: number): Promise<User> => {
-    const response = await api.get<User>(`/users/${id}/profile`);
+  getProfile: async (id: number, signal?: AbortSignal): Promise<User> => {
+    const response = await api.get<User>(`/users/${id}/profile`, { signal });
     return response.data;
   },
 

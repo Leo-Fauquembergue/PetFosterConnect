@@ -1,16 +1,14 @@
-import type { AnimalWithRelations } from "@projet/shared-types";
 import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
-import { extractErrorMessage } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+import { useAdminAnimals } from "../../hooks/useAdminAnimals";
 
 export default function AdminAnimals() {
-  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { animals, loading, setAnimals } = useAdminAnimals();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -19,22 +17,6 @@ export default function AdminAnimals() {
     type: "delete" | "restore";
     id: number;
   } | null>(null);
-
-  // Fetch
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        const data = await animalApi.getAllAdmin();
-        setAnimals(data as AnimalWithRelations[]);
-      } catch (error: unknown) {
-        const errorMessage = extractErrorMessage(error, "Impossible de charger la liste des animaux.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnimals();
-  }, []);
 
   // FILTRAGE
   const filteredAnimals = animals.filter((animal) => {

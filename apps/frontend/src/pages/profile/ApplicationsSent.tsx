@@ -1,29 +1,8 @@
-import type { ApplicationSentResponse } from "@projet/shared-types";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { extractErrorMessage } from "../../api/api";
-import { applicationApi } from "../../api/applicationApi";
 import Loader from "../../components/ui/Loader";
+import { useApplicationsSent } from "../../hooks/useApplicationsSent";
 
 export default function ApplicationsSent() {
-  const [applications, setApplications] = useState<ApplicationSentResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    applicationApi
-      .getSentApplications()
-      .then((data) => {
-        setApplications(data);
-      })
-      .catch((error: unknown) => {
-        const errorMessage = extractErrorMessage(
-          error,
-          "Erreur lors du chargement de vos candidatures."
-        );
-        toast.error(errorMessage);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { applications, loading } = useApplicationsSent();
 
   if (loading) {
     return <Loader text="Chargement de vos demandes..." />;

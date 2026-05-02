@@ -1,16 +1,16 @@
-import type { UpdateUserDto, User } from "@projet/shared-types";
+import type { UpdateUserDto } from "@projet/shared-types";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
-import { userApi } from "../../api/userApi";
 import { extractErrorMessage } from "../../api/api";
+import { userApi } from "../../api/userApi";
 import Badge from "../../components/ui/Badge";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+import { useAdminUsers } from "../../hooks/useAdminUsers";
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { users, setUsers, loading } = useAdminUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
@@ -19,22 +19,6 @@ export default function AdminUsers() {
     type: "delete" | "restore";
     id: number;
   } | null>(null);
-
-  // Fetch
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await userApi.getAllUsers();
-        setUsers(data);
-      } catch (error: unknown) {
-        const errorMessage = extractErrorMessage(error, "Impossible de charger les utilisateurs.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
 
   // LOGIQUE DE FILTRAGE
   const filteredUsers = users.filter((user) => {
@@ -61,7 +45,10 @@ export default function AdminUsers() {
         toast.success("Utilisateur restauré");
       }
     } catch (error: unknown) {
-      const errorMessage = extractErrorMessage(error, "Une erreur est survenue lors de l'opération.");
+      const errorMessage = extractErrorMessage(
+        error,
+        "Une erreur est survenue lors de l'opération."
+      );
       toast.error(errorMessage);
     } finally {
       setActionToConfirm(null);

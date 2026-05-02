@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { authApi } from "../api/authApi";
 import { extractErrorMessage } from "../api/api";
+import { authApi } from "../api/authApi";
 
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/ui/Button";
@@ -93,7 +93,7 @@ function LoginForm() {
       navigate("/");
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error, "Erreur serveur. Veuillez réessayer.");
-      
+
       // Gestion spécifique du 401 pour un message plus précis
       if ((error as any)?.response?.status === 401) {
         toast.error("Email ou mot de passe incorrect !", { position: "top-right" });
@@ -161,7 +161,10 @@ function RegisterForm() {
       });
       navigate("/");
     } catch (err: unknown) {
-      const errorMessage = extractErrorMessage(err, "Erreur lors de l'inscription. Veuillez réessayer.");
+      const errorMessage = extractErrorMessage(
+        err,
+        "Erreur lors de l'inscription. Veuillez réessayer."
+      );
 
       // Gestion spécifique du 409
       if ((err as any)?.response?.status === 409) {

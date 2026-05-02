@@ -1,44 +1,13 @@
-import type { AnimalWithRelations } from "@projet/shared-types";
-import axios from "axios";
 import { PawPrint, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
-import { animalApi } from "../api/animalApi";
-import { extractErrorMessage } from "../api/api";
 import AnimalCard from "../components/cards/AnimalCard";
 import Loader from "../components/ui/Loader";
+import { useAnimals } from "../hooks/useAnimals";
 
 const AnimalList = () => {
-  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { animals, loading, error } = useAnimals();
   const [searchTerm, setSearchTerm] = useState("");
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchAnimals = async () => {
-      try {
-        const data = await animalApi.getAllAnimals(controller.signal);
-        setAnimals(data);
-      } catch (err: unknown) {
-        if (axios.isCancel(err)) {
-          return;
-        }
-        setError(true);
-        const errorMessage = extractErrorMessage(err, "Impossible de charger les animaux.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnimals();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   // Filtrage en temps réel
   const filteredAnimals = useMemo(() => {

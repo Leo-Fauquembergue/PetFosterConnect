@@ -22,13 +22,13 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
       <Input
         label="Téléphone"
         type="tel"
-        value={formData.phoneNumber}
+        value={formData.phoneNumber || ""}
         onChange={(e) => onChange("phoneNumber", e.target.value)}
       />
       <Input
         label="Adresse complète"
         type="text"
-        value={formData.address}
+        value={formData.address || ""}
         onChange={(e) => onChange("address", e.target.value)}
       />
 
@@ -36,7 +36,7 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
         <Select
           label="Type de logement"
           value={formData.housingType || "other"}
-          onChange={(e) => onChange("housingType", e.target.value)}
+          onChange={(e) => onChange("housingType", e.target.value as "house" | "apartment" | "other" | null)}
         >
           <option value="house">Maison</option>
           <option value="apartment">Appartement</option>

@@ -12,13 +12,13 @@ export const animalApi = {
     return response.data;
   },
 
-  getLatestAnimals: async (): Promise<AnimalWithRelations[]> => {
-    const response = await api.get<AnimalWithRelations[]>("/animals?limit=3");
+  getLatestAnimals: async (signal?: AbortSignal): Promise<AnimalWithRelations[]> => {
+    const response = await api.get<AnimalWithRelations[]>("/animals?limit=3", { signal });
     return response.data;
   },
 
-  getAnimalById: async (id: number): Promise<AnimalWithRelations> => {
-    const response = await api.get<AnimalWithRelations>(`/animals/${id}`);
+  getAnimalById: async (id: number, signal?: AbortSignal): Promise<AnimalWithRelations> => {
+    const response = await api.get<AnimalWithRelations>(`/animals/${id}`, { signal });
     return response.data;
   },
 
@@ -38,8 +38,8 @@ export const animalApi = {
   },
 
   // --- Méthodes Admin ---
-  getAllAdmin: async (): Promise<Animal[]> => {
-    const response = await api.get<Animal[]>("/animals/admin/all");
+  getAllAdmin: async (signal?: AbortSignal): Promise<Animal[]> => {
+    const response = await api.get<Animal[]>("/animals/admin/all", { signal });
     return response.data;
   },
 

@@ -1,35 +1,16 @@
-import type { AnimalWithRelations, Bookmark } from "@projet/shared-types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { bookmarkApi } from "../../api/bookmarkApi";
 import { useAuth } from "../../auth/AuthContext";
 import Loader from "../../components/ui/Loader";
-
-// Interface locale pour mapper la réponse de l'API des favoris
-export type BookmarkWithAnimal = Bookmark & {
-  animal: AnimalWithRelations;
-};
+import { useBookmarks } from "../../hooks/useBookmarks";
 
 export default function BookmarksPage() {
   const { user } = useAuth();
-  // ⚡ Typage strict
-  const [bookmarks, setBookmarks] = useState<BookmarkWithAnimal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { bookmarks, setBookmarks, loading } = useBookmarks(user?.id);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    bookmarkApi
-      .getMyBookmarks()
-      .then((data) => setBookmarks(data))
-      .catch((err: unknown) => {
-        const errorMessage = extractErrorMessage(err, "Impossible de charger vos favoris ❌");
-        toast.error(errorMessage, { position: "top-right" });
-      })
-      .finally(() => setLoading(false));
-  }, [user]);
 
   const handleToggle = async (animalId: number) => {
     setDeletingId(animalId);

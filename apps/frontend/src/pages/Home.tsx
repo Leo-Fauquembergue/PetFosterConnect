@@ -1,82 +1,12 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
-import type { AnimalWithRelations, ShelterWithRelations } from "@projet/shared-types";
-import { animalApi } from "../api/animalApi";
-import { shelterApi } from "../api/shelterApi";
-import { extractErrorMessage } from "../api/api";
 import AnimalCard from "../components/cards/AnimalCard";
 import ShelterCard from "../components/cards/ShelterCard";
 import Button from "../components/ui/Button";
 import Loader from "../components/ui/Loader";
-
-// TYPES D'AFFICHAGE (UI) - Les seuls dont ce composant a besoin !
-type DisplayAnimal = Pick<AnimalWithRelations, "id" | "name"> & {
-  species: string;
-  age: string;
-  image: string;
-  location: string;
-};
-
-type DisplayShelter = {
-  id: ShelterWithRelations["pfcUserId"];
-  name: ShelterWithRelations["shelterName"];
-  image: string;
-  location: string;
-};
+import { useHomeData } from "../hooks/useHomeData";
 
 export default function Home() {
-  const [animals, setAnimals] = useState<DisplayAnimal[]>([]);
-  const [shelters, setShelters] = useState<DisplayShelter[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Appels parallèles, le typage est géré nativement par les services !
-        const [animalsData, sheltersData] = await Promise.all([
-          animalApi.getLatestAnimals(),
-          shelterApi.getFeaturedShelters(),
-        ]);
-
-        // MAPPING ANIMAUX
-        const recentAnimals = animalsData.map((a) => {
-          let imageUrl = "https://placehold.co/600x400?text=Pas+de+photo";
-          if (Array.isArray(a.photos) && a.photos.length > 0) {
-            imageUrl = a.photos[0] as string;
-          } else if (typeof a.photos === "string") {
-            imageUrl = a.photos;
-          }
-
-          return {
-            id: a.id,
-            name: a.name,
-            species: a.species?.name || "Espèce inconnue",
-            age: a.age || "Âge non renseigné",
-            image: imageUrl,
-            location: a.shelter?.shelterProfile?.shelterName || "Refuge partenaire",
-          };
-        });
-        setAnimals(recentAnimals);
-
-        // MAPPING REFUGES
-        const featuredShelters = sheltersData.map((s) => ({
-          id: s.pfcUserId,
-          name: s.shelterName,
-          image: s.logo || "https://placehold.co/600x400?text=Refuge",
-          location: s.user?.address || "Localisation non renseignée",
-        }));
-        setShelters(featuredShelters);
-      } catch (error: unknown) {
-        const errorMessage = extractErrorMessage(error, "Impossible de charger les dernières annonces.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { animals, shelters, loading } = useHomeData();
 
   if (loading) {
     return (

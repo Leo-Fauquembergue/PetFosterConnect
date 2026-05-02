@@ -1,33 +1,22 @@
 import type {
-  IndividualProfile,
-  ShelterProfile,
   UpdateUserWithIndividualProfileDto,
   UpdateUserWithShelterProfileDto,
-  User,
 } from "@projet/shared-types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { userApi } from "../../api/userApi";
 import { extractErrorMessage } from "../../api/api";
+import { userApi } from "../../api/userApi";
 import UserCard from "../../components/cards/UserCard";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
+import { type UserWithProfiles, useUserProfile } from "../../hooks/useUserProfile";
 
-// ⚡ Typage strict englobant les relations Prisma optionnelles
-type UserWithProfiles = User & {
-  individualProfile?: IndividualProfile | null;
-  shelterProfile?: ShelterProfile | null;
-};
-
-// Typage unifié du state formData englobant les deux DTOs
-type ProfileFormData = Partial<
-  UpdateUserWithIndividualProfileDto & UpdateUserWithShelterProfileDto
->;
-
-// ⚡ Types stricts attendus par les composants enfants pour satisfaire TS2322
-type ExpectedIndividualProps = Required<Omit<UpdateUserWithIndividualProfileDto, "availableTime">> & {
+// ⚡ Types stricts attendus par les composants enfants
+type ExpectedIndividualProps = Required<
+  Omit<UpdateUserWithIndividualProfileDto, "availableTime">
+> & {
   availableTime?: string;
 };
 
@@ -36,54 +25,9 @@ type ExpectedShelterProps = Required<UpdateUserWithShelterProfileDto>;
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [user, setUser] = useState<UserWithProfiles | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, setUser, loading, formData, setFormData } = useUserProfile(id);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [formData, setFormData] = useState<ProfileFormData>({});
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!id) return;
-      try {
-        const data = await userApi.getProfile(Number(id));
-        const userData = data as UserWithProfiles;
-        setUser(userData);
-
-        if (userData.role === "individual") {
-          setFormData({
-            email: userData.email ?? "",
-            phoneNumber: userData.phoneNumber ?? "",
-            address: userData.address ?? "",
-            surface: userData.individualProfile?.surface ?? 0,
-            housingType: userData.individualProfile?.housingType ?? "other",
-            haveGarden: userData.individualProfile?.haveGarden ?? false,
-            haveAnimals: userData.individualProfile?.haveAnimals ?? false,
-            haveChildren: userData.individualProfile?.haveChildren ?? false,
-            availableFamily: userData.individualProfile?.availableFamily ?? false,
-            availableTime: userData.individualProfile?.availableTime ?? "",
-          });
-        } else if (userData.role === "shelter") {
-          setFormData({
-            email: userData.email ?? "",
-            phoneNumber: userData.phoneNumber ?? "",
-            address: userData.address ?? "",
-            shelterName: userData.shelterProfile?.shelterName ?? "",
-            siret: userData.shelterProfile?.siret ?? "",
-            description: userData.shelterProfile?.description ?? "",
-            logo: userData.shelterProfile?.logo ?? "",
-          });
-        }
-        setLoading(false);
-      } catch (err: unknown) {
-        const errorMessage = extractErrorMessage(err, "Impossible de charger le profil.");
-        toast.error(errorMessage);
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [id]);
 
   if (loading) return <p>Chargement...</p>;
   if (!user) return <p>Utilisateur introuvable</p>;

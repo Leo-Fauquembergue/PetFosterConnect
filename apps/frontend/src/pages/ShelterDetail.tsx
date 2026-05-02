@@ -1,33 +1,11 @@
-// ⚡ CORRECTION : Import du type depuis le package partagé
-import type { ShelterDetailResponse } from "@projet/shared-types";
-import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { shelterApi } from "../api/shelterApi";
 import BackBanner from "../components/ui/BackBanner";
 import Loader from "../components/ui/Loader";
+import { useShelter } from "../hooks/useShelter";
 
 const RefugeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-
-  const [shelter, setShelter] = useState<ShelterDetailResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const fetchShelter = async () => {
-      if (!id) return;
-      try {
-        const data = await shelterApi.getShelterById(Number(id));
-        setShelter(data);
-      } catch (_err: unknown) {
-        // ⚡ Fin du any implicite
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchShelter();
-  }, [id]);
+  const { shelter, loading, error } = useShelter(id);
 
   if (loading) return <Loader text="Chargement du refuge..." />;
 

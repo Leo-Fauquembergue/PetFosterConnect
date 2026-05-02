@@ -1,28 +1,13 @@
-import type { ApplicationReceivedResponse } from "@projet/shared-types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { applicationApi } from "../../api/applicationApi";
 import Loader from "../../components/ui/Loader";
+import { useApplicationsReceived } from "../../hooks/useApplicationsReceived";
 
 export default function ApplicationsReceived() {
-  const [applications, setApplications] = useState<ApplicationReceivedResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { applications, setApplications, loading } = useApplicationsReceived();
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const data = await applicationApi.getReceivedApplications();
-        setApplications(data);
-      } catch (_err: unknown) {
-        toast.error("Erreur lors du chargement des demandes reçues.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchApplications();
-  }, []);
 
   const handleStatus = async (
     candidateId: number,
