@@ -1,42 +1,24 @@
 import type { ShelterWithRelations } from "@projet/shared-types";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { extractErrorMessage } from "../api/api";
+import { useCallback } from "react";
 import { shelterApi } from "../api/shelterApi";
+import { useFetch } from "./useFetch";
 
 export const useShelters = () => {
-  const [shelters, setShelters] = useState<ShelterWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const fetcher = useCallback(
+    (signal: AbortSignal) => shelterApi.getAllShelters(signal),
+    []
+  );
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchShelters = async () => {
-      try {
-        setLoading(true);
-        const data = await shelterApi.getAllShelters(controller.signal);
-        setShelters(data);
-        setError(false);
-      } catch (err: unknown) {
-        if (axios.isCancel(err)) {
-          return;
-        }
-        setError(true);
-        const errorMessage = extractErrorMessage(err, "Impossible de charger les refuges.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchShelters();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const {
+    data: shelters,
+    setData: setShelters,
+    loading,
+    error,
+  } = useFetch<ShelterWithRelations[]>(
+    fetcher,
+    "Impossible de charger les refuges.",
+    []
+  );
 
   return { shelters, loading, error, setShelters };
 };

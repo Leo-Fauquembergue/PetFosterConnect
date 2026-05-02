@@ -1,45 +1,24 @@
 import type { ApplicationReceivedResponse } from "@projet/shared-types";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { extractErrorMessage } from "../api/api";
+import { useCallback } from "react";
 import { applicationApi } from "../api/applicationApi";
+import { useFetch } from "./useFetch";
 
 export const useApplicationsReceived = () => {
-  const [applications, setApplications] = useState<ApplicationReceivedResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const fetcher = useCallback(
+    (signal: AbortSignal) => applicationApi.getReceivedApplications(signal),
+    []
+  );
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchApplications = async () => {
-      try {
-        setLoading(true);
-        const data = await applicationApi.getReceivedApplications(controller.signal);
-        setApplications(data);
-        setError(false);
-      } catch (err: unknown) {
-        if (axios.isCancel(err)) {
-          return;
-        }
-        setError(true);
-        const errorMessage = extractErrorMessage(
-          err,
-          "Erreur lors du chargement des demandes reçues."
-        );
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApplications();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const {
+    data: applications,
+    setData: setApplications,
+    loading,
+    error,
+  } = useFetch<ApplicationReceivedResponse[]>(
+    fetcher,
+    "Erreur lors du chargement des demandes reçues.",
+    []
+  );
 
   return { applications, setApplications, loading, error };
 };

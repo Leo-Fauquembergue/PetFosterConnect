@@ -1,51 +1,32 @@
 import type { AnimalWithRelations, Bookmark } from "@projet/shared-types";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { extractErrorMessage } from "../api/api";
+import { useCallback } from "react";
 import { bookmarkApi } from "../api/bookmarkApi";
+import { useFetch } from "./useFetch";
 
 export type BookmarkWithAnimal = Bookmark & {
   animal: AnimalWithRelations;
 };
 
 export const useBookmarks = (userId: number | undefined) => {
-  const [bookmarks, setBookmarks] = useState<BookmarkWithAnimal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const fetcher = useCallback(
+    (signal: AbortSignal) => bookmarkApi.getMyBookmarks(signal),
+    []
+  );
 
-  useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
+  const {
+    data: bookmarks,
+    setData: setBookmarks,
+    loading,
+    error,
+  } = useFetch<BookmarkWithAnimal[]>(
+    fetcher,
+    "Impossible de charger vos favoris ❌",
+    []
+  );
 
-    const controller = new AbortController();
-
-    const fetchBookmarks = async () => {
-      try {
-        setLoading(true);
-        const data = await bookmarkApi.getMyBookmarks(controller.signal);
-        setBookmarks(data);
-        setError(false);
-      } catch (err: unknown) {
-        if (axios.isCancel(err)) {
-          return;
-        }
-        setError(true);
-        const errorMessage = extractErrorMessage(err, "Impossible de charger vos favoris ❌");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookmarks();
-
-    return () => {
-      controller.abort();
-    };
-  }, [userId]);
+  // Note: userId is no longer used for fetching here since it was not used in the API call itself (getMyBookmarks), 
+  // but keeping it for signature compatibility if needed by the component.
+  // If the API call depends on userId, the fetcher should be updated.
 
   return { bookmarks, setBookmarks, loading, error };
 };

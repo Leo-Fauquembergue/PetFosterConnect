@@ -1,47 +1,27 @@
 import type { AnimalWithRelations } from "@projet/shared-types";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { extractErrorMessage } from "../api/api";
+import { useCallback } from "react";
 import { shelterApi } from "../api/shelterApi";
+import { useFetch } from "./useFetch";
 
 export const useShelterAnimals = (shelterId: string | undefined) => {
-  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const fetcher = useCallback(
+    (signal: AbortSignal) => {
+      if (!shelterId) return Promise.reject(new Error("ID requis"));
+      return shelterApi.getShelterAnimals(Number(shelterId), signal);
+    },
+    [shelterId]
+  );
 
-  useEffect(() => {
-    if (!shelterId) {
-      setLoading(false);
-      return;
-    }
+  const {
+    data: animals,
+    setData: setAnimals,
+    loading,
+    error,
+  } = useFetch<AnimalWithRelations[]>(
+    fetcher,
+    "Erreur de chargement des animaux.",
+    []
+  );
 
-    const controller = new AbortController();
-
-    const fetchAnimals = async () => {
-      try {
-        setLoading(true);
-        const data = await shelterApi.getShelterAnimals(Number(shelterId), controller.signal);
-        setAnimals(data);
-        setError(false);
-      } catch (err: unknown) {
-        if (axios.isCancel(err)) {
-          return;
-        }
-        setError(true);
-        const errorMessage = extractErrorMessage(err, "Erreur de chargement des animaux.");
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnimals();
-
-    return () => {
-      controller.abort();
-    };
-  }, [shelterId]);
-
-  return { animals, setAnimals, loading, error };
+  return { animals, setAnimals, loading, error: !!error };
 };
