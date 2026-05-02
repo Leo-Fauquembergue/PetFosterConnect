@@ -10,8 +10,8 @@ export class BookmarksService {
       where: { id: animalId },
     });
 
-    if (!animal) {
-      throw new NotFoundException("Cet animal n'existe pas.");
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException("Cet animal n'existe pas ou a été supprimé.");
     }
 
     const existingBookmark = await this.prisma.bookmark.findUnique({
@@ -48,7 +48,11 @@ export class BookmarksService {
 
   async findAllByUser(userId: number) {
     return this.prisma.bookmark.findMany({
-      where: { pfcUserId: userId },
+      where: { 
+        pfcUserId: userId,
+        // 🛡️ CORRECTION : Exclut les bookmarks d'animaux ou refuges supprimés
+        animal: { deletedAt: null, shelter: { deletedAt: null } },
+      },
       include: {
         animal: {
           include: { species: true },

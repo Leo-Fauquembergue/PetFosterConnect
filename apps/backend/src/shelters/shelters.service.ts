@@ -30,7 +30,8 @@ export class SheltersService {
             deletedAt: true,
             // 🛡️ CORRECTION SÉCURITÉ : Bombe Mémoire (OOM) désamorcée.
             // On remplace le chargement de toute la table Animal par un compteur.
-            _count: { select: { animals: true } },
+            // 🛡️ CORRECTION : On ne compte que les animaux non supprimés
+            _count: { select: { animals: { where: { deletedAt: null } } } },
           },
         },
       },
@@ -49,6 +50,7 @@ export class SheltersService {
             address: true,
             deletedAt: true,
             animals: {
+              where: { deletedAt: null }, // 🛡️ CORRECTION : Exclut les animaux supprimés
               include: {
                 species: true,
               },

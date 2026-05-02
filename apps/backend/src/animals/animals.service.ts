@@ -46,6 +46,8 @@ export class AnimalsService {
       where: {
         // Si includeDeleted est false, on ne veut que deletedAt: null
         deletedAt: includeDeleted ? undefined : null,
+        // Exclut les animaux appartenant à un refuge supprimé (soft delete)
+        shelter: includeDeleted ? undefined : { deletedAt: null },
       },
       take: limit, // On applique la limite si elle est fournie
       orderBy: {
