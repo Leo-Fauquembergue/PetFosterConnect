@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
@@ -8,6 +8,7 @@ import { AppService } from "./app.service";
 import { ApplicationsModule } from "./applications/applications.module";
 import { AuthModule } from "./auth/auth.module";
 import { BookmarksModule } from "./bookmarks/bookmarks.module";
+import { CsrfMiddleware } from "./common/middlewares/csrf.middleware";
 import { EmailsModule } from "./emails/emails.module";
 import { HealthController } from "./health/health.controller";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -53,4 +54,8 @@ import { UsersModule } from "./users/users.module";
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CsrfMiddleware).forRoutes("*");
+  }
+}

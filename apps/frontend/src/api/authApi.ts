@@ -2,6 +2,12 @@ import type { LoginDto, RegisterDto, UserWithProfiles } from "@projet/shared-typ
 import api from "./api";
 
 export const authApi = {
+  getCsrfToken: async () => {
+    const response = await api.get<{ csrfToken: string }>("/auth/csrf");
+    api.defaults.headers.common["x-csrf-token"] = response.data.csrfToken;
+    return response.data.csrfToken;
+  },
+
   login: async (credentials: LoginDto) => {
     const response = await api.post<{ access_token: string; user: UserWithProfiles }>(
       "/auth/login",

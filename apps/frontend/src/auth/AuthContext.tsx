@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        await authApi.getCsrfToken(); // Récupère et configure le jeton CSRF
         const data = await authApi.getMe();
         setUser(data);
         setIsLoggedIn(true);
