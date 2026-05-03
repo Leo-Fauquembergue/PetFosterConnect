@@ -13,6 +13,7 @@ export const AnimalWithRelationsSchema = AnimalSchema.extend({
   shelter: z
     .object({
       id: z.number().int().positive(),
+      address: z.string().nullable().optional(),
       shelterProfile: z
         .object({
           shelterName: z.string(),

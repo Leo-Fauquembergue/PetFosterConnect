@@ -1,44 +1,14 @@
-import type { AnimalWithRelations } from "@projet/shared-types";
 import { Link } from "react-router-dom";
+import type { UIAnimal } from "../../api/mappers/animalMapper";
 import Badge from "../ui/Badge";
 
-// On définit un type qui accepte soit AnimalWithRelations, soit les props aplaties de HomeAnimalCard
-// ⚡ CORRECTION : On utilise Omit pour éviter le conflit de type sur 'species'
-type AnimalCardProps = Omit<Partial<AnimalWithRelations>, "species"> & {
+interface AnimalCardProps {
+  animal: UIAnimal;
   variant?: "default" | "home";
-  image?: string;
-  location?: string;
-  // Si on passe species en string (cas de HomeAnimalCard)
-  species?: AnimalWithRelations["species"] | string;
-};
+}
 
-const AnimalCard = ({
-  id,
-  name,
-  photos,
-  age,
-  species,
-  shelter,
-  variant = "default",
-  image,
-  location,
-}: AnimalCardProps) => {
-  // Gestion de la photo (priorité à 'image' si passée, puis 'photos')
-  const mainPhoto =
-    image ||
-    (Array.isArray(photos) && photos.length > 0
-      ? (photos[0] as string)
-      : "https://via.placeholder.com/400x300?text=Pas+de+photo");
-
-  // Gestion de l'espèce (peut être un objet ou un string)
-  const speciesName = typeof species === "string" ? species : species?.name || "Inconnue";
-
-  // Gestion du refuge/localisation
-  const shelterName = shelter?.shelterProfile?.shelterName;
-  const displayLocation =
-    location ||
-    (shelterName === "DELETED" ? "Ancien refuge" : shelterName) ||
-    "Localisation non précisée";
+const AnimalCard = ({ animal, variant = "default" }: AnimalCardProps) => {
+  const { id, name, age, speciesName, shelterName, mainPhoto } = animal;
 
   if (variant === "home") {
     return (
@@ -66,8 +36,8 @@ const AnimalCard = ({
             {name}
           </h3>
           <div className="text-sm text-gray-500 space-y-1 mb-4">
-            <p>🎂 {age || "Âge non précisé"}</p>
-            <p>📍 {displayLocation}</p>
+            <p>🎂 {age}</p>
+            <p>📍 {shelterName}</p>
           </div>
           <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
             <span className="text-primary font-semibold text-sm group-hover:underline decoration-2 underline-offset-4">
@@ -104,10 +74,10 @@ const AnimalCard = ({
             <span className="font-medium text-gray-800">Espèce :</span> {speciesName}
           </p>
           <p className="text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Âge :</span> {age || "Non précisé"}
+            <span className="font-medium text-gray-800">Âge :</span> {age}
           </p>
           <p className="text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Refuge :</span> {displayLocation}
+            <span className="font-medium text-gray-800">Refuge :</span> {shelterName}
           </p>
         </div>
         <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">

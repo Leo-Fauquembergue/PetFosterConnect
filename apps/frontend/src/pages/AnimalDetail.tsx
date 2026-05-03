@@ -1,3 +1,4 @@
+import { UserRole } from "@projet/shared-types";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { AlertCircle, Heart } from "lucide-react";
@@ -19,7 +20,7 @@ import Loader from "../components/ui/Loader"; // ⚡ FIX : Import correct du Loa
 import { useAnimal } from "../hooks/useAnimal";
 
 export default function AnimalDetail() {
-  const { userId, id } = useParams<{ userId: string; id: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -147,9 +148,7 @@ export default function AnimalDetail() {
 
   const photoArray = Array.isArray(animal.photos) ? (animal.photos as string[]) : [];
   const isShelterOwner =
-    user?.role === "shelter" &&
-    Number(user?.id) === Number(userId) &&
-    (animal.shelter?.pfcUserId ? Number(animal.shelter.pfcUserId) === Number(userId) : true);
+    user?.role === UserRole.shelter && Number(user?.id) === Number(animal.shelter?.id);
 
   return (
     <div className="bg-bgapp font-openSans text-gray-800">
@@ -196,7 +195,7 @@ export default function AnimalDetail() {
             <div className="flex justify-between items-start mb-2 w-full">
               <div>
                 <h1 className="text-4xl font-bold font-montserrat text-black">{animal.name}</h1>
-                <p className="text-lg text-gray-600">{animal.species?.name}</p>
+                <p className="text-lg text-gray-600">{animal.speciesName}</p>
               </div>
 
               {/* ⚡ AJOUT : Remplacement du vide par une indication claire de l'état du badge */}
@@ -263,15 +262,11 @@ export default function AnimalDetail() {
 
             <div className="mt-6 mb-8 w-full">
               <h2 className="text-xl font-bold text-success mb-1 font-montserrat">Proposé par</h2>
-              <p className="text-sm font-semibold text-gray-900">
-                {animal.shelter?.shelterProfile?.shelterName === "DELETED"
-                  ? "Ancien refuge"
-                  : animal.shelter?.shelterProfile?.shelterName || "Refuge partenaire"}
-              </p>
-              {animal.shelter?.shelterProfile?.shelterName !== "DELETED" && (
+              <p className="text-sm font-semibold text-gray-900">{animal.shelterName}</p>
+              {animal.shelterName !== "Ancien refuge" && (
                 <p className="text-xs text-gray-500">
                   <span className="font-medium">Adresse :</span>{" "}
-                  {animal.shelter?.address || "Non communiquée"}
+                  {animal.raw.shelter?.address || "Non communiquée"}
                 </p>
               )}
             </div>

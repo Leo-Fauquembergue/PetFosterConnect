@@ -1,5 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type LoginDto, LoginSchema, type RegisterDto, RegisterSchema } from "@projet/shared-types";
+import {
+  type LoginDto,
+  LoginSchema,
+  type RegisterDto,
+  RegisterSchema,
+  UserRole,
+} from "@projet/shared-types";
 import axios from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -182,7 +188,7 @@ function RegisterForm() {
       />
 
       {/* Champs conditionnels */}
-      {selectedRole === "shelter" && (
+      {selectedRole === UserRole.shelter && (
         <>
           <Input label="Siret" type="text" {...register("siret")} error={errors.siret?.message} />
           <Input
@@ -201,7 +207,7 @@ function RegisterForm() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                value="individual"
+                value={UserRole.individual}
                 {...register("role")}
                 className="accent-primary"
               />
@@ -210,7 +216,7 @@ function RegisterForm() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                value="shelter"
+                value={UserRole.shelter}
                 {...register("role")}
                 className="accent-primary"
               />

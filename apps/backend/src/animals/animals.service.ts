@@ -65,6 +65,7 @@ export class AnimalsService {
             id: true,
             email: true,
             phoneNumber: true,
+            address: true,
             shelterProfile: true, // Sélection explicite et sûre
           },
         },
@@ -82,6 +83,7 @@ export class AnimalsService {
             id: true,
             email: true,
             phoneNumber: true,
+            address: true,
             shelterProfile: true,
           },
         },

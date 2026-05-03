@@ -74,7 +74,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {animals.map((animal) => (
                 <div key={animal.id} className="w-full max-w-sm">
-                  <AnimalCard {...animal} variant="home" />
+                  <AnimalCard animal={animal} variant="home" />
                 </div>
               ))}
             </div>
@@ -114,7 +114,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {shelters.map((shelter) => (
                 <div key={shelter.id} className="w-full max-w-sm">
-                  <ShelterCard {...shelter} variant="home" />
+                  <ShelterCard shelter={shelter} variant="home" />
                 </div>
               ))}
             </div>

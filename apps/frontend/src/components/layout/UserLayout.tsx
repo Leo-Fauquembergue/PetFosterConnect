@@ -1,3 +1,4 @@
+import { UserRole } from "@projet/shared-types";
 import { Home, LogOut, PawPrint, UserCircle } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
@@ -24,7 +25,7 @@ export default function UserLayout() {
               Mon Profil
             </NavLink>
 
-            {user?.role === "shelter" && (
+            {user?.role === UserRole.shelter && (
               <NavLink
                 to={`/utilisateur/${user?.id}/animaux`}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"

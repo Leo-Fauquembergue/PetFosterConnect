@@ -51,8 +51,8 @@ const SheltersPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {shelters.map((shelter) => (
-              <div key={shelter.pfcUserId} className="w-full max-w-sm">
-                <ShelterCard {...shelter} />
+              <div key={shelter.id} className="w-full max-w-sm">
+                <ShelterCard shelter={shelter} />
               </div>
             ))}
           </div>

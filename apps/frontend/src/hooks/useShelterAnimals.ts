@@ -1,13 +1,14 @@
-import type { AnimalWithRelations } from "@projet/shared-types";
 import { useCallback } from "react";
+import { mapAnimalsToUI, type UIAnimal } from "../api/mappers/animalMapper";
 import { shelterApi } from "../api/shelterApi";
 import { useFetch } from "./useFetch";
 
 export const useShelterAnimals = (shelterId: string | undefined) => {
   const fetcher = useCallback(
-    (signal: AbortSignal) => {
+    async (signal: AbortSignal) => {
       if (!shelterId) return Promise.reject(new Error("ID requis"));
-      return shelterApi.getShelterAnimals(Number(shelterId), signal);
+      const data = await shelterApi.getShelterAnimals(Number(shelterId), signal);
+      return mapAnimalsToUI(data);
     },
     [shelterId]
   );
@@ -17,7 +18,7 @@ export const useShelterAnimals = (shelterId: string | undefined) => {
     setData: setAnimals,
     loading,
     error,
-  } = useFetch<AnimalWithRelations[]>(fetcher, "Erreur de chargement des animaux.", []);
+  } = useFetch<UIAnimal[]>(fetcher, "Erreur de chargement des animaux.", []);
 
   return { animals, setAnimals, loading, error };
 };

@@ -23,14 +23,12 @@ const RefugeDetailPage = () => {
     <div className="bg-bgapp font-openSans text-gray-800">
       <BackBanner to="/refuges" />
       <div className="p-8 max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 font-montserrat">
-          {shelter.shelterName}
-        </h1>
+        <h1 className="text-3xl font-bold text-center mb-8 font-montserrat">{shelter.name}</h1>
 
         <div className="border-2 border-secondary rounded-xl p-6 shadow-md flex flex-col md:flex-row gap-6 bg-bgapp font-openSans text-gray-800">
           <img
-            src={shelter.logo ?? "https://placehold.co/150x150?text=Pas+de+logo"}
-            alt={`${shelter.shelterName} logo`}
+            src={shelter.logo}
+            alt={`${shelter.name} logo`}
             className="w-32 h-32 rounded-full object-cover bg-gray-200"
           />
 
@@ -47,14 +45,12 @@ const RefugeDetailPage = () => {
 
         {/* Boutons navigation */}
         <div className="mt-6 flex gap-4 justify-center">
-          {shelter?.pfcUserId && (
-            <Link
-              to={`/refuges/${shelter.pfcUserId}/animaux`}
-              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-md transition"
-            >
-              Voir les animaux du refuge
-            </Link>
-          )}
+          <Link
+            to={`/refuges/${shelter.id}/animaux`}
+            className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-md transition"
+          >
+            Voir les animaux du refuge
+          </Link>
         </div>
       </div>
     </div>

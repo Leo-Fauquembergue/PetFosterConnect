@@ -291,11 +291,11 @@ export class ApplicationsService {
       (async () => {
         if (!application.user?.email) return;
         try {
-          const firstname =
-            (application.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
+          // 🛡️ FIX : firstname n'existe pas dans le schéma actuel, on utilise l'email ou un fallback
+          const recipientName = application.user.email.split("@")[0] || "Candidat";
           await this.emailsService.sendAcceptanceEmail(
             application.user.email,
-            firstname,
+            recipientName,
             application.animal.name
           );
         } catch (error: unknown) {
@@ -307,11 +307,11 @@ export class ApplicationsService {
       ...pendingApplications.map(async (rejectedApp) => {
         if (!rejectedApp.user?.email) return;
         try {
-          const firstname =
-            (rejectedApp.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
+          // 🛡️ FIX : firstname n'existe pas dans le schéma actuel
+          const recipientName = rejectedApp.user.email.split("@")[0] || "Candidat";
           await this.emailsService.sendRejectionEmail(
             rejectedApp.user.email,
-            firstname,
+            recipientName,
             rejectedApp.animal.name
           );
         } catch (error: unknown) {
@@ -346,11 +346,11 @@ export class ApplicationsService {
 
     try {
       if (application.user?.email) {
-        const firstname =
-          (application.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
+        // 🛡️ FIX : firstname n'existe pas dans le schéma actuel
+        const recipientName = application.user.email.split("@")[0] || "Candidat";
         await this.emailsService.sendRejectionEmail(
           application.user.email,
-          firstname,
+          recipientName,
           application.animal.name
         );
       }

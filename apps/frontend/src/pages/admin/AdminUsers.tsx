@@ -1,4 +1,4 @@
-import type { UpdateUserDto } from "@projet/shared-types";
+import { type UpdateUserDto, UserRole } from "@projet/shared-types";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -89,9 +89,9 @@ export default function AdminUsers() {
           onChange={(e) => setRoleFilter(e.target.value)}
         >
           <option value="all">Tous les rôles</option>
-          <option value="individual">Particuliers</option>
-          <option value="shelter">Refuges</option>
-          <option value="admin">Admins</option>
+          <option value={UserRole.individual}>Particuliers</option>
+          <option value={UserRole.shelter}>Refuges</option>
+          <option value={UserRole.admin}>Admins</option>
         </select>
       </div>
 
@@ -118,9 +118,9 @@ export default function AdminUsers() {
                     <Badge
                       label={user.role}
                       className={
-                        user.role === "admin"
+                        user.role === UserRole.admin
                           ? "text-admin"
-                          : user.role === "shelter"
+                          : user.role === UserRole.shelter
                             ? "text-primary"
                             : "text-info"
                       }

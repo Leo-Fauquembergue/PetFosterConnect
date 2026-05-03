@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { animalApi } from "../api/animalApi";
 import { extractErrorMessage } from "../api/api";
+import { mapToUIAnimal, type UIAnimal } from "../api/mappers/animalMapper";
 
 export const useAnimal = (id: string | undefined) => {
-  const [animal, setAnimal] = useState<AnimalDetailResponse | null>(null);
+  const [animal, setAnimal] = useState<UIAnimal | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -25,13 +26,15 @@ export const useAnimal = (id: string | undefined) => {
           controller.signal
         )) as AnimalDetailResponse;
 
-        setAnimal(data);
+        const mappedAnimal = mapToUIAnimal(data as unknown as Parameters<typeof mapToUIAnimal>[0]);
+        setAnimal(mappedAnimal);
+
         if (data.isBookmarked !== undefined) {
           setIsFavorite(data.isBookmarked);
         }
 
-        if (data.photos && data.photos.length > 0) {
-          setSelectedPhoto(data.photos[0]);
+        if (mappedAnimal.photos && mappedAnimal.photos.length > 0) {
+          setSelectedPhoto(mappedAnimal.photos[0]);
         }
         setError(null);
       } catch (err: unknown) {

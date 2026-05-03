@@ -1,7 +1,8 @@
-import type {
-  UpdateUserWithIndividualProfileDto,
-  UpdateUserWithShelterProfileDto,
-  UserWithProfiles,
+import {
+  type UpdateUserWithIndividualProfileDto,
+  type UpdateUserWithShelterProfileDto,
+  UserRole,
+  type UserWithProfiles,
 } from "@projet/shared-types";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
@@ -45,7 +46,7 @@ export default function UserProfilePage() {
     try {
       let updatedUser: UserWithProfiles;
 
-      if (user.role === "individual") {
+      if (user.role === UserRole.individual) {
         updatedUser = (await userApi.updateIndividualProfile(
           user.id as number,
           formData as UpdateUserWithIndividualProfileDto
@@ -85,7 +86,7 @@ export default function UserProfilePage() {
           </>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {user.role === "individual" ? (
+            {user.role === UserRole.individual ? (
               <IndividualProfileForm
                 formData={formData as ExpectedIndividualProps}
                 onChange={(field, value) => handleChange(field, value)}

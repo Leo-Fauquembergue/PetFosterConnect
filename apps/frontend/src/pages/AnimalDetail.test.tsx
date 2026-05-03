@@ -1,3 +1,4 @@
+import { UserRole } from "@projet/shared-types";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -27,7 +28,7 @@ vi.mock("react-toastify", () => ({
 // Mock du contexte d'authentification pour forcer un utilisateur connecté ("individual")
 vi.mock("../auth/AuthContext", () => ({
   useAuth: () => ({
-    user: { id: 1, email: "adoptant@test.com", role: "individual" },
+    user: { id: 1, email: "adoptant@test.com", role: UserRole.individual },
     isLoading: false,
   }),
 }));

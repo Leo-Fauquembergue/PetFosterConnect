@@ -1,13 +1,14 @@
-import type { ShelterDetailResponse } from "@projet/shared-types";
 import { useCallback } from "react";
+import { mapToUIShelter, type UIShelter } from "../api/mappers/shelterMapper";
 import { shelterApi } from "../api/shelterApi";
 import { useFetch } from "./useFetch";
 
 export const useShelter = (id: string | undefined) => {
   const fetcher = useCallback(
-    (signal: AbortSignal) => {
+    async (signal: AbortSignal) => {
       if (!id) return Promise.reject(new Error("ID requis"));
-      return shelterApi.getShelterById(Number(id), signal);
+      const data = await shelterApi.getShelterById(Number(id), signal);
+      return mapToUIShelter(data);
     },
     [id]
   );
@@ -17,7 +18,7 @@ export const useShelter = (id: string | undefined) => {
     setData: setShelter,
     loading,
     error,
-  } = useFetch<ShelterDetailResponse | null>(fetcher, "Impossible de charger le refuge.", null);
+  } = useFetch<UIShelter | null>(fetcher, "Impossible de charger le refuge.", null);
 
   return { shelter, loading, error, setShelter };
 };
