@@ -6,9 +6,10 @@ import Textarea from "../ui/Textarea";
 type Props = {
   formData: Required<UpdateUserWithShelterProfileDto>;
   onChange: <K extends keyof Props["formData"]>(field: K, value: Props["formData"][K]) => void;
+  siret?: string;
 };
 
-export default function ShelterProfileForm({ formData, onChange }: Props) {
+export default function ShelterProfileForm({ formData, onChange, siret }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
@@ -53,10 +54,12 @@ export default function ShelterProfileForm({ formData, onChange }: Props) {
       />
 
       <Input
-        label="SIRET"
+        label="SIRET (Non modifiable)"
         type="text"
-        value={formData.siret}
-        onChange={(e) => onChange("siret", e.target.value)}
+        value={siret || ""}
+        readOnly
+        disabled
+        className="bg-gray-100 cursor-not-allowed"
       />
 
       <Textarea

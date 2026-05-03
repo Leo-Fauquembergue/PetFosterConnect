@@ -52,7 +52,6 @@ export const useUserProfile = (userId: string | undefined) => {
             phoneNumber: userData.phoneNumber ?? "",
             address: userData.address ?? "",
             shelterName: userData.shelterProfile?.shelterName ?? "",
-            siret: userData.shelterProfile?.siret ?? "",
             description: userData.shelterProfile?.description ?? "",
             logo: userData.shelterProfile?.logo ?? "",
           });

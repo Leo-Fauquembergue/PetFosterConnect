@@ -268,13 +268,13 @@ export class UsersService {
           shelterProfile: {
             upsert: {
               update: {
-                siret: dto.siret ?? user.shelterProfile?.siret,
+                siret: user.shelterProfile?.siret,
                 shelterName: dto.shelterName ?? user.shelterProfile?.shelterName,
                 description: dto.description ?? user.shelterProfile?.description ?? null,
                 logo: dto.logo ?? user.shelterProfile?.logo ?? null,
               },
               create: {
-                siret: dto.siret ?? "00000000000000",
+                siret: "00000000000000",
                 shelterName: dto.shelterName ?? "Nom inconnu",
                 description: dto.description ?? null,
                 logo: dto.logo ?? null,

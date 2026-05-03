@@ -94,6 +94,7 @@ export default function UserProfilePage() {
               <ShelterProfileForm
                 formData={formData as ExpectedShelterProps}
                 onChange={(field, value) => handleChange(field, value)}
+                siret={user.shelterProfile?.siret}
               />
             )}
             <div className="flex justify-between gap-4">
