@@ -25,7 +25,12 @@ export const UserSchema = z
         error: "Le mot de passe doit contenir au moins un caractère spécial",
       }),
     role: UserRoleEnum,
-    phoneNumber: z.string().max(20).nullable().optional(),
+    phoneNumber: z
+      .string()
+      .max(20)
+      .regex(/^[0-9]*$/, { message: "Le numéro de téléphone ne doit contenir que des chiffres" })
+      .nullable()
+      .optional(),
     address: z.string().max(255).nullable().optional(),
     createdAt: z.date().optional(),
     updatedAt: z.date().nullable().optional(),

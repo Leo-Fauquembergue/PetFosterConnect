@@ -155,7 +155,7 @@ describe("AnimalsService", () => {
       await expect(service.remove(1)).rejects.toThrow(
         "Impossible de supprimer un animal déjà adopté ou en famille d'accueil afin de conserver l'historique."
       );
-      
+
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
       expect(mockPrisma.animal.update).not.toHaveBeenCalled();
     });

@@ -1,9 +1,11 @@
-import { UserRole } from "@projet/shared-types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type CreateApplicationDto, CreateApplicationSchema, UserRole } from "@projet/shared-types";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { AlertCircle, Heart } from "lucide-react";
 import QRCode from "qrcode";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../api/api";
@@ -16,7 +18,7 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
-import Loader from "../components/ui/Loader"; // ⚡ FIX : Import correct du Loader
+import Loader from "../components/ui/Loader";
 import { useAnimal } from "../hooks/useAnimal";
 
 export default function AnimalDetail() {
@@ -28,51 +30,39 @@ export default function AnimalDetail() {
   const { animal, loading, error, isFavorite, setIsFavorite, selectedPhoto, setSelectedPhoto } =
     useAnimal(id);
 
-  const [adoptMessage, setAdoptMessage] = useState("");
-  const [fosterMessage, setFosterMessage] = useState("");
+  // Formulaire d'adoption
+  const adoptForm = useForm<CreateApplicationDto>({
+    resolver: zodResolver(CreateApplicationSchema),
+    defaultValues: {
+      animalId: Number(id),
+      applicationType: "adoption",
+      message: "",
+    },
+  });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Formulaire de FA (Foster)
+  const fosterForm = useForm<CreateApplicationDto>({
+    resolver: zodResolver(CreateApplicationSchema),
+    defaultValues: {
+      animalId: Number(id),
+      applicationType: "foster",
+      message: "",
+    },
+  });
 
-  const handleError = (err: unknown) => {
-    const errorMessage = extractErrorMessage(err, "Erreur lors de la demande");
-    toast.error(errorMessage);
-  };
-
-  const handleAdopt = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onApplicationSubmit = async (data: CreateApplicationDto) => {
     if (!user) return navigate("/connexion");
-    setIsSubmitting(true);
     try {
-      await applicationApi.createApplication({
-        animalId: Number(id),
-        applicationType: "adoption",
-        message: adoptMessage,
-      });
+      await applicationApi.createApplication(data);
       setHasApplied(true);
-      toast.success("Demande d'adoption envoyée !");
+      toast.success(
+        data.applicationType === "adoption"
+          ? "Demande d'adoption envoyée !"
+          : "Demande de famille d'accueil envoyée !"
+      );
     } catch (err) {
-      handleError(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleFoster = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return navigate("/connexion");
-    setIsSubmitting(true);
-    try {
-      await applicationApi.createApplication({
-        animalId: Number(id),
-        applicationType: "foster",
-        message: fosterMessage,
-      });
-      setHasApplied(true);
-      toast.success("Demande de famille d'accueil envoyée !");
-    } catch (err) {
-      handleError(err);
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage = extractErrorMessage(err, "Erreur lors de la demande");
+      toast.error(errorMessage);
     }
   };
 
@@ -191,7 +181,6 @@ export default function AnimalDetail() {
                 <p className="text-lg text-gray-600">{animal.speciesName}</p>
               </div>
 
-              {/* ⚡ AJOUT : Remplacement du vide par une indication claire de l'état du badge */}
               {animal.animalStatus === "available" ? (
                 <Badge label="Disponible" variant="success" />
               ) : animal.animalStatus === "adopted" ? (
@@ -279,35 +268,51 @@ export default function AnimalDetail() {
                 </p>
               ) : animal.animalStatus === "available" ? (
                 <>
-                  <form onSubmit={handleAdopt} className="flex items-start gap-4">
+                  <form
+                    onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
+                    className="flex items-start gap-4"
+                  >
                     <div className="flex-grow">
                       <Input
                         label="Message d'adoption"
                         placeholder="Pourquoi souhaitez-vous adopter ?"
                         className="bg-white"
-                        value={adoptMessage}
-                        onChange={(e) => setAdoptMessage(e.target.value)}
+                        {...adoptForm.register("message")}
+                        error={adoptForm.formState.errors.message?.message}
                       />
                     </div>
                     <div className="w-40 mt-[26px]">
-                      <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Envoi..." : "Adopter"}
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        type="submit"
+                        disabled={adoptForm.formState.isSubmitting}
+                      >
+                        {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
                       </Button>
                     </div>
                   </form>
-                  <form onSubmit={handleFoster} className="flex items-start gap-4">
+                  <form
+                    onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
+                    className="flex items-start gap-4"
+                  >
                     <div className="flex-grow">
                       <Input
                         label="Message pour l'accueil"
                         placeholder="Vos disponibilités et motivations..."
                         className="bg-white"
-                        value={fosterMessage}
-                        onChange={(e) => setFosterMessage(e.target.value)}
+                        {...fosterForm.register("message")}
+                        error={fosterForm.formState.errors.message?.message}
                       />
                     </div>
                     <div className="w-40 mt-[26px]">
-                      <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Envoi..." : "Accueillir"}
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        type="submit"
+                        disabled={fosterForm.formState.isSubmitting}
+                      >
+                        {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
                       </Button>
                     </div>
                   </form>

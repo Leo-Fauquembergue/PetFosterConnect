@@ -1,15 +1,19 @@
-import type { UpdateUserWithShelterProfileDto } from "@projet/shared-types";
+import { type UpdateUserWithShelterProfileDto } from "@projet/shared-types";
+import { useFormContext } from "react-hook-form";
 import { CiSettings } from "react-icons/ci";
 import Input from "../ui/Input";
 import Textarea from "../ui/Textarea";
 
 type Props = {
-  formData: Required<UpdateUserWithShelterProfileDto>;
-  onChange: <K extends keyof Props["formData"]>(field: K, value: Props["formData"][K]) => void;
   siret?: string;
 };
 
-export default function ShelterProfileForm({ formData, onChange, siret }: Props) {
+export default function ShelterProfileForm({ siret }: Props) {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<UpdateUserWithShelterProfileDto>();
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
@@ -20,37 +24,38 @@ export default function ShelterProfileForm({ formData, onChange, siret }: Props)
       <Input
         label="URL du Logo"
         type="text"
-        value={formData.logo || ""}
-        onChange={(e) => onChange("logo", e.target.value)}
+        {...register("logo")}
         placeholder="https://exemple.com/mon-logo.png"
+        error={errors.logo?.message}
       />
 
       <Input
         label="Email de contact"
         type="email"
-        value={formData.email}
-        onChange={(e) => onChange("email", e.target.value)}
+        {...register("email")}
+        error={errors.email?.message}
       />
 
       <Input
         label="Téléphone"
         type="tel"
-        value={formData.phoneNumber || ""}
-        onChange={(e) => onChange("phoneNumber", e.target.value)}
+        onlyDigits
+        {...register("phoneNumber")}
+        error={errors.phoneNumber?.message}
       />
 
       <Input
         label="Adresse complète"
         type="text"
-        value={formData.address || ""}
-        onChange={(e) => onChange("address", e.target.value)}
+        {...register("address")}
+        error={errors.address?.message}
       />
 
       <Input
         label="Nom du refuge"
         type="text"
-        value={formData.shelterName}
-        onChange={(e) => onChange("shelterName", e.target.value)}
+        {...register("shelterName")}
+        error={errors.shelterName?.message}
       />
 
       <Input
@@ -64,9 +69,9 @@ export default function ShelterProfileForm({ formData, onChange, siret }: Props)
 
       <Textarea
         label="Description / Présentation"
-        value={formData.description || ""}
-        onChange={(e) => onChange("description", e.target.value)}
+        {...register("description")}
         rows={4}
+        error={errors.description?.message}
       />
     </div>
   );

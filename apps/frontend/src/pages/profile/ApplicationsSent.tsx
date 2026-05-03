@@ -15,7 +15,11 @@ export default function ApplicationsSent() {
     setCancellingId(animalId);
     try {
       await applicationApi.cancelOwnApplication(animalId);
-      setApplications((prev) => prev.filter((app) => app.animalId !== animalId));
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.animalId === animalId ? { ...app, applicationStatus: "cancelled" } : app
+        )
+      );
       toast.success("Votre demande a été annulée avec succès.");
     } catch (_error: unknown) {
       toast.error("Erreur lors de l'annulation de la demande.");
@@ -78,12 +82,15 @@ export default function ApplicationsSent() {
                         ? "bg-warning/10 text-warning"
                         : app.applicationStatus === "approved"
                           ? "bg-success/10 text-success"
-                          : "bg-error/10 text-error"
+                          : app.applicationStatus === "cancelled"
+                            ? "bg-gray-100 text-gray-500"
+                            : "bg-error/10 text-error"
                     } `}
                   >
                     {app.applicationStatus === "pending" && "En attente"}
                     {app.applicationStatus === "approved" && "Acceptée"}
                     {app.applicationStatus === "rejected" && "Refusée"}
+                    {app.applicationStatus === "cancelled" && "Annulée"}
                   </span>
                 </div>
 
@@ -98,14 +105,16 @@ export default function ApplicationsSent() {
 
               {/* Actions */}
               <div className="flex flex-col justify-center gap-2 min-w-[150px]">
-                <Button
-                  variant="danger"
-                  onClick={() => setAnimalToCancel(app.animalId)}
-                  disabled={cancellingId === app.animalId}
-                  className="w-full"
-                >
-                  {cancellingId === app.animalId ? "Annulation..." : "Annuler la demande"}
-                </Button>
+                {app.applicationStatus === "pending" && (
+                  <Button
+                    variant="danger"
+                    onClick={() => setAnimalToCancel(app.animalId)}
+                    disabled={cancellingId === app.animalId}
+                    className="w-full"
+                  >
+                    {cancellingId === app.animalId ? "Annulation..." : "Annuler la demande"}
+                  </Button>
+                )}
               </div>
             </div>
           );

@@ -76,18 +76,16 @@ export default function AuthPage() {
 function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginDto>({
     resolver: zodResolver(LoginSchema),
   });
 
   const onSubmit = async (data: LoginDto) => {
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
       await login(data);
       toast.success("Connexion réussie !", {
@@ -104,8 +102,6 @@ function LoginForm() {
       } else {
         toast.error(errorMessage, { position: "top-right" });
       }
-    } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -141,7 +137,7 @@ function RegisterForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     watch,
   } = useForm<RegisterDto>({
     resolver: zodResolver(RegisterSchema),
@@ -150,10 +146,8 @@ function RegisterForm() {
   const navigate = useNavigate();
   const { register: registerUser } = useAuth();
   const selectedRole = watch("role");
-  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
   const onSubmit = async (data: RegisterDto) => {
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
       await registerUser(data);
       toast.success("Compte créé avec succès 🎉", {
@@ -173,8 +167,6 @@ function RegisterForm() {
       } else {
         toast.error(errorMessage, { position: "top-right" });
       }
-    } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -189,7 +181,7 @@ function RegisterForm() {
 
       {/* Champs conditionnels */}
       {selectedRole === UserRole.shelter && (
-        <>
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-4">
           <Input label="Siret" type="text" {...register("siret")} error={errors.siret?.message} />
           <Input
             label="Nom du refuge"
@@ -197,7 +189,7 @@ function RegisterForm() {
             {...register("shelterName")}
             error={errors.shelterName?.message}
           />
-        </>
+        </div>
       )}
 
       <div className="flex flex-col gap-2">

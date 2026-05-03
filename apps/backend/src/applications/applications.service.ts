@@ -80,6 +80,7 @@ export class ApplicationsService {
           deletedAt: null, // 🛡️ FILTRE : Exclut les candidatures pour animaux supprimés
         },
         deletedAt: null,
+        applicationStatus: { not: "cancelled" }, // 🛡️ FILTRE : Exclut les candidatures annulées par le candidat
       },
       select: {
         pfcUserId: true,
@@ -100,6 +101,7 @@ export class ApplicationsService {
   // Route Admin restaurée précédemment
   findAll() {
     return this.prisma.application.findMany({
+      where: { deletedAt: null },
       include: {
         animal: {
           include: {
@@ -158,7 +160,7 @@ export class ApplicationsService {
         deletedAt: null,
         applicationStatus: "pending",
       },
-      data: { deletedAt: new Date() },
+      data: { applicationStatus: "cancelled" },
     });
 
     if (updateResult.count === 0) {

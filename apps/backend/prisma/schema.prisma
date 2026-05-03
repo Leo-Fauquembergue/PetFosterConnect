@@ -106,9 +106,10 @@ enum ApplicationType {
 }
 
 enum ApplicationStatus {
-  pending  /// En attente de lecture par le refuge
-  approved /// Acceptée
-  rejected /// Refusée
+  pending   /// En attente de lecture par le refuge
+  approved  /// Acceptée
+  rejected  /// Refusée
+  cancelled /// Annulée par le candidat
 
   @@map("application_status")
 }

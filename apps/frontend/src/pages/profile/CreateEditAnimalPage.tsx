@@ -5,7 +5,7 @@ import {
   CreateAnimalSchema,
 } from "@projet/shared-types";
 import { useEffect, useState } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { type Control, type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { z } from "zod";
@@ -19,8 +19,25 @@ import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
 
 // On utilise z.input pour le type du formulaire afin de refléter l'état "brut"
-// (champs optionnels avec défauts, etc.) avant validation.
 type AnimalFormInput = z.input<typeof CreateAnimalSchema>;
+
+// Composant isolé pour la prévisualisation afin d'éviter les re-rendus globaux
+function AnimalPreview({ control }: { control: Control<AnimalFormInput> }) {
+  const photos = useWatch({ control, name: "photos" });
+  const name = useWatch({ control, name: "name" });
+
+  const firstPhoto = Array.isArray(photos) ? photos[0] : "";
+
+  return (
+    <div className="relative rounded-xl overflow-hidden shadow-lg h-[400px] bg-gray-200">
+      <img
+        src={firstPhoto || "https://placehold.co/600x600"}
+        alt={name || "Nouvel animal"}
+        className="w-full h-full object-cover"
+      />
+    </div>
+  );
+}
 
 export default function AnimalForm() {
   const navigate = useNavigate();
@@ -31,7 +48,7 @@ export default function AnimalForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<AnimalFormInput>({
     resolver: zodResolver(CreateAnimalSchema),
@@ -52,9 +69,6 @@ export default function AnimalForm() {
     },
   });
 
-  const watchedPhotos = watch("photos");
-  const watchedName = watch("name");
-
   useEffect(() => {
     const fetchSpecies = async () => {
       try {
@@ -68,12 +82,10 @@ export default function AnimalForm() {
     fetchSpecies();
   }, []);
 
-  // SubmitHandler reçoit le type d'entrée, mais grâce au resolver,
-  // les données sont déjà validées et transformées selon le schéma de sortie.
   const onSubmit: SubmitHandler<AnimalFormInput> = async (data) => {
     try {
-      // On parse à nouveau pour garantir le type de sortie CreateAnimalDto (conversion des types, etc.)
-      const validatedData = CreateAnimalSchema.parse(data) as CreateAnimalDto;
+      // Grâce au zodResolver, 'data' est déjà validé et transformé en CreateAnimalDto
+      const validatedData = data as CreateAnimalDto;
 
       if (animal) {
         await animalApi.updateAnimal(animal.id, validatedData);
@@ -98,16 +110,7 @@ export default function AnimalForm() {
         >
           {/* SECTION PHOTOS */}
           <div className="space-y-4">
-            <div className="relative rounded-xl overflow-hidden shadow-lg h-[400px] bg-gray-200">
-              <img
-                src={
-                  (Array.isArray(watchedPhotos) && watchedPhotos[0]) ||
-                  "https://placehold.co/600x600"
-                }
-                alt={watchedName || "Nouvel animal"}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <AnimalPreview control={control} />
             <div>
               <Input
                 label="Photos (URLs séparées par des virgules)"
@@ -159,9 +162,7 @@ export default function AnimalForm() {
 
               <Select
                 label="Espèce"
-                {...register("speciesId", {
-                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
-                })}
+                {...register("speciesId", { valueAsNumber: true })}
                 error={errors.speciesId?.message}
               >
                 <option value="">-- Sélectionner une espèce --</option>
@@ -193,7 +194,7 @@ export default function AnimalForm() {
                 step="any"
                 placeholder="Ex: 15"
                 {...register("weight", {
-                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  setValueAs: (v) => (v === "" ? null : Number(v)),
                 })}
                 error={errors.weight?.message}
               />
@@ -203,7 +204,7 @@ export default function AnimalForm() {
                 step="any"
                 placeholder="Ex: 45"
                 {...register("height", {
-                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  setValueAs: (v) => (v === "" ? null : Number(v)),
                 })}
                 error={errors.height?.message}
               />

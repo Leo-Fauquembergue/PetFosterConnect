@@ -10,11 +10,7 @@ export const useUserProfile = (userId: string | undefined) => {
   const [user, setUser] = useState<UserWithProfiles | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [formData, setFormData] = useState<UIProfileFormData>({
-    email: "",
-    phoneNumber: "",
-    address: "",
-  });
+  const [formData, setFormData] = useState<UIProfileFormData | undefined>(undefined);
 
   useEffect(() => {
     if (!userId) {
@@ -53,5 +49,5 @@ export const useUserProfile = (userId: string | undefined) => {
     };
   }, [userId]);
 
-  return { user, setUser, loading, error, formData, setFormData };
+  return { user, setUser, loading, error, formData };
 };

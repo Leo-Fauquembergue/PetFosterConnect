@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type UpdatePasswordDto, UpdatePasswordSchema } from "@projet/shared-types";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
@@ -10,42 +12,44 @@ type Props = {
 };
 
 export default function PasswordForm({ userId }: Props) {
-  const [formData, setFormData] = useState({
-    oldPassword: "",
-    newPassword: "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdatePasswordDto>({
+    resolver: zodResolver(UpdatePasswordSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+    },
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const onSubmit = async (data: UpdatePasswordDto) => {
     try {
-      await userApi.updatePassword(userId, formData);
+      await userApi.updatePassword(userId, data);
       toast.success("Mot de passe modifié avec succès !");
-      setFormData({ oldPassword: "", newPassword: "" });
+      reset();
     } catch (err: unknown) {
       const errorMessage = extractErrorMessage(
         err,
         "Erreur lors de la modification du mot de passe."
       );
       toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <InputPassword
         label="Ancien mot de passe"
-        value={formData.oldPassword}
-        onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
+        {...register("oldPassword")}
+        error={errors.oldPassword?.message}
       />
       <InputPassword
         label="Nouveau mot de passe"
-        value={formData.newPassword}
-        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+        {...register("newPassword")}
+        error={errors.newPassword?.message}
       />
       <Button type="submit" disabled={isSubmitting} variant="info" fullWidth className="md:w-auto">
         {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
