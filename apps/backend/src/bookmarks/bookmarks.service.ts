@@ -65,9 +65,24 @@ export class BookmarksService {
         // 🛡️ CORRECTION : Exclut les bookmarks d'animaux ou refuges supprimés
         animal: { deletedAt: null, shelter: { deletedAt: null } },
       },
-      include: {
+      // 🚀 OPTIMISATION : On ne sélectionne que les champs strictement nécessaires pour l'affichage de la carte
+      // On évite ainsi les jointures coûteuses (comme shelter > shelterProfile)
+      select: {
+        pfcUserId: true,
+        animalId: true,
+        createdAt: true,
         animal: {
-          include: { species: true },
+          select: {
+            id: true,
+            name: true,
+            photos: true,
+            description: true,
+            species: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
       },
     });

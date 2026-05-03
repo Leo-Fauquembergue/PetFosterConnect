@@ -34,7 +34,8 @@ const AnimalCard = ({
   const speciesName = typeof species === "string" ? species : species?.name || "Inconnue";
 
   // Gestion du refuge/localisation
-  const displayLocation = location || shelter?.shelterProfile?.shelterName || "Chargement...";
+  const displayLocation =
+    location || shelter?.shelterProfile?.shelterName || "Localisation non précisée";
 
   if (variant === "home") {
     return (
