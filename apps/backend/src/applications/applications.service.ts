@@ -64,7 +64,17 @@ export class ApplicationsService {
     return this.prisma.application.findMany({
       where: { pfcUserId: userId, deletedAt: null },
       include: {
-        animal: true,
+        animal: {
+          include: {
+            shelter: {
+              select: {
+                shelterProfile: {
+                  select: { shelterName: true },
+                },
+              },
+            },
+          },
+        },
         user: { select: { id: true, email: true, phoneNumber: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -100,11 +110,22 @@ export class ApplicationsService {
   findAll() {
     return this.prisma.application.findMany({
       include: {
-        animal: true,
+        animal: {
+          include: {
+            shelter: {
+              select: {
+                shelterProfile: {
+                  select: { shelterName: true },
+                },
+              },
+            },
+          },
+        },
         user: {
           select: { id: true, email: true, phoneNumber: true, role: true, individualProfile: true },
         },
       },
+      orderBy: { createdAt: "desc" },
     });
   }
 

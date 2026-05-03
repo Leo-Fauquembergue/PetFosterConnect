@@ -104,29 +104,24 @@ export class UsersService {
       where: { id },
       include: { individualProfile: true, shelterProfile: true },
     });
-    if (!user) throw new NotFoundException("Utilisateur introuvable");
+    if (!user || user.deletedAt) throw new NotFoundException("Utilisateur introuvable");
 
     const now = new Date();
     const anonymizedEmail = `anonymized_${id}_${now.getTime()}@deleted.com`;
 
     return this.prisma.$transaction(async (tx) => {
-      // 1. Si c'est un refuge, on cascade le soft-delete sur ses animaux
+      // 1. Si c'est un refuge, on cascade le soft-delete sur ses animaux non placés
       if (user.role === "shelter") {
         const shelterAnimals = await tx.animal.findMany({
           where: { pfcUserId: id, deletedAt: null },
-          select: { id: true },
+          select: { id: true, animalStatus: true },
         });
 
-        const animalIds = shelterAnimals.map((a) => a.id);
+        if (shelterAnimals.length > 0) {
+          const animalIds = shelterAnimals.map((a) => a.id);
 
-        if (animalIds.length > 0) {
-          // Soft-delete de tous les animaux du refuge
-          await tx.animal.updateMany({
-            where: { id: { in: animalIds } },
-            data: { deletedAt: now },
-          });
-
-          // Rejet automatique de TOUTES les candidatures 'pending' pour ces animaux
+          // Rejet automatique de TOUTES les candidatures 'pending' pour tous les animaux de ce refuge,
+          // car le refuge ne pourra plus les traiter.
           await tx.application.updateMany({
             where: {
               animalId: { in: animalIds },
@@ -134,6 +129,20 @@ export class UsersService {
             },
             data: { applicationStatus: "rejected" },
           });
+
+          // Soft-delete UNIQUEMENT des animaux disponibles ou indisponibles.
+          // Les animaux 'adopted' et 'foster_care' sont conservés pour ne pas détruire
+          // l'historique des adoptants et familles d'accueil.
+          const animalsToRemoveIds = shelterAnimals
+            .filter((a) => a.animalStatus === "available" || a.animalStatus === "unavailable")
+            .map((a) => a.id);
+
+          if (animalsToRemoveIds.length > 0) {
+            await tx.animal.updateMany({
+              where: { id: { in: animalsToRemoveIds } },
+              data: { deletedAt: now },
+            });
+          }
         }
       }
 
@@ -152,6 +161,11 @@ export class UsersService {
           update: {
             surface: 0,
             housingType: "other",
+            haveGarden: false,
+            haveAnimals: false,
+            haveChildren: false,
+            availableFamily: false,
+            availableTime: null,
           },
         };
       }
@@ -162,6 +176,7 @@ export class UsersService {
             siret: "00000000000000",
             shelterName: "DELETED",
             description: null,
+            logo: null,
           },
         };
       }
@@ -176,7 +191,7 @@ export class UsersService {
 
   async validateUser(email: string, plainPassword: string) {
     const user = await this.findByEmail(email);
-    if (!user) return null;
+    if (!user || user.deletedAt) return null;
 
     const isValid = await argon2.verify(user.password, plainPassword);
     if (!isValid) return null;
@@ -201,7 +216,7 @@ export class UsersService {
 
   async updatePassword(userId: number, dto: UpdatePasswordDto) {
     const user = await this.prisma.pfcUser.findUnique({ where: { id: userId } });
-    if (!user) throw new NotFoundException("Utilisateur introuvable");
+    if (!user || user.deletedAt) throw new NotFoundException("Utilisateur introuvable");
 
     const isValid = await argon2.verify(user.password, dto.oldPassword);
     if (!isValid) throw new BadRequestException("Ancien mot de passe incorrect");
@@ -215,6 +230,14 @@ export class UsersService {
   }
 
   async updateIndividualProfile(id: number, dto: UpdateUserWithIndividualProfileDto) {
+    const user = await this.prisma.pfcUser.findUnique({
+      where: { id },
+    });
+
+    if (!user || user.deletedAt) {
+      throw new NotFoundException("Utilisateur introuvable");
+    }
+
     return this.prisma.pfcUser.update({
       where: { id },
       data: {
@@ -254,7 +277,7 @@ export class UsersService {
       include: { shelterProfile: true },
     });
 
-    if (!user) {
+    if (!user || user.deletedAt) {
       throw new NotFoundException("Utilisateur introuvable");
     }
 

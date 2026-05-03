@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import type { RequestWithUser } from "@projet/shared-types";
 import { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
@@ -145,6 +150,12 @@ export class AnimalsService {
     }
 
     this.checkOwnership(animal.pfcUserId, user, "Action interdite sur cet animal.");
+
+    if (animal.animalStatus === "adopted" || animal.animalStatus === "foster_care") {
+      throw new BadRequestException(
+        "Impossible de supprimer un animal déjà adopté ou en famille d'accueil afin de conserver l'historique."
+      );
+    }
 
     // ⚡ Utilisation d'une transaction pour éviter les "données fantômes"
     // On supprime l'animal ET on rejette les candidatures en cours

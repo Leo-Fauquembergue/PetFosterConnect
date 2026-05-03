@@ -144,11 +144,18 @@ describe("UsersService", () => {
       expect(result.password).toBeUndefined();
     });
 
-    it("doit cascader le soft-delete sur les animaux et candidatures si c'est un refuge", async () => {
+    it("doit cascader le soft-delete sur les animaux non placés et rejeter toutes les candidatures si c'est un refuge", async () => {
       const shelterUser = { id: 5, role: UserRole.shelter };
       mockPrisma.pfcUser.findUnique.mockResolvedValue(shelterUser);
 
-      const shelterAnimals = [{ id: 10 }, { id: 11 }];
+      // 10 = available (should be soft-deleted)
+      // 11 = adopted (should NOT be soft-deleted)
+      // 12 = unavailable (should be soft-deleted)
+      const shelterAnimals = [
+        { id: 10, animalStatus: "available" },
+        { id: 11, animalStatus: "adopted" },
+        { id: 12, animalStatus: "unavailable" },
+      ];
       mockPrisma.animal.findMany.mockResolvedValue(shelterAnimals);
 
       const updatedShelterUser = {
@@ -160,14 +167,16 @@ describe("UsersService", () => {
 
       await service.remove(5);
 
+      // Vérifie que seuls les animaux 10 et 12 (available/unavailable) sont soft-deleted
       expect(mockPrisma.animal.updateMany).toHaveBeenCalledWith({
-        where: { id: { in: [10, 11] } },
+        where: { id: { in: [10, 12] } },
         data: { deletedAt: expect.any(Date) },
       });
 
+      // Vérifie que les candidatures de TOUS les animaux (10, 11, 12) sont rejetées
       expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
         where: {
-          animalId: { in: [10, 11] },
+          animalId: { in: [10, 11, 12] },
           applicationStatus: "pending",
         },
         data: { applicationStatus: "rejected" },

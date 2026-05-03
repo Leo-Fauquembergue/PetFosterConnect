@@ -155,9 +155,9 @@ describe("AnimalsService", () => {
   });
 
   describe("remove", () => {
-    it('devrait faire un "soft delete" si l\'utilisateur est propriétaire', async () => {
+    it("devrait faire un \"soft delete\" si l'utilisateur est propriétaire et l'animal est disponible", async () => {
       const user = { id: 5, email: "refuge@test.com", role: "shelter" } as RequestWithUser["user"];
-      const animal = { id: 1, pfcUserId: 5 };
+      const animal = { id: 1, pfcUserId: 5, animalStatus: "available" };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
       mockPrisma.animal.update.mockResolvedValue({ ...animal, deletedAt: new Date() });
@@ -170,13 +170,25 @@ describe("AnimalsService", () => {
       });
     });
 
+    it("devrait lever une BadRequestException si l'animal est déjà adopté ou en famille d'accueil", async () => {
+      const user = { id: 5, email: "refuge@test.com", role: "shelter" } as RequestWithUser["user"];
+      const animal = { id: 1, pfcUserId: 5, animalStatus: "adopted" };
+
+      mockPrisma.animal.findUnique.mockResolvedValue(animal);
+
+      await expect(service.remove(1, user)).rejects.toThrow(
+        "Impossible de supprimer un animal déjà adopté ou en famille d'accueil afin de conserver l'historique."
+      );
+      expect(mockPrisma.animal.update).not.toHaveBeenCalled();
+    });
+
     it("devrait lever une ForbiddenException (Faille IDOR bloquée) lors de la suppression par un non-propriétaire", async () => {
       const attacker = {
         id: 42,
         email: "hacker@test.com",
         role: "shelter",
       } as RequestWithUser["user"];
-      const animal = { id: 1, pfcUserId: 5 };
+      const animal = { id: 1, pfcUserId: 5, animalStatus: "available" };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
 

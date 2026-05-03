@@ -46,13 +46,17 @@ export const useHomeData = () => {
             imageUrl = a.photos;
           }
 
+          const shelterName = a.shelter?.shelterProfile?.shelterName;
+          const displayLocation =
+            shelterName === "DELETED" ? "Ancien refuge" : shelterName || "Refuge partenaire";
+
           return {
             id: a.id,
             name: a.name,
             species: a.species?.name || "Espèce inconnue",
             age: a.age || "Âge non renseigné",
             image: imageUrl,
-            location: a.shelter?.shelterProfile?.shelterName || "Refuge partenaire",
+            location: displayLocation,
           };
         });
         setAnimals(recentAnimals);

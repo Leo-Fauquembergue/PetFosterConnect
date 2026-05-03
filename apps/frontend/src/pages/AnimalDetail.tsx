@@ -114,7 +114,7 @@ export default function AnimalDetail() {
     const animalUrl = `${window.location.origin}/animaux/${animal.id}`;
     const qrData = await QRCode.toDataURL(animalUrl);
 
-    const logoUrl = animal.shelter?.shelterProfile?.logoUrl;
+    const logoUrl = animal.shelter?.shelterProfile?.logo;
     if (logoUrl) {
       const logoWidthShelter = 40;
       const logoXShelter = (pageWidth - logoWidthShelter) / 2;
@@ -264,12 +264,16 @@ export default function AnimalDetail() {
             <div className="mt-6 mb-8 w-full">
               <h2 className="text-xl font-bold text-success mb-1 font-montserrat">Proposé par</h2>
               <p className="text-sm font-semibold text-gray-900">
-                {animal.shelter?.shelterProfile?.shelterName || "Refuge partenaire"}
+                {animal.shelter?.shelterProfile?.shelterName === "DELETED"
+                  ? "Ancien refuge"
+                  : animal.shelter?.shelterProfile?.shelterName || "Refuge partenaire"}
               </p>
-              <p className="text-xs text-gray-500">
-                <span className="font-medium">Adresse :</span>{" "}
-                {animal.shelter?.address || "Non communiquée"}
-              </p>
+              {animal.shelter?.shelterProfile?.shelterName !== "DELETED" && (
+                <p className="text-xs text-gray-500">
+                  <span className="font-medium">Adresse :</span>{" "}
+                  {animal.shelter?.address || "Non communiquée"}
+                </p>
+              )}
             </div>
 
             <div className="border-t-2 border-gray-300 pt-6 flex flex-col gap-4 w-full mt-auto no-print">

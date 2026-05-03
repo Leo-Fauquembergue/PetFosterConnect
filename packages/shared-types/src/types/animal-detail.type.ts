@@ -8,7 +8,7 @@ export type AnimalDetailResponse = Omit<AnimalWithRelations, "shelter"> & {
     address: string | null;
     shelterProfile?: {
       shelterName: string;
-      logoUrl: string | null;
+      logo: string | null;
     } | null;
   } | null;
 };

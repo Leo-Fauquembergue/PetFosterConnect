@@ -16,6 +16,7 @@ export const AnimalWithRelationsSchema = AnimalSchema.extend({
       shelterProfile: z
         .object({
           shelterName: z.string(),
+          logo: z.url().nullable().optional(),
         })
         .optional(),
     })
