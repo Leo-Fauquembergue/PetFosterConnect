@@ -109,7 +109,9 @@ api.interceptors.response.use(
     const timeoutId = setTimeout(() => refreshController.abort(), REFRESH_TIMEOUT);
 
     try {
-      const refreshResponse = await api.post("/auth/refresh", undefined, { signal: refreshController.signal });
+      const refreshResponse = await api.post("/auth/refresh", undefined, {
+        signal: refreshController.signal,
+      });
       clearTimeout(timeoutId);
 
       if (refreshResponse.data?.csrfToken) {

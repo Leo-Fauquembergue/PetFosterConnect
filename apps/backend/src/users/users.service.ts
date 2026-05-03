@@ -107,10 +107,16 @@ export class UsersService {
     if (!user || user.deletedAt) throw new NotFoundException("Utilisateur introuvable");
 
     const now = new Date();
-    const anonymizedEmail = `anonymized_${id}_${now.getTime()}@deleted.com`;
+    const anonymizedEmail = `deleted_${id}_${now.getTime()}@pfc.internal`;
 
     return this.prisma.$transaction(async (tx) => {
-      // 1. Si c'est un refuge, on cascade le soft-delete sur ses animaux non placés
+      // 1. Invalidation immédiate de toutes les sessions
+      await tx.refreshToken.deleteMany({ where: { userId: id } });
+
+      // 2. Suppression physique des données de comportement
+      await tx.bookmark.deleteMany({ where: { pfcUserId: id } });
+
+      // 3. Gestion des relations d'animaux/candidatures (logique métier)
       if (user.role === "shelter") {
         const shelterAnimals = await tx.animal.findMany({
           where: { pfcUserId: id, deletedAt: null },
@@ -119,20 +125,11 @@ export class UsersService {
 
         if (shelterAnimals.length > 0) {
           const animalIds = shelterAnimals.map((a) => a.id);
-
-          // Rejet automatique de TOUTES les candidatures 'pending' pour tous les animaux de ce refuge,
-          // car le refuge ne pourra plus les traiter.
           await tx.application.updateMany({
-            where: {
-              animalId: { in: animalIds },
-              applicationStatus: "pending",
-            },
+            where: { animalId: { in: animalIds }, applicationStatus: "pending" },
             data: { applicationStatus: "rejected" },
           });
 
-          // Soft-delete UNIQUEMENT des animaux disponibles ou indisponibles.
-          // Les animaux 'adopted' et 'foster_care' sont conservés pour ne pas détruire
-          // l'historique des adoptants et familles d'accueil.
           const animalsToRemoveIds = shelterAnimals
             .filter((a) => a.animalStatus === "available" || a.animalStatus === "unavailable")
             .map((a) => a.id);
@@ -146,36 +143,31 @@ export class UsersService {
         }
       }
 
-      // Si c'est un individu, on rejette ses candidatures en attente
       if (user.role === "individual") {
         await tx.application.updateMany({
-          where: {
-            pfcUserId: id,
-            applicationStatus: "pending",
-          },
+          where: { pfcUserId: id, applicationStatus: "pending" },
           data: { applicationStatus: "rejected" },
         });
       }
 
-      // 2. Construction de l'objet d'update pour l'anonymisation
+      // 4. Purge et anonymisation stricte
       const updateData: Prisma.PfcUserUpdateInput = {
         deletedAt: now,
         email: anonymizedEmail,
-        password: "DELETED",
+        password: "ANONYMIZED_PURGED",
         phoneNumber: null,
         address: null,
       };
 
-      // On n'update les profils que s'ils existent (évite les erreurs Prisma)
       if (user.individualProfile) {
         updateData.individualProfile = {
           update: {
-            surface: 0,
-            housingType: "other",
-            haveGarden: false,
-            haveAnimals: false,
-            haveChildren: false,
-            availableFamily: false,
+            housingType: null,
+            surface: null,
+            haveGarden: null,
+            haveAnimals: null,
+            haveChildren: null,
+            availableFamily: null,
             availableTime: null,
           },
         };
@@ -184,8 +176,9 @@ export class UsersService {
       if (user.shelterProfile) {
         updateData.shelterProfile = {
           update: {
-            siret: "00000000000000",
-            shelterName: "DELETED",
+            // Unicité garantie par l'ID utilisateur (max 10 chiffres + 4 de 'DEL-')
+            siret: `DEL-${id}`,
+            shelterName: "COMPTE_SUPPRIME",
             description: null,
             logo: null,
           },

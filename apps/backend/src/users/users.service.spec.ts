@@ -24,6 +24,12 @@ describe("UsersService", () => {
     application: {
       updateMany: jest.fn(),
     },
+    refreshToken: {
+      deleteMany: jest.fn(),
+    },
+    bookmark: {
+      deleteMany: jest.fn(),
+    },
     $transaction: jest.fn((cb) => cb(mockPrisma)),
   };
 
@@ -123,18 +129,20 @@ describe("UsersService", () => {
 
       const updatedMockUser = {
         id: 1,
-        email: "anonymized_1_123456@deleted.com",
+        email: "deleted_1_123456@pfc.internal",
         deletedAt: new Date(),
       };
       mockPrisma.pfcUser.update.mockResolvedValue(updatedMockUser);
 
       const result = (await service.remove(1)) as Partial<User>;
 
+      expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: 1 } });
+      expect(mockPrisma.bookmark.deleteMany).toHaveBeenCalledWith({ where: { pfcUserId: 1 } });
       expect(mockPrisma.pfcUser.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 1 },
           data: expect.objectContaining({
-            password: "DELETED",
+            password: "ANONYMIZED_PURGED",
             phoneNumber: null,
             address: null,
           }),
@@ -150,17 +158,14 @@ describe("UsersService", () => {
 
       mockPrisma.pfcUser.update.mockResolvedValue({
         id: 1,
-        email: "anonymized_1@deleted.com",
+        email: "deleted_1@pfc.internal",
         deletedAt: new Date(),
       });
 
       await service.remove(1);
 
       expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
-        where: {
-          pfcUserId: 1,
-          applicationStatus: "pending",
-        },
+        where: { pfcUserId: 1, applicationStatus: "pending" },
         data: { applicationStatus: "rejected" },
       });
     });
@@ -169,9 +174,6 @@ describe("UsersService", () => {
       const shelterUser = { id: 5, role: UserRole.shelter };
       mockPrisma.pfcUser.findUnique.mockResolvedValue(shelterUser);
 
-      // 10 = available (should be soft-deleted)
-      // 11 = adopted (should NOT be soft-deleted)
-      // 12 = unavailable (should be soft-deleted)
       const shelterAnimals = [
         { id: 10, animalStatus: "available" },
         { id: 11, animalStatus: "adopted" },
@@ -181,25 +183,20 @@ describe("UsersService", () => {
 
       const updatedShelterUser = {
         id: 5,
-        email: "anonymized_5_123456@deleted.com",
+        email: "deleted_5_123456@pfc.internal",
         deletedAt: new Date(),
       };
       mockPrisma.pfcUser.update.mockResolvedValue(updatedShelterUser);
 
       await service.remove(5);
 
-      // Vérifie que seuls les animaux 10 et 12 (available/unavailable) sont soft-deleted
       expect(mockPrisma.animal.updateMany).toHaveBeenCalledWith({
         where: { id: { in: [10, 12] } },
         data: { deletedAt: expect.any(Date) },
       });
 
-      // Vérifie que les candidatures de TOUS les animaux (10, 11, 12) sont rejetées
       expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
-        where: {
-          animalId: { in: [10, 11, 12] },
-          applicationStatus: "pending",
-        },
+        where: { animalId: { in: [10, 11, 12] }, applicationStatus: "pending" },
         data: { applicationStatus: "rejected" },
       });
 

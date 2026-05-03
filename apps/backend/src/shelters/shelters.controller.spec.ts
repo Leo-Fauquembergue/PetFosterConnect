@@ -96,6 +96,6 @@ describe("ShelterController (integration)", () => {
     // Le profil utilisateur doit avoir un deletedAt
     const user = await prisma.pfcUser.findUnique({ where: { id: testUserId } });
     expect(user?.deletedAt).not.toBeNull();
-    expect(user?.email).toContain("anonymized");
+    expect(user?.email).toContain("deleted_");
   });
 });
