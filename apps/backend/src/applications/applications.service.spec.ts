@@ -1,10 +1,5 @@
-import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import type {
-  CreateApplicationDto,
-  RequestWithUser,
-  UpdateApplicationStatusDto,
-} from "@projet/shared-types";
+import type { CreateApplicationDto, UpdateApplicationStatusDto } from "@projet/shared-types";
 import { EmailsService } from "../emails/emails.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { ApplicationsService } from "./applications.service";
@@ -55,7 +50,6 @@ describe("ApplicationsService", () => {
         applicationType: "adoption",
       } as CreateApplicationDto;
 
-      // ⚡ Typage propre !
       const userId = 5;
 
       mockPrisma.animal.findUnique.mockResolvedValue({
@@ -84,75 +78,41 @@ describe("ApplicationsService", () => {
     });
   });
 
-  describe("updateStatus (Sécurité IDOR)", () => {
+  describe("updateStatus", () => {
     const candidateId = 5;
     const animalId = 10;
     const statusDto = { applicationStatus: "approved" } as UpdateApplicationStatusDto;
 
-    it("doit mettre à jour le statut si l'utilisateur est le propriétaire de l'animal", async () => {
-      const shelterOwner = {
-        id: 42,
-        email: "refuge@test.com",
-        role: "shelter",
-      } as RequestWithUser["user"];
+    it("doit mettre à jour le statut d'une candidature", async () => {
       const fakeAnimal = { id: animalId, pfcUserId: 42 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
       mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.application.findUnique.mockResolvedValue({ applicationStatus: "approved" });
 
-      await service.updateStatus(candidateId, animalId, statusDto, shelterOwner);
-
-      expect(mockPrisma.application.updateMany).toHaveBeenCalled();
-    });
-
-    it("doit lever une ForbiddenException (Faille IDOR bloquée) si un refuge tente de modifier la demande d'un autre refuge", async () => {
-      const attackerShelter = {
-        id: 999,
-        email: "hacker@test.com",
-        role: "shelter",
-      } as RequestWithUser["user"];
-      const fakeAnimal = { id: animalId, pfcUserId: 42 };
-
-      mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
-
-      await expect(
-        service.updateStatus(candidateId, animalId, statusDto, attackerShelter)
-      ).rejects.toThrow(ForbiddenException);
-
-      expect(mockPrisma.application.updateMany).not.toHaveBeenCalled();
-    });
-
-    it("doit mettre à jour le statut si l'utilisateur est Admin (Privilège absolu)", async () => {
-      const adminUser = {
-        id: 99,
-        email: "admin@test.com",
-        role: "admin",
-      } as RequestWithUser["user"];
-      const fakeAnimal = { id: animalId, pfcUserId: 42 };
-
-      mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
-      mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.application.findUnique.mockResolvedValue({ applicationStatus: "approved" });
-
-      await service.updateStatus(candidateId, animalId, statusDto, adminUser);
+      await service.updateStatus(candidateId, animalId, statusDto);
 
       expect(mockPrisma.application.updateMany).toHaveBeenCalled();
     });
   });
 
-  describe("remove (Sécurité IDOR)", () => {
-    it("doit lever une ForbiddenException si un utilisateur non propriétaire tente d'archiver une demande", async () => {
-      const attacker = {
-        id: 999,
-        email: "hacker@test.com",
-        role: "shelter",
-      } as RequestWithUser["user"];
+  describe("remove", () => {
+    it("doit archiver une demande", async () => {
       const fakeAnimal = { id: 10, pfcUserId: 42 };
-
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
 
-      await expect(service.remove(5, 10, attacker)).rejects.toThrow(ForbiddenException);
+      await service.remove(5, 10);
+
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            pfcUserId: 5,
+            animalId: 10,
+            deletedAt: null,
+          },
+        })
+      );
     });
   });
 });

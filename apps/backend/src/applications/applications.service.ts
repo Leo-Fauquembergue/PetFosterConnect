@@ -1,12 +1,5 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from "@nestjs/common";
+import { ConflictException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import type { RequestWithUser } from "@projet/shared-types";
 import {
   ApplicationStatus,
   CreateApplicationDto,
@@ -14,8 +7,6 @@ import {
 } from "@projet/shared-types";
 import { EmailsService } from "../emails/emails.service";
 import { PrismaService } from "../prisma/prisma.service";
-
-type UserPayload = RequestWithUser["user"];
 
 @Injectable()
 export class ApplicationsService {
@@ -129,17 +120,10 @@ export class ApplicationsService {
     });
   }
 
-  async updateStatus(
-    candidateId: number,
-    animalId: number,
-    updateDto: UpdateApplicationStatusDto,
-    user: UserPayload
-  ) {
+  async updateStatus(candidateId: number, animalId: number, updateDto: UpdateApplicationStatusDto) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
 
     if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
-
-    this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
     // Empêcher de mettre à jour une candidature supprimée (ou déjà approuvée si on rejette)
     const updateResult = await this.prisma.application.updateMany({
@@ -184,12 +168,10 @@ export class ApplicationsService {
     return { message: "Demande annulée avec succès" };
   }
 
-  async remove(candidateId: number, animalId: number, user: UserPayload) {
+  async remove(candidateId: number, animalId: number) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
 
     if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
-
-    this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
     const updateResult = await this.prisma.application.updateMany({
       where: {
@@ -207,14 +189,14 @@ export class ApplicationsService {
     return { message: "Demande archivée/supprimée avec succès" };
   }
 
-  async acceptApplication(candidateId: number, animalId: number, user: UserPayload) {
+  async acceptApplication(candidateId: number, animalId: number) {
     // 1. On regroupe les opérations BDD dans une transaction pour l'atomicité
     const { application, pendingApplications } = await this.prisma.$transaction(async (tx) => {
-      // Vérification IDOR (logique extraite de updateStatus pour être dans la transaction)
+      // Vérification IDOR déjà faite par le Guard au niveau Controller.
+      // On s'assure juste que l'animal existe toujours et n'est pas supprimé.
       const animal = await tx.animal.findUnique({ where: { id: animalId } });
       if (!animal || animal.deletedAt)
         throw new NotFoundException("Animal introuvable ou supprimé");
-      this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
       // Mise à jour de la demande acceptée via un verrou optimiste
       const appUpdateResult = await tx.application.updateMany({
@@ -330,15 +312,10 @@ export class ApplicationsService {
     };
   }
 
-  async rejectApplication(candidateId: number, animalId: number, user: UserPayload) {
-    const application = await this.updateStatus(
-      candidateId,
-      animalId,
-      {
-        applicationStatus: "rejected",
-      },
-      user
-    );
+  async rejectApplication(candidateId: number, animalId: number) {
+    const application = await this.updateStatus(candidateId, animalId, {
+      applicationStatus: "rejected",
+    });
 
     if (!application) {
       throw new NotFoundException("Candidature introuvable post-rejet.");
@@ -360,15 +337,5 @@ export class ApplicationsService {
     }
 
     return { message: "Candidature refusée", application };
-  }
-
-  /**
-   * Vérifie si l'utilisateur est admin ou le propriétaire de la ressource.
-   * Empêche les attaques IDOR.
-   */
-  private checkOwnership(ownerId: number, user: UserPayload, message: string) {
-    if (user.role !== "admin" && ownerId !== user.id) {
-      throw new ForbiddenException(message);
-    }
   }
 }

@@ -18,7 +18,7 @@ export class CsrfMiddleware implements NestMiddleware {
     if (mutatingMethods.includes(req.method)) {
       const headerToken = req.headers["x-csrf-token"];
       const jwtCookie = req.cookies?.[COOKIE_NAME];
-      const authHeader = req.headers["authorization"];
+      const authHeader = req.headers.authorization;
 
       /**
        * SÉCURITÉ : On autorise le bypass si un header Authorization est présent (Bearer token).

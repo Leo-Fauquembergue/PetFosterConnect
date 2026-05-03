@@ -1,21 +1,12 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Req,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "@prisma/client";
 import type { RequestWithUser } from "@projet/shared-types";
 import * as sharedTypes from "@projet/shared-types";
+import { CheckOwner } from "../auth/decorators/check-owner.decorator";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { ResourceOwnerGuard } from "../auth/guards/resource-owner.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { IdSchema } from "../common/schemas/params.schema";
@@ -29,7 +20,7 @@ export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.individual)
   @ApiOperation({ summary: "Créer une demande d'adoption" })
   @ApiResponse({ status: 201, description: "Demande créée avec succès" })
@@ -49,7 +40,7 @@ export class ApplicationsController {
   }
 
   @Get("received")
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.shelter, UserRole.admin)
   @ApiOperation({ summary: "Récupérer les demandes reçues par le refuge connecté" })
   findAllReceived(@Req() req: RequestWithUser) {
@@ -58,7 +49,7 @@ export class ApplicationsController {
 
   // ⚡ AJOUT: Route Admin globale
   @Get()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: "Récupérer l'intégralité des demandes (Admin)" })
   findAll() {
@@ -66,21 +57,21 @@ export class ApplicationsController {
   }
 
   @Patch(":animalId/:candidateId/status")
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(UserRole.shelter, UserRole.admin)
+  @CheckOwner({ type: "animal", idParam: "animalId" })
   @ApiOperation({ summary: "Mettre à jour le statut d'une demande" })
   update(
-    @Req() req: RequestWithUser,
     @Param("animalId", new ZodPipe(IdSchema)) animalId: number,
     @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
     @Body(new ZodPipe(sharedTypes.UpdateApplicationStatusSchema))
     updateDto: sharedTypes.UpdateApplicationStatusDto
   ) {
-    return this.applicationsService.updateStatus(candidateId, animalId, updateDto, req.user);
+    return this.applicationsService.updateStatus(candidateId, animalId, updateDto);
   }
 
   @Delete("me/:animalId")
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.individual)
   @ApiOperation({ summary: "Annuler sa propre demande d'adoption" })
   cancelOwn(
@@ -91,38 +82,38 @@ export class ApplicationsController {
   }
 
   @Delete(":animalId/:candidateId")
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(UserRole.shelter, UserRole.admin)
+  @CheckOwner({ type: "animal", idParam: "animalId" })
   @ApiOperation({ summary: "Archiver / Supprimer une demande" })
   remove(
-    @Req() req: RequestWithUser,
     @Param("animalId", new ZodPipe(IdSchema)) animalId: number,
     @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number
   ) {
-    return this.applicationsService.remove(candidateId, animalId, req.user);
+    return this.applicationsService.remove(candidateId, animalId);
   }
 
   @Post(":candidateId/:animalId/accept")
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(UserRole.shelter, UserRole.admin)
+  @CheckOwner({ type: "animal", idParam: "animalId" })
   @ApiOperation({ summary: "Accepter formellement une demande" })
   async accept(
-    @Req() req: RequestWithUser,
     @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
     @Param("animalId", new ZodPipe(IdSchema)) animalId: number
   ) {
-    return this.applicationsService.acceptApplication(candidateId, animalId, req.user);
+    return this.applicationsService.acceptApplication(candidateId, animalId);
   }
 
   @Post(":candidateId/:animalId/reject")
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(UserRole.shelter, UserRole.admin)
+  @CheckOwner({ type: "animal", idParam: "animalId" })
   @ApiOperation({ summary: "Refuser formellement une demande" })
   async reject(
-    @Req() req: RequestWithUser,
     @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
     @Param("animalId", new ZodPipe(IdSchema)) animalId: number
   ) {
-    return this.applicationsService.rejectApplication(candidateId, animalId, req.user);
+    return this.applicationsService.rejectApplication(candidateId, animalId);
   }
 }

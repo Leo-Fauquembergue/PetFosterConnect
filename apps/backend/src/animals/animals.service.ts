@@ -1,11 +1,5 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import type { RequestWithUser } from "@projet/shared-types";
 import { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -19,8 +13,6 @@ type AnimalWithRelations = Prisma.AnimalGetPayload<{
 
 // Animal enrichi avec isBookmarked
 type AnimalWithBookmark = AnimalWithRelations & { isBookmarked: boolean };
-
-type UserPayload = RequestWithUser["user"];
 
 @Injectable()
 export class AnimalsService {
@@ -111,14 +103,12 @@ export class AnimalsService {
     });
   }
 
-  async update(id: number, updateAnimalDto: UpdateAnimalDto, user: UserPayload) {
+  async update(id: number, updateAnimalDto: UpdateAnimalDto) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
     if (!animal || animal.deletedAt) {
       throw new NotFoundException("Animal introuvable ou supprimé");
     }
-
-    this.checkOwnership(animal.pfcUserId, user, "Vous ne pouvez modifier que vos animaux.");
 
     // ⚡ Déstructuration élégante et séparation des champs complexes
     const { weight, speciesId, photos, ...restDto } = updateAnimalDto;
@@ -144,14 +134,12 @@ export class AnimalsService {
     return this.prisma.animal.update({ where: { id }, data });
   }
 
-  async remove(id: number, user: UserPayload) {
+  async remove(id: number) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
     if (!animal || animal.deletedAt) {
       throw new NotFoundException("Animal introuvable ou déjà supprimé");
     }
-
-    this.checkOwnership(animal.pfcUserId, user, "Action interdite sur cet animal.");
 
     if (animal.animalStatus === "adopted" || animal.animalStatus === "foster_care") {
       throw new BadRequestException(
@@ -181,15 +169,5 @@ export class AnimalsService {
 
       return updatedAnimal;
     });
-  }
-
-  /**
-   * Vérifie si l'utilisateur est admin ou le propriétaire de la ressource.
-   * Empêche les attaques IDOR.
-   */
-  private checkOwnership(ownerId: number, user: UserPayload, message: string) {
-    if (user.role !== "admin" && ownerId !== user.id) {
-      throw new ForbiddenException(message);
-    }
   }
 }

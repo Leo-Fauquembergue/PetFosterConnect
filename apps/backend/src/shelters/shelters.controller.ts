@@ -10,9 +10,10 @@ import {
 import { UserRole } from "@prisma/client";
 import * as sharedTypes from "@projet/shared-types";
 import { AnimalsService } from "../animals/animals.service";
+import { CheckOwner } from "../auth/decorators/check-owner.decorator";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
+import { ResourceOwnerGuard } from "../auth/guards/resource-owner.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { IdSchema, LimitSchema } from "../common/schemas/params.schema";
@@ -79,7 +80,8 @@ export class SheltersController {
     return this.animalsService.findAllByShelter(id);
   }
 
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @Put(":id")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour un refuge" })

@@ -15,9 +15,10 @@ import {
   UpdateUserWithIndividualProfileSchema,
   UpdateUserWithShelterProfileSchema,
 } from "@projet/shared-types";
+import { CheckOwner } from "../auth/decorators/check-owner.decorator";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
+import { ResourceOwnerGuard } from "../auth/guards/resource-owner.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
 import { IdSchema } from "../common/schemas/params.schema";
@@ -31,7 +32,8 @@ export class UsersController {
   // --- 1. ROUTES SPÉCIFIQUES (Profils) D'ABORD ---
 
   @Get(":id/profile")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Récupérer le profil complet d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -47,7 +49,8 @@ export class UsersController {
   }
 
   @Put(":id/individual-profile")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le profil individuel d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -63,7 +66,8 @@ export class UsersController {
   }
 
   @Put(":id/shelter-profile")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le profil refuge d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -79,7 +83,8 @@ export class UsersController {
   }
 
   @Put(":id/password")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le mot de passe d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -117,7 +122,8 @@ export class UsersController {
   }
 
   @Get(":id")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Récupérer un utilisateur par son ID" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -128,7 +134,8 @@ export class UsersController {
   }
 
   @Patch(":id")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -143,7 +150,8 @@ export class UsersController {
   }
 
   @Delete(":id")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Supprimer un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
