@@ -36,16 +36,6 @@ export const applicationApi = {
     return response.data;
   },
 
-  acceptApplication: async (candidateId: number, animalId: number) => {
-    const response = await api.post(`/applications/${candidateId}/${animalId}/accept`);
-    return response.data;
-  },
-
-  rejectApplication: async (candidateId: number, animalId: number) => {
-    const response = await api.post(`/applications/${candidateId}/${animalId}/reject`);
-    return response.data;
-  },
-
   deleteApplication: async (candidateId: number, animalId: number) => {
     const response = await api.delete(`/applications/${animalId}/${candidateId}`);
     return response.data;

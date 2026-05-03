@@ -20,14 +20,16 @@ export default function ApplicationsReceived() {
     setActionLoadingId(uniqueId);
 
     try {
+      await applicationApi.updateApplicationStatus(candidateId, animalId, {
+        applicationStatus: status === "approved" ? "approved" : "rejected",
+      });
+
       if (status === "approved") {
-        await applicationApi.acceptApplication(candidateId, animalId);
         toast.success(
           `✅ Candidature acceptée pour ${candidateEmail}. Un email de confirmation a été envoyé !`,
           { autoClose: 4000 }
         );
       } else {
-        await applicationApi.rejectApplication(candidateId, animalId);
         toast.error(
           `❌ Candidature refusée pour ${candidateEmail}. Un email de notification a été envoyé.`,
           { autoClose: 4000 }
@@ -43,7 +45,7 @@ export default function ApplicationsReceived() {
       );
     } catch (err: unknown) {
       const errorMessage = extractErrorMessage(err, "Impossible de mettre à jour la candidature.");
-      toast.error(`⚠️ Erreur: ${errorMessage}`, { autoClose: 5000 });
+      toast.error(errorMessage);
     } finally {
       setActionLoadingId(null);
     }

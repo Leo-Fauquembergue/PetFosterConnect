@@ -92,28 +92,4 @@ export class ApplicationsController {
   ) {
     return this.applicationsService.remove(candidateId, animalId);
   }
-
-  @Post(":candidateId/:animalId/accept")
-  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
-  @Roles(UserRole.shelter, UserRole.admin)
-  @CheckOwner({ type: "animal", idParam: "animalId" })
-  @ApiOperation({ summary: "Accepter formellement une demande" })
-  async accept(
-    @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
-    @Param("animalId", new ZodPipe(IdSchema)) animalId: number
-  ) {
-    return this.applicationsService.acceptApplication(candidateId, animalId);
-  }
-
-  @Post(":candidateId/:animalId/reject")
-  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
-  @Roles(UserRole.shelter, UserRole.admin)
-  @CheckOwner({ type: "animal", idParam: "animalId" })
-  @ApiOperation({ summary: "Refuser formellement une demande" })
-  async reject(
-    @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
-    @Param("animalId", new ZodPipe(IdSchema)) animalId: number
-  ) {
-    return this.applicationsService.rejectApplication(candidateId, animalId);
-  }
 }
