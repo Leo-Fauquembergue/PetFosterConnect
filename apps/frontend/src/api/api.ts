@@ -38,17 +38,22 @@ const NO_REDIRECT_API_ROUTES = ["/auth/login", "/auth/register", "/auth/me"];
 
 // État de rafraîchissement
 let isRefreshing = false;
-let failedQueue: Array<{
+
+type QueueItem = {
   resolve: (value: unknown) => void;
   reject: (reason?: unknown) => void;
-}> = [];
+};
 
-const processQueue = (error: unknown = null, token: string | null = null) => {
+let failedQueue: QueueItem[] = [];
+
+const REFRESH_TIMEOUT = 10000;
+
+const processQueue = (error: unknown = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(null);
     }
   });
   failedQueue = [];
@@ -59,18 +64,16 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const status = error.response?.status;
-    const requestUrl = originalRequest.url || "";
     const currentPath = window.location.pathname;
 
+    const requestUrl = originalRequest.url || "";
     const isAuthApiRequest = NO_REDIRECT_API_ROUTES.some((route) => requestUrl.includes(route));
 
-    // Gestion de l'erreur 403 (Interdit)
     if (status === 403 && currentPath !== "/interdit") {
       window.dispatchEvent(new CustomEvent("auth:forbidden"));
       return Promise.reject(error);
     }
 
-    // Si ce n'est pas une 401, ou si c'est une 401 sur une route d'auth/retry, on gère la déconnexion
     if (status !== 401 || originalRequest._retry || isAuthApiRequest) {
       if (status === 401 && currentPath !== "/connexion" && currentPath !== "/inscription") {
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
@@ -78,28 +81,58 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Gestion de la race condition pour le rafraîchissement
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
       })
-        .then(() => api(originalRequest))
+        .then(() => {
+          if (originalRequest.signal?.aborted) {
+            return Promise.reject(new axios.CanceledError("canceled"));
+          }
+          const csrfToken = api.defaults.headers.common["x-csrf-token"];
+          const newConfig = {
+            ...originalRequest,
+            headers: axios.AxiosHeaders.concat(
+              originalRequest.headers,
+              csrfToken ? { "x-csrf-token": csrfToken } : {}
+            ),
+          };
+          return api(newConfig);
+        })
         .catch((err) => Promise.reject(err));
     }
 
     originalRequest._retry = true;
     isRefreshing = true;
 
-    try {
-      await api.post("/auth/refresh");
-      isRefreshing = false;
-      processQueue();
-      return api(originalRequest);
-    } catch (refreshError) {
-      isRefreshing = false;
-      processQueue(refreshError, null);
+    const refreshController = new AbortController();
+    const timeoutId = setTimeout(() => refreshController.abort(), REFRESH_TIMEOUT);
 
-      // Redirection si échec définitif du rafraîchissement
+    try {
+      const refreshResponse = await api.post("/auth/refresh", undefined, { signal: refreshController.signal });
+      clearTimeout(timeoutId);
+
+      if (refreshResponse.data?.csrfToken) {
+        api.defaults.headers.common["x-csrf-token"] = refreshResponse.data.csrfToken;
+      }
+
+      isRefreshing = false;
+      processQueue(null);
+
+      const csrfToken = api.defaults.headers.common["x-csrf-token"];
+      const newConfig = {
+        ...originalRequest,
+        headers: axios.AxiosHeaders.concat(
+          originalRequest.headers,
+          csrfToken ? { "x-csrf-token": csrfToken } : {}
+        ),
+      };
+      return api(newConfig);
+    } catch (refreshError) {
+      clearTimeout(timeoutId);
+      isRefreshing = false;
+      processQueue(refreshError);
+
       if (currentPath !== "/connexion" && currentPath !== "/inscription") {
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
       }
