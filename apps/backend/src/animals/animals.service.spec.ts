@@ -118,18 +118,33 @@ describe("AnimalsService", () => {
   });
 
   describe("remove", () => {
-    it('devrait faire un "soft delete" si l\'animal est disponible', async () => {
+    it('devrait faire un "soft delete" et rejeter les candidatures dans une transaction', async () => {
       const animal = { id: 1, pfcUserId: 5, animalStatus: "available" };
 
       mockPrisma.animal.findUnique.mockResolvedValue(animal);
       mockPrisma.animal.update.mockResolvedValue({ ...animal, deletedAt: new Date() });
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 3 });
 
-      await service.remove(1);
+      const result = await service.remove(1);
 
+      // 1. Vérification de l'animal
       expect(mockPrisma.animal.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { deletedAt: expect.any(Date) },
       });
+
+      // 2. Vérification du rejet des candidatures
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
+        where: {
+          animalId: 1,
+          applicationStatus: "pending",
+        },
+        data: { applicationStatus: "rejected" },
+      });
+
+      // 3. Vérification de la transaction
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(result.id).toBe(1);
     });
 
     it("devrait lever une BadRequestException si l'animal est déjà adopté ou en famille d'accueil", async () => {
@@ -140,6 +155,8 @@ describe("AnimalsService", () => {
       await expect(service.remove(1)).rejects.toThrow(
         "Impossible de supprimer un animal déjà adopté ou en famille d'accueil afin de conserver l'historique."
       );
+      
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
       expect(mockPrisma.animal.update).not.toHaveBeenCalled();
     });
 

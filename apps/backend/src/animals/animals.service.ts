@@ -135,6 +135,7 @@ export class AnimalsService {
   }
 
   async remove(id: number) {
+    // 1. Vérification préalable hors transaction pour des messages d'erreur clairs
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
     if (!animal || animal.deletedAt) {
@@ -147,16 +148,17 @@ export class AnimalsService {
       );
     }
 
-    // ⚡ Utilisation d'une transaction pour éviter les "données fantômes"
-    // On supprime l'animal ET on rejette les candidatures en cours
+    // 2. Transaction pour garantir l'atomicité du soft-delete et du rejet des candidatures
+    // Performance : L'utilisation de updateMany sur animalId est rapide car c'est une clé étrangère indexée.
+    // Verrous : Postgres verrouille uniquement les lignes impactées (animal + ses candidatures).
     return this.prisma.$transaction(async (tx) => {
-      // 1. Soft-delete de l'animal
+      // Soft-delete de l'animal
       const updatedAnimal = await tx.animal.update({
         where: { id },
         data: { deletedAt: new Date() },
       });
 
-      // 2. Rejet automatique des candidatures 'pending' pour cet animal
+      // Rejet silencieux (sans email) des candidatures en attente
       await tx.application.updateMany({
         where: {
           animalId: id,
