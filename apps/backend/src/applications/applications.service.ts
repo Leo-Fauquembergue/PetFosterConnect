@@ -27,6 +27,19 @@ export class ApplicationsService {
   ) {}
 
   async create(userId: number, createDto: CreateApplicationDto) {
+    const animal = await this.prisma.animal.findUnique({
+      where: { id: createDto.animalId },
+      select: { deletedAt: true, animalStatus: true },
+    });
+
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException("Animal introuvable ou supprimé.");
+    }
+
+    if (animal.animalStatus !== "available") {
+      throw new ConflictException("Cet animal n'est plus disponible pour une candidature.");
+    }
+
     try {
       return await this.prisma.application.create({
         data: {

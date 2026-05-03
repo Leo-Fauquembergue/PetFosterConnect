@@ -107,7 +107,9 @@ export class AnimalsService {
   async update(id: number, updateAnimalDto: UpdateAnimalDto, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException("Animal introuvable ou supprimé");
+    }
 
     this.checkOwnership(animal.pfcUserId, user, "Vous ne pouvez modifier que vos animaux.");
 
@@ -138,7 +140,9 @@ export class AnimalsService {
   async remove(id: number, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException("Animal introuvable ou déjà supprimé");
+    }
 
     this.checkOwnership(animal.pfcUserId, user, "Action interdite sur cet animal.");
 
