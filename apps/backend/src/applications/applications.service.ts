@@ -89,7 +89,7 @@ export class ApplicationsService {
       include: {
         animal: true,
         user: {
-          include: { individualProfile: true },
+          select: { id: true, email: true, phoneNumber: true, role: true, individualProfile: true },
         },
       },
     });
