@@ -50,4 +50,9 @@ export const applicationApi = {
     const response = await api.delete(`/applications/${animalId}/${candidateId}`);
     return response.data;
   },
+
+  cancelOwnApplication: async (animalId: number) => {
+    const response = await api.delete(`/applications/me/${animalId}`);
+    return response.data;
+  },
 };

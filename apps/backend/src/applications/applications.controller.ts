@@ -79,6 +79,17 @@ export class ApplicationsController {
     return this.applicationsService.updateStatus(candidateId, animalId, updateDto, req.user);
   }
 
+  @Delete("me/:animalId")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.individual)
+  @ApiOperation({ summary: "Annuler sa propre demande d'adoption" })
+  cancelOwn(
+    @Req() req: RequestWithUser,
+    @Param("animalId", new ZodPipe(IdSchema)) animalId: number
+  ) {
+    return this.applicationsService.cancelOwn(req.user.id, animalId);
+  }
+
   @Delete(":animalId/:candidateId")
   @UseGuards(RolesGuard)
   @Roles(UserRole.shelter, UserRole.admin)

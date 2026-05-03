@@ -117,6 +117,21 @@ export class ApplicationsService {
     });
   }
 
+  async cancelOwn(candidateId: number, animalId: number) {
+    const application = await this.prisma.application.findUnique({
+      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+    });
+
+    if (!application || application.deletedAt) {
+      throw new NotFoundException("Demande introuvable ou déjà annulée");
+    }
+
+    return this.prisma.application.update({
+      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+      data: { deletedAt: new Date() },
+    });
+  }
+
   async remove(candidateId: number, animalId: number, user: UserPayload) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
 
