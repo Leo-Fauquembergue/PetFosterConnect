@@ -26,9 +26,21 @@ export default function AnimalDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [hasApplied, setHasApplied] = useState(false);
-  const { animal, loading, error, isFavorite, setIsFavorite, selectedPhoto, setSelectedPhoto } =
-    useAnimal(id);
+  const [hasAppliedLocally, setHasAppliedLocally] = useState(false);
+  const {
+    animal,
+    loading,
+    error,
+    isFavorite,
+    setIsFavorite,
+    selectedPhoto,
+    setSelectedPhoto,
+    myApplicationStatus,
+    setMyApplicationStatus,
+  } = useAnimal(id);
+
+  // Détermination de l'état d'affichage
+  const effectiveStatus = hasAppliedLocally ? "pending" : myApplicationStatus;
 
   // Formulaire d'adoption
   const adoptForm = useForm<CreateApplicationDto>({
@@ -54,7 +66,8 @@ export default function AnimalDetail() {
     if (!user) return navigate("/connexion");
     try {
       await applicationApi.createApplication(data);
-      setHasApplied(true);
+      setHasAppliedLocally(true);
+      setMyApplicationStatus("pending");
       toast.success(
         data.applicationType === "adoption"
           ? "Demande d'adoption envoyée !"
@@ -262,60 +275,79 @@ export default function AnimalDetail() {
                 >
                   Modifier
                 </Button>
-              ) : hasApplied ? (
-                <p className="text-success font-semibold">
-                  Demande déjà réalisée pour cet animal ✅
-                </p>
+              ) : effectiveStatus === "pending" ? (
+                <div className="text-center p-4 bg-warning/10 rounded-lg text-warning border border-warning/20">
+                  <p className="font-semibold">Demande en cours d'examen ✅</p>
+                  <p className="text-xs">Le refuge a bien reçu votre message.</p>
+                </div>
+              ) : effectiveStatus === "approved" ? (
+                <div className="text-center p-4 bg-success/10 rounded-lg text-success border border-success/20">
+                  <p className="font-semibold">Félicitations ! Votre demande a été acceptée 🐾</p>
+                </div>
+              ) : effectiveStatus === "rejected" ? (
+                <div className="text-center p-4 bg-error/10 rounded-lg text-error border border-error/20">
+                  <p className="font-semibold">Candidature non retenue pour le moment.</p>
+                </div>
               ) : animal.animalStatus === "available" ? (
                 <>
-                  <form
-                    onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
-                    className="flex items-start gap-4"
-                  >
-                    <div className="flex-grow">
-                      <Input
-                        label="Message d'adoption"
-                        placeholder="Pourquoi souhaitez-vous adopter ?"
-                        className="bg-white"
-                        {...adoptForm.register("message")}
-                        error={adoptForm.formState.errors.message?.message}
-                      />
-                    </div>
-                    <div className="w-40 mt-[26px]">
-                      <Button
-                        variant="primary"
-                        fullWidth
-                        type="submit"
-                        disabled={adoptForm.formState.isSubmitting}
+                  {(effectiveStatus === "cancelled" || !effectiveStatus) && (
+                    <>
+                      {effectiveStatus === "cancelled" && (
+                        <p className="text-xs text-gray-500 mb-2 italic">
+                          Vous aviez annulé votre précédente demande. Vous pouvez en soumettre une
+                          nouvelle.
+                        </p>
+                      )}
+                      <form
+                        onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
+                        className="flex items-start gap-4"
                       >
-                        {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
-                      </Button>
-                    </div>
-                  </form>
-                  <form
-                    onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
-                    className="flex items-start gap-4"
-                  >
-                    <div className="flex-grow">
-                      <Input
-                        label="Message pour l'accueil"
-                        placeholder="Vos disponibilités et motivations..."
-                        className="bg-white"
-                        {...fosterForm.register("message")}
-                        error={fosterForm.formState.errors.message?.message}
-                      />
-                    </div>
-                    <div className="w-40 mt-[26px]">
-                      <Button
-                        variant="primary"
-                        fullWidth
-                        type="submit"
-                        disabled={fosterForm.formState.isSubmitting}
+                        <div className="flex-grow">
+                          <Input
+                            label="Message d'adoption"
+                            placeholder="Pourquoi souhaitez-vous adopter ?"
+                            className="bg-white"
+                            {...adoptForm.register("message")}
+                            error={adoptForm.formState.errors.message?.message}
+                          />
+                        </div>
+                        <div className="w-40 mt-[26px]">
+                          <Button
+                            variant="primary"
+                            fullWidth
+                            type="submit"
+                            disabled={adoptForm.formState.isSubmitting}
+                          >
+                            {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
+                          </Button>
+                        </div>
+                      </form>
+                      <form
+                        onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
+                        className="flex items-start gap-4"
                       >
-                        {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
-                      </Button>
-                    </div>
-                  </form>
+                        <div className="flex-grow">
+                          <Input
+                            label="Message pour l'accueil"
+                            placeholder="Vos disponibilités et motivations..."
+                            className="bg-white"
+                            {...fosterForm.register("message")}
+                            error={fosterForm.formState.errors.message?.message}
+                          />
+                        </div>
+                        <div className="w-40 mt-[26px]">
+                          <Button
+                            variant="primary"
+                            fullWidth
+                            type="submit"
+                            disabled={fosterForm.formState.isSubmitting}
+                          >
+                            {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
                 </>
               ) : (
                 <div className="text-center p-4 bg-gray-50 rounded-lg text-gray-500 border border-gray-200">

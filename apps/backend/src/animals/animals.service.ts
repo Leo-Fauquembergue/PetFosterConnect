@@ -80,6 +80,8 @@ export class AnimalsService {
           },
         },
         bookmarks: userId ? { where: { pfcUserId: userId } } : false,
+        // ⚡ AJOUT : On récupère aussi le statut de la candidature de l'utilisateur connecté
+        applications: userId ? { where: { pfcUserId: userId, deletedAt: null } } : false,
       },
     });
 
@@ -88,10 +90,11 @@ export class AnimalsService {
     }
 
     const isBookmarked = !!animal.bookmarks?.length;
+    const myApplicationStatus = animal.applications?.[0]?.applicationStatus || null;
 
-    // On supprime bookmarks du retour pour éviter de l’exposer
-    const { bookmarks, ...rest } = animal;
-    return { ...rest, isBookmarked };
+    // On nettoie le retour
+    const { bookmarks, applications, ...rest } = animal;
+    return { ...rest, isBookmarked, myApplicationStatus } as unknown as AnimalWithBookmark;
   }
 
   async findAllByShelter(userId: number) {

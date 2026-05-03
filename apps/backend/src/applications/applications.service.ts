@@ -32,8 +32,21 @@ export class ApplicationsService {
     }
 
     try {
-      return await this.prisma.application.create({
-        data: {
+      // ⚡ RE-APPLY LOGIC : Si une demande annulée existe, on la réactive au lieu d'en créer une nouvelle
+      return await this.prisma.application.upsert({
+        where: {
+          pfcUserId_animalId: {
+            pfcUserId: userId,
+            animalId: createDto.animalId,
+          },
+        },
+        update: {
+          applicationType: createDto.applicationType,
+          message: createDto.message,
+          applicationStatus: "pending", // On repasse en attente
+          deletedAt: null, // On restaure si c'était soft-deleted
+        },
+        create: {
           pfcUserId: userId,
           animalId: createDto.animalId,
           applicationType: createDto.applicationType,
@@ -77,10 +90,11 @@ export class ApplicationsService {
       where: {
         animal: {
           pfcUserId: shelterId,
-          deletedAt: null, // 🛡️ FILTRE : Exclut les candidatures pour animaux supprimés
+          deletedAt: null,
         },
         deletedAt: null,
-        applicationStatus: { not: "cancelled" }, // 🛡️ FILTRE : Exclut les candidatures annulées par le candidat
+        // ⚡ FILTRE : Exclut explicitement les candidatures annulées
+        applicationStatus: { notIn: ["cancelled"] },
       },
       select: {
         pfcUserId: true,
@@ -167,7 +181,9 @@ export class ApplicationsService {
       throw new ConflictException("Impossible d'annuler cette demande (déjà traitée ou annulée).");
     }
 
-    return { message: "Demande annulée avec succès" };
+    return this.prisma.application.findUnique({
+      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+    });
   }
 
   async remove(candidateId: number, animalId: number) {

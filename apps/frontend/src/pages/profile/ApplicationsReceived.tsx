@@ -126,12 +126,15 @@ export default function ApplicationsReceived() {
                       ? "bg-warning/10 text-warning"
                       : app.applicationStatus === "approved"
                         ? "bg-success/10 text-success"
-                        : "bg-error/10 text-error"
+                        : app.applicationStatus === "cancelled"
+                          ? "bg-gray-100 text-gray-500"
+                          : "bg-error/10 text-error"
                   } `}
                 >
                   {app.applicationStatus === "pending" && "En attente"}
                   {app.applicationStatus === "approved" && "Acceptée"}
                   {app.applicationStatus === "rejected" && "Refusée"}
+                  {app.applicationStatus === "cancelled" && "Annulée par le candidat"}
                 </span>
               </div>
 

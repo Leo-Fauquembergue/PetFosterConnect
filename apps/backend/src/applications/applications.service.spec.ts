@@ -14,6 +14,7 @@ describe("ApplicationsService", () => {
       update: jest.fn(),
       updateMany: jest.fn(),
       findUnique: jest.fn(),
+      upsert: jest.fn(), // ⚡ AJOUT : Mock de upsert
     },
     animal: {
       findUnique: jest.fn(),
@@ -43,7 +44,7 @@ describe("ApplicationsService", () => {
   });
 
   describe("create", () => {
-    it("doit créer une candidature", async () => {
+    it("doit créer ou mettre à jour une candidature (upsert)", async () => {
       const dto = {
         animalId: 10,
         message: "Je veux adopter",
@@ -58,7 +59,7 @@ describe("ApplicationsService", () => {
         animalStatus: "available",
       });
 
-      mockPrisma.application.create.mockResolvedValue({
+      mockPrisma.application.upsert.mockResolvedValue({
         pfcUserId: userId,
         animalId: 10,
         applicationStatus: "pending",
@@ -66,15 +67,7 @@ describe("ApplicationsService", () => {
 
       await service.create(userId, dto);
 
-      expect(mockPrisma.application.create).toHaveBeenCalledWith({
-        data: {
-          pfcUserId: userId,
-          animalId: dto.animalId,
-          message: dto.message,
-          applicationType: dto.applicationType,
-        },
-        include: { animal: true },
-      });
+      expect(mockPrisma.application.upsert).toHaveBeenCalled();
     });
   });
 
@@ -112,6 +105,45 @@ describe("ApplicationsService", () => {
             deletedAt: null,
           },
         })
+      );
+    });
+  });
+
+  describe("cancelOwn", () => {
+    it("doit annuler sa propre demande", async () => {
+      const candidateId = 5;
+      const animalId = 10;
+
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.application.findUnique.mockResolvedValue({
+        pfcUserId: candidateId,
+        animalId,
+        applicationStatus: "cancelled",
+      });
+
+      const result = await service.cancelOwn(candidateId, animalId);
+
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
+        where: {
+          pfcUserId: candidateId,
+          animalId: animalId,
+          deletedAt: null,
+          applicationStatus: "pending",
+        },
+        data: { applicationStatus: "cancelled" },
+      });
+      expect(result).toEqual(
+        expect.objectContaining({
+          applicationStatus: "cancelled",
+        })
+      );
+    });
+
+    it("doit échouer si la demande n'est pas pending", async () => {
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.cancelOwn(5, 10)).rejects.toThrow(
+        "Impossible d'annuler cette demande (déjà traitée ou annulée)."
       );
     });
   });

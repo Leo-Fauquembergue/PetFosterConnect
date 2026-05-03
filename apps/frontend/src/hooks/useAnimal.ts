@@ -1,4 +1,4 @@
-import type { AnimalDetailResponse } from "@projet/shared-types";
+import type { AnimalDetailResponse, ApplicationStatus } from "@projet/shared-types";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -12,6 +12,7 @@ export const useAnimal = (id: string | undefined) => {
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [myApplicationStatus, setMyApplicationStatus] = useState<ApplicationStatus | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -31,6 +32,10 @@ export const useAnimal = (id: string | undefined) => {
 
         if (data.isBookmarked !== undefined) {
           setIsFavorite(data.isBookmarked);
+        }
+
+        if (data.myApplicationStatus !== undefined) {
+          setMyApplicationStatus(data.myApplicationStatus);
         }
 
         if (mappedAnimal.photos && mappedAnimal.photos.length > 0) {
@@ -67,6 +72,8 @@ export const useAnimal = (id: string | undefined) => {
     setIsFavorite,
     selectedPhoto,
     setSelectedPhoto,
+    myApplicationStatus,
+    setMyApplicationStatus,
     setAnimal,
   };
 };
