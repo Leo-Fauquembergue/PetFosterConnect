@@ -57,8 +57,9 @@ export class EmailsService {
   // -------------------------------
 
   private getTemplate(name: string): handlebars.TemplateDelegate {
-    if (this.templateCache.has(name)) {
-      return this.templateCache.get(name)!;
+    const cachedTemplate = this.templateCache.get(name);
+    if (cachedTemplate) {
+      return cachedTemplate;
     }
 
     const filePath = path.join(this.templatesDir, `${name}.hbs`);
@@ -73,7 +74,7 @@ export class EmailsService {
     return template;
   }
 
-  private compileTemplate(templateName: string, data: any): string {
+  private compileTemplate(templateName: string, data: Record<string, unknown>): string {
     try {
       const layout = this.getTemplate("layout");
       const template = this.getTemplate(templateName);
