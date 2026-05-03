@@ -33,10 +33,10 @@ export class ApplicationsController {
   @Roles(UserRole.individual)
   @ApiOperation({ summary: "Créer une demande d'adoption" })
   @ApiResponse({ status: 201, description: "Demande créée avec succès" })
-  @UsePipes(new ZodPipe(sharedTypes.CreateApplicationSchema))
   create(
     @Req() req: RequestWithUser,
-    @Body() createApplicationDto: sharedTypes.CreateApplicationDto
+    @Body(new ZodPipe(sharedTypes.CreateApplicationSchema))
+    createApplicationDto: sharedTypes.CreateApplicationDto
   ) {
     return this.applicationsService.create(req.user.id, createApplicationDto);
   }
@@ -69,12 +69,12 @@ export class ApplicationsController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.shelter, UserRole.admin)
   @ApiOperation({ summary: "Mettre à jour le statut d'une demande" })
-  @UsePipes(new ZodPipe(sharedTypes.UpdateApplicationStatusSchema))
   update(
     @Req() req: RequestWithUser,
     @Param("animalId", new ZodPipe(IdSchema)) animalId: number,
     @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
-    @Body() updateDto: sharedTypes.UpdateApplicationStatusDto
+    @Body(new ZodPipe(sharedTypes.UpdateApplicationStatusSchema))
+    updateDto: sharedTypes.UpdateApplicationStatusDto
   ) {
     return this.applicationsService.updateStatus(candidateId, animalId, updateDto, req.user);
   }

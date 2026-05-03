@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { LoginDto, RegisterDto } from "@projet/shared-types";
@@ -22,14 +23,17 @@ export class AuthService {
     const isValid = await argon2.verify(user.password, dto.password);
     if (!isValid) throw new UnauthorizedException("Email ou mot de passe incorrect");
 
+    const csrfToken = randomBytes(32).toString("hex");
+
     const token = this.jwtService.sign({
       sub: user.id,
       email: user.email,
       role: user.role,
+      csrfToken, // 🛡️ SÉCURITÉ : Bindé au JWT
     });
 
     const userSafe = await this.usersService.getProfile(user.id);
-    return { user: userSafe, token };
+    return { user: userSafe, token, csrfToken };
   }
 
   async register(dto: RegisterDto) {
@@ -47,13 +51,16 @@ export class AuthService {
       shelterName: dto.shelterName ?? "",
     });
 
+    const csrfToken = randomBytes(32).toString("hex");
+
     const token = this.jwtService.sign({
       sub: newUser.id,
       email: newUser.email,
       role: newUser.role,
+      csrfToken, // 🛡️ SÉCURITÉ : Bindé au JWT
     });
 
     const userSafe = await this.usersService.getProfile(newUser.id);
-    return { user: userSafe, token };
+    return { user: userSafe, token, csrfToken };
   }
 }

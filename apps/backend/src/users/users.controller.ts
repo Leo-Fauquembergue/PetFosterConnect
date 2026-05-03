@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Put,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "@prisma/client";
 // ⚡ Import des types uniquement pour le typage (compile-time)
@@ -65,10 +54,10 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "Profil individuel mis à jour avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  @UsePipes(new ZodPipe(UpdateUserWithIndividualProfileSchema))
   async updateIndividualProfile(
     @Param("id", new ZodPipe(IdSchema)) id: number,
-    @Body() updateDto: UpdateUserWithIndividualProfileDto
+    @Body(new ZodPipe(UpdateUserWithIndividualProfileSchema))
+    updateDto: UpdateUserWithIndividualProfileDto
   ) {
     return this.usersService.updateIndividualProfile(id, updateDto);
   }
@@ -81,10 +70,10 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "Profil refuge mis à jour avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  @UsePipes(new ZodPipe(UpdateUserWithShelterProfileSchema))
   async updateShelterProfile(
     @Param("id", new ZodPipe(IdSchema)) id: number,
-    @Body() updateDto: UpdateUserWithShelterProfileDto
+    @Body(new ZodPipe(UpdateUserWithShelterProfileSchema))
+    updateDto: UpdateUserWithShelterProfileDto
   ) {
     return this.usersService.updateShelterProfile(id, updateDto);
   }
@@ -113,8 +102,7 @@ export class UsersController {
   @ApiOperation({ summary: "Créer un nouvel utilisateur (Admin)" })
   @ApiResponse({ status: 201, description: "Utilisateur créé avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides ou email déjà utilisé" })
-  @UsePipes(new ZodPipe(sharedTypes.RegisterSchema))
-  create(@Body() body: sharedTypes.RegisterDto) {
+  create(@Body(new ZodPipe(sharedTypes.RegisterSchema)) body: sharedTypes.RegisterDto) {
     return this.usersService.create(body);
   }
 

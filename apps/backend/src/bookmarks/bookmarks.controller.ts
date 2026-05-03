@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards, UsePipes } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 // ⚡ Typage strict de l'objet Request
 import type { RequestWithUser } from "@projet/shared-types";
@@ -23,10 +23,9 @@ export class BookmarksController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 401, description: "Non authentifié" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
-  @UsePipes(new ZodPipe(CreateBookmarkSchema))
   async toggle(
     @Req() req: RequestWithUser, // ⚡ Retrait du any
-    @Body() dto: CreateBookmarkDto
+    @Body(new ZodPipe(CreateBookmarkSchema)) dto: CreateBookmarkDto
   ) {
     // 🔒 L'ID utilisateur est extrait de force depuis le JWT, usurpation impossible
     return this.bookmarksService.toggle(req.user.id, dto.animalId);

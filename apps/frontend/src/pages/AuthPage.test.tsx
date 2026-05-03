@@ -70,6 +70,7 @@ describe("AuthPage - LoginForm", () => {
                   phoneNumber: "0600000000",
                   address: "Paris",
                 } as unknown as User,
+                csrfToken: "fake-csrf-token",
               }),
             50
           )

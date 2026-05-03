@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserRole } from "@prisma/client";
+import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
@@ -14,6 +15,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
   let legitShelterToken: string;
   let attackerShelterToken: string;
   let individualToken: string;
+  const csrfToken = "test-csrf-token";
 
   let legitShelterId: number;
   let individualId: number;
@@ -25,12 +27,15 @@ describe("Applications (E2E) - Security & IDOR", () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
 
     prisma = app.get<PrismaService>(PrismaService);
     jwtService = app.get<JwtService>(JwtService);
 
+    // 🧹 Nettoyage robuste dans le bon ordre des contraintes
+    await prisma.bookmark.deleteMany();
     await prisma.application.deleteMany();
     await prisma.animal.deleteMany();
     await prisma.species.deleteMany();
@@ -44,6 +49,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
       sub: legitShelter.id,
       email: legitShelter.email,
       role: legitShelter.role,
+      csrfToken,
     });
 
     const attackerShelter = await prisma.pfcUser.create({
@@ -53,6 +59,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
       sub: attackerShelter.id,
       email: attackerShelter.email,
       role: attackerShelter.role,
+      csrfToken,
     });
 
     const individual = await prisma.pfcUser.create({
@@ -63,6 +70,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
       sub: individual.id,
       email: individual.email,
       role: individual.role,
+      csrfToken,
     });
 
     const species = await prisma.species.create({ data: { name: "Chat" } });
@@ -90,6 +98,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
     it("doit bloquer l'accès sans token (401)", async () => {
       await request(app.getHttpServer())
         .post("/applications")
+        .set("x-csrf-token", "any-token")
         .send({
           animalId: animalId,
           message: "Je souhaite adopter Mimi",
@@ -102,6 +111,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
       await request(app.getHttpServer())
         .post("/applications")
         .set("Authorization", `Bearer ${individualToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({
           animalId: "id_invalide", // Doit être un nombre
           applicationType: "vol", // Invalide (adoption ou foster)
@@ -113,6 +123,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
       const response = await request(app.getHttpServer())
         .post("/applications")
         .set("Authorization", `Bearer ${individualToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({
           animalId: animalId,
           message: "Je souhaite adopter Mimi",
@@ -129,6 +140,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
       await request(app.getHttpServer())
         .patch(`/applications/${animalId}/${individualId}/status`)
         .set("Authorization", `Bearer ${attackerShelterToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({ applicationStatus: "approved" })
         .expect(403);
     });
@@ -137,6 +149,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
       await request(app.getHttpServer())
         .patch(`/applications/${animalId}/${individualId}/status`)
         .set("Authorization", `Bearer ${legitShelterToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({ applicationStatus: "approved" })
         .expect(200);
     });

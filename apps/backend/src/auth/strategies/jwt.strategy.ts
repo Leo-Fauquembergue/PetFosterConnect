@@ -12,6 +12,7 @@ export interface JwtPayload {
   sub: string | number;
   email: string;
   role: UserRole;
+  csrfToken: string; // 🛡️ SÉCURITÉ : Jeton lié cryptographiquement au JWT
   iat?: number;
   exp?: number;
 }

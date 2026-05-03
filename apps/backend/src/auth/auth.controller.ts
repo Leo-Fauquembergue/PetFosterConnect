@@ -1,5 +1,6 @@
-import { randomBytes } from "node:crypto";
 import { Body, Controller, Get, Post, Req, Res, UseGuards, UsePipes } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { RequestWithUser } from "@projet/shared-types";
 import * as sharedTypes from "@projet/shared-types";
@@ -15,46 +16,50 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService
   ) {}
 
   @Get("csrf")
   @ApiOperation({ summary: "Obtenir un jeton CSRF" })
-  getCsrfToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    let token = req.cookies["csrf-token"];
+  getCsrfToken(@Req() req: Request) {
+    const jwtCookie = req.cookies[COOKIE_NAME];
 
-    if (!token) {
-      token = randomBytes(32).toString("hex");
-      const isProd = process.env.NODE_ENV === "production";
-
-      res.cookie("csrf-token", token, {
-        httpOnly: true, // Non lisible par JS
-        secure: isProd,
-        sameSite: isProd ? "none" : "lax",
-        domain: process.env.COOKIE_DOMAIN || undefined,
-        path: "/",
-      });
+    if (jwtCookie) {
+      try {
+        const payload = this.jwtService.verify(jwtCookie, {
+          secret: this.configService.get<string>("JWT_SECRET"),
+        });
+        return { csrfToken: payload.csrfToken };
+      } catch {
+        // En cas d'erreur de décodage, on retombe sur le cas anonyme
+      }
     }
 
-    return { csrfToken: token };
+    // Pour les anonymes, on retourne un jeton statique.
+    // Sa simple présence dans le header x-csrf-token protégera contre le CSRF
+    // car un attaquant ne peut pas forcer l'ajout d'un header personnalisé
+    // sans un preflight CORS réussi (qu'il n'aura pas depuis evil.com).
+    return { csrfToken: "initial" };
   }
 
   @Post("register")
   @ApiOperation({ summary: "Inscription d'un nouvel utilisateur" })
   @UsePipes(new ZodPipe(sharedTypes.RegisterSchema))
   async register(@Body() dto: sharedTypes.RegisterDto, @Res({ passthrough: true }) res: Response) {
-    const { user, token } = await this.authService.register(dto);
+    const { user, token, csrfToken } = await this.authService.register(dto);
     this.setCookie(res, token);
-    return { user, access_token: token };
+    return { user, access_token: token, csrfToken };
   }
 
   @Post("login")
   @ApiOperation({ summary: "Connexion de l'utilisateur" })
   @UsePipes(new ZodPipe(sharedTypes.LoginSchema))
   async login(@Body() dto: sharedTypes.LoginDto, @Res({ passthrough: true }) res: Response) {
-    const { user, token } = await this.authService.login(dto);
+    const { user, token, csrfToken } = await this.authService.login(dto);
     this.setCookie(res, token);
-    return { user, access_token: token };
+    return { user, access_token: token, csrfToken };
   }
 
   @Post("logout")
@@ -87,7 +92,7 @@ export class AuthController {
      *
      * - sameSite: "none" est requis si le Front et le Back sont sur des domaines différents (ex: Vercel et Render).
      *   ATTENTION : Cela expose l'application aux attaques CSRF si aucune autre protection n'est en place.
-     *   Nous avons désormais ajouté un mécanisme de token CSRF (endpoint /auth/csrf + CsrfMiddleware).
+     *   Nous avons désormais lié le token CSRF au payload JWT.
      */
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,

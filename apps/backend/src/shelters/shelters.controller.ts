@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -46,8 +35,10 @@ export class SheltersController {
   @ApiOperation({ summary: "Créer un profil de refuge" })
   @ApiResponse({ status: 201, description: "Refuge créé avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides" })
-  @UsePipes(new ZodPipe(sharedTypes.CreateShelterProfileSchema))
-  create(@Body() body: sharedTypes.CreateShelterProfileDto) {
+  create(
+    @Body(new ZodPipe(sharedTypes.CreateShelterProfileSchema))
+    body: sharedTypes.CreateShelterProfileDto
+  ) {
     return this.sheltersService.create(body);
   }
 
@@ -97,10 +88,10 @@ export class SheltersController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
-  @UsePipes(new ZodPipe(sharedTypes.UpdateShelterProfileSchema))
   update(
     @Param("id", new ZodPipe(IdSchema)) id: number,
-    @Body() body: sharedTypes.UpdateShelterProfileDto
+    @Body(new ZodPipe(sharedTypes.UpdateShelterProfileSchema))
+    body: sharedTypes.UpdateShelterProfileDto
   ) {
     return this.sheltersService.update(id, body);
   }

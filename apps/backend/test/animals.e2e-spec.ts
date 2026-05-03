@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserRole } from "@prisma/client";
+import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
@@ -14,6 +15,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
   let shelterToken: string;
   let attackerToken: string;
   let individualToken: string;
+  const csrfToken = "test-csrf-token";
   let sharedSpeciesId: number;
   let createdAnimalId: number;
 
@@ -23,12 +25,16 @@ describe("Animals (E2E) - Security & RBAC", () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
 
     prisma = app.get<PrismaService>(PrismaService);
     jwtService = app.get<JwtService>(JwtService);
 
+    // 🧹 Nettoyage robuste dans le bon ordre des contraintes
+    await prisma.bookmark.deleteMany();
+    await prisma.application.deleteMany();
     await prisma.animal.deleteMany();
     await prisma.species.deleteMany();
     await prisma.pfcUser.deleteMany();
@@ -36,7 +42,12 @@ describe("Animals (E2E) - Security & RBAC", () => {
     const shelter = await prisma.pfcUser.create({
       data: { email: "refuge_legitime@test.com", password: "hash", role: UserRole.shelter },
     });
-    shelterToken = jwtService.sign({ sub: shelter.id, email: shelter.email, role: shelter.role });
+    shelterToken = jwtService.sign({
+      sub: shelter.id,
+      email: shelter.email,
+      role: shelter.role,
+      csrfToken,
+    });
 
     const attacker = await prisma.pfcUser.create({
       data: { email: "refuge_attaquant@test.com", password: "hash", role: UserRole.shelter },
@@ -45,6 +56,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       sub: attacker.id,
       email: attacker.email,
       role: attacker.role,
+      csrfToken,
     });
 
     const individual = await prisma.pfcUser.create({
@@ -54,6 +66,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       sub: individual.id,
       email: individual.email,
       role: individual.role,
+      csrfToken,
     });
 
     const species = await prisma.species.create({ data: { name: "Chien" } });
@@ -78,6 +91,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       await request(app.getHttpServer())
         .post("/animals")
         .set("Authorization", `Bearer ${individualToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({ ...createDto, speciesId: sharedSpeciesId })
         .expect(403);
     });
@@ -86,6 +100,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       const response = await request(app.getHttpServer())
         .post("/animals")
         .set("Authorization", `Bearer ${shelterToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({ ...createDto, speciesId: sharedSpeciesId })
         .expect(201);
 
@@ -108,6 +123,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       await request(app.getHttpServer())
         .patch(`/animals/${createdAnimalId}`)
         .set("Authorization", `Bearer ${attackerToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({ name: "Hacked Name" })
         .expect(403);
     });
@@ -116,6 +132,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       await request(app.getHttpServer())
         .patch(`/animals/${createdAnimalId}`)
         .set("Authorization", `Bearer ${shelterToken}`)
+        .set("x-csrf-token", csrfToken)
         .send({ name: "Pongo Modifié" })
         .expect(200);
     });
@@ -126,6 +143,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       await request(app.getHttpServer())
         .delete(`/animals/${createdAnimalId}`)
         .set("Authorization", `Bearer ${attackerToken}`)
+        .set("x-csrf-token", csrfToken)
         .expect(403);
     });
 
@@ -133,6 +151,7 @@ describe("Animals (E2E) - Security & RBAC", () => {
       await request(app.getHttpServer())
         .delete(`/animals/${createdAnimalId}`)
         .set("Authorization", `Bearer ${shelterToken}`)
+        .set("x-csrf-token", csrfToken)
         .expect(200);
 
       const deletedAnimal = await prisma.animal.findUnique({
