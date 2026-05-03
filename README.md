@@ -73,13 +73,13 @@ Les dépendances Prisma 7 (`dotenv`, `@prisma/config`) sont déjà incluses dans
 #### a. Lancer la migration (création des tables)
 
 ```bash
-NODE_CONFIG_STRATEGY=none npx prisma migrate dev --name init_db --schema=./prisma/schema.prisma
+NODE_CONFIG_STRATEGY=none npx prisma migrate dev --name init_db --schema=./apps/backend/prisma/schema.prisma
 ```
 
 #### c. Générer le client Prisma
 
 ```bash
-npx prisma generate --schema=./prisma/schema.prisma
+npx prisma generate --schema=./apps/backend/prisma/schema.prisma
 ```
 
 ### 6. Lancer le projet en mode développement
@@ -171,13 +171,13 @@ Le backend utilise **NestJS**, **Prisma 7** et **PostgreSQL** (via Docker). L'ar
 
 ```bash
 # Créer une nouvelle migration
-NODE_CONFIG_STRATEGY=none npx prisma migrate dev --name nom_migration --schema=./prisma/schema.prisma
+NODE_CONFIG_STRATEGY=none npx prisma migrate dev --name nom_migration --schema=./apps/backend/prisma/schema.prisma
 
 # Appliquer les migrations en production
-npx prisma migrate deploy --schema=./prisma/schema.prisma
+npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma
 
 # Réinitialiser la base de données (⚠️ supprime toutes les données)
-npx prisma migrate reset --schema=./prisma/schema.prisma
+npx prisma migrate reset --schema=./apps/backend/prisma/schema.prisma
 
 # Visualiser la base de données
 npx prisma studio --config=./prisma.config.ts
