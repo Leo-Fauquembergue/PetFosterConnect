@@ -120,9 +120,23 @@ export class ApplicationsService {
 
     this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
-    return this.prisma.application.update({
-      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+    // Empêcher de mettre à jour une candidature supprimée (ou déjà approuvée si on rejette)
+    const updateResult = await this.prisma.application.updateMany({
+      where: {
+        pfcUserId: candidateId,
+        animalId: animalId,
+        deletedAt: null,
+        applicationStatus: "pending", // On ne peut changer le statut que si elle est en attente
+      },
       data: { applicationStatus: updateDto.applicationStatus as ApplicationStatus },
+    });
+
+    if (updateResult.count === 0) {
+      throw new ConflictException("Candidature introuvable, déjà traitée ou annulée.");
+    }
+
+    return this.prisma.application.findUnique({
+      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
       include: {
         user: { select: { id: true, email: true, individualProfile: true } },
         animal: { select: { id: true, name: true, photos: true } },
@@ -131,18 +145,22 @@ export class ApplicationsService {
   }
 
   async cancelOwn(candidateId: number, animalId: number) {
-    const application = await this.prisma.application.findUnique({
-      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
-    });
-
-    if (!application || application.deletedAt) {
-      throw new NotFoundException("Demande introuvable ou déjà annulée");
-    }
-
-    return this.prisma.application.update({
-      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+    // Un utilisateur ne peut annuler que si la demande est toujours 'pending'
+    const updateResult = await this.prisma.application.updateMany({
+      where: {
+        pfcUserId: candidateId,
+        animalId: animalId,
+        deletedAt: null,
+        applicationStatus: "pending",
+      },
       data: { deletedAt: new Date() },
     });
+
+    if (updateResult.count === 0) {
+      throw new ConflictException("Impossible d'annuler cette demande (déjà traitée ou annulée).");
+    }
+
+    return { message: "Demande annulée avec succès" };
   }
 
   async remove(candidateId: number, animalId: number, user: UserPayload) {
@@ -152,10 +170,20 @@ export class ApplicationsService {
 
     this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
-    return this.prisma.application.update({
-      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+    const updateResult = await this.prisma.application.updateMany({
+      where: {
+        pfcUserId: candidateId,
+        animalId: animalId,
+        deletedAt: null,
+      },
       data: { deletedAt: new Date() },
     });
+
+    if (updateResult.count === 0) {
+      throw new NotFoundException("Demande introuvable ou déjà supprimée.");
+    }
+
+    return { message: "Demande archivée/supprimée avec succès" };
   }
 
   async acceptApplication(candidateId: number, animalId: number, user: UserPayload) {
@@ -167,22 +195,46 @@ export class ApplicationsService {
         throw new NotFoundException("Animal introuvable ou supprimé");
       this.checkOwnership(animal.pfcUserId, user, "Vous ne gérez pas cet animal.");
 
-      // Mise à jour de la demande acceptée
-      const updatedApp = await tx.application.update({
-        where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+      // Mise à jour de la demande acceptée via un verrou optimiste
+      const appUpdateResult = await tx.application.updateMany({
+        where: {
+          pfcUserId: candidateId,
+          animalId: animalId,
+          deletedAt: null, // S'assure qu'elle n'a pas été annulée entre-temps
+          applicationStatus: "pending", // S'assure qu'elle est toujours en attente
+        },
         data: { applicationStatus: "approved" as ApplicationStatus },
+      });
+
+      if (appUpdateResult.count === 0) {
+        throw new ConflictException(
+          "Cette candidature n'est plus valide (annulée ou déjà traitée)."
+        );
+      }
+
+      // Récupération de l'application modifiée pour la suite
+      const updatedApp = await tx.application.findUniqueOrThrow({
+        where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
         include: {
           user: { select: { id: true, email: true, individualProfile: true } },
           animal: { select: { id: true, name: true, photos: true } },
         },
       });
 
-      // Mise à jour du statut de l'animal
+      // Mise à jour conditionnelle du statut de l'animal (Optimistic Concurrency Control)
+      // Empêche d'écraser une adoption concurrente grâce au verrou de ligne (Row-Level Lock) de PostgreSQL
       const newAnimalStatus = updatedApp.applicationType === "adoption" ? "adopted" : "foster_care";
-      await tx.animal.update({
-        where: { id: animalId },
+      const animalUpdateResult = await tx.animal.updateMany({
+        where: {
+          id: animalId,
+          animalStatus: "available",
+        },
         data: { animalStatus: newAnimalStatus },
       });
+
+      if (animalUpdateResult.count === 0) {
+        throw new ConflictException("Cet animal a déjà été adopté ou placé entre-temps.");
+      }
 
       // Récupération des candidats à refuser avant de modifier leur statut
       const pendingApps = await tx.application.findMany({
@@ -190,6 +242,7 @@ export class ApplicationsService {
           animalId: animalId,
           pfcUserId: { not: candidateId },
           applicationStatus: "pending" as ApplicationStatus,
+          deletedAt: null,
         },
         include: {
           user: { select: { email: true, individualProfile: true } },
@@ -197,12 +250,13 @@ export class ApplicationsService {
         },
       });
 
-      // Refus automatique des autres demandes
+      // Refus automatique des autres demandes en attente
       await tx.application.updateMany({
         where: {
           animalId: animalId,
           pfcUserId: { not: candidateId },
           applicationStatus: "pending" as ApplicationStatus,
+          deletedAt: null,
         },
         data: { applicationStatus: "rejected" as ApplicationStatus },
       });
@@ -264,6 +318,10 @@ export class ApplicationsService {
       },
       user
     );
+
+    if (!application) {
+      throw new NotFoundException("Candidature introuvable post-rejet.");
+    }
 
     try {
       if (application.user?.email) {

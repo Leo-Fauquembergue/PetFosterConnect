@@ -18,6 +18,7 @@ describe("ApplicationsService", () => {
       findMany: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
+      findUnique: jest.fn(),
     },
     animal: {
       findUnique: jest.fn(),
@@ -57,6 +58,12 @@ describe("ApplicationsService", () => {
       // ⚡ Typage propre !
       const userId = 5;
 
+      mockPrisma.animal.findUnique.mockResolvedValue({
+        id: 10,
+        deletedAt: null,
+        animalStatus: "available",
+      });
+
       mockPrisma.application.create.mockResolvedValue({
         pfcUserId: userId,
         animalId: 10,
@@ -91,11 +98,12 @@ describe("ApplicationsService", () => {
       const fakeAnimal = { id: animalId, pfcUserId: 42 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
-      mockPrisma.application.update.mockResolvedValue({ applicationStatus: "approved" });
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.application.findUnique.mockResolvedValue({ applicationStatus: "approved" });
 
       await service.updateStatus(candidateId, animalId, statusDto, shelterOwner);
 
-      expect(mockPrisma.application.update).toHaveBeenCalled();
+      expect(mockPrisma.application.updateMany).toHaveBeenCalled();
     });
 
     it("doit lever une ForbiddenException (Faille IDOR bloquée) si un refuge tente de modifier la demande d'un autre refuge", async () => {
@@ -112,7 +120,7 @@ describe("ApplicationsService", () => {
         service.updateStatus(candidateId, animalId, statusDto, attackerShelter)
       ).rejects.toThrow(ForbiddenException);
 
-      expect(mockPrisma.application.update).not.toHaveBeenCalled();
+      expect(mockPrisma.application.updateMany).not.toHaveBeenCalled();
     });
 
     it("doit mettre à jour le statut si l'utilisateur est Admin (Privilège absolu)", async () => {
@@ -124,11 +132,12 @@ describe("ApplicationsService", () => {
       const fakeAnimal = { id: animalId, pfcUserId: 42 };
 
       mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
-      mockPrisma.application.update.mockResolvedValue({ applicationStatus: "approved" });
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.application.findUnique.mockResolvedValue({ applicationStatus: "approved" });
 
       await service.updateStatus(candidateId, animalId, statusDto, adminUser);
 
-      expect(mockPrisma.application.update).toHaveBeenCalled();
+      expect(mockPrisma.application.updateMany).toHaveBeenCalled();
     });
   });
 
