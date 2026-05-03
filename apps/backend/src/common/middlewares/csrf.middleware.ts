@@ -22,10 +22,11 @@ export class CsrfMiddleware implements NestMiddleware {
 
       /**
        * SÉCURITÉ : On autorise le bypass si un header Authorization est présent (Bearer token).
-       * Les requêtes avec Bearer token ne sont pas vulnérables au CSRF car le navigateur
-       * ne les envoie jamais automatiquement.
+       * 🛡️ PROTECTION : Ce bypass est désormais sûr car JwtStrategy priorise le Header sur le Cookie.
+       * Si un attaquant injecte un Bearer factice pour bypasser le CSRF, JwtStrategy tentera
+       * de valider ce Bearer factice et échouera (au lieu de se replier sur le cookie valide).
        */
-      if (authHeader?.startsWith("Bearer ")) {
+      if (authHeader?.startsWith("Bearer ") && authHeader.length > 7) {
         return next();
       }
 
