@@ -190,90 +190,92 @@ export class ApplicationsService {
   }
 
   async acceptApplication(candidateId: number, animalId: number) {
-    // 1. On regroupe les opérations BDD dans une transaction pour l'atomicité
-    const { application, pendingApplications } = await this.prisma.$transaction(async (tx) => {
-      // Vérification IDOR déjà faite par le Guard au niveau Controller.
-      // On s'assure juste que l'animal existe toujours et n'est pas supprimé.
-      const animal = await tx.animal.findUnique({ where: { id: animalId } });
-      if (!animal || animal.deletedAt)
-        throw new NotFoundException("Animal introuvable ou supprimé");
+    // 1. On regroupe les opérations BDD dans une transaction Serializable pour l'atomicité et l'isolation stricte
+    const { application, pendingApplications } = await this.prisma.$transaction(
+      async (tx) => {
+        // Vérification et verrouillage de l'animal
+        const animal = await tx.animal.findUnique({
+          where: { id: animalId },
+          select: { id: true, animalStatus: true, deletedAt: true },
+        });
 
-      // Mise à jour de la demande acceptée via un verrou optimiste
-      const appUpdateResult = await tx.application.updateMany({
-        where: {
-          pfcUserId: candidateId,
-          animalId: animalId,
-          deletedAt: null, // S'assure qu'elle n'a pas été annulée entre-temps
-          applicationStatus: "pending", // S'assure qu'elle est toujours en attente
-        },
-        data: { applicationStatus: "approved" as ApplicationStatus },
-      });
+        if (!animal || animal.deletedAt)
+          throw new NotFoundException("Animal introuvable ou supprimé");
 
-      if (appUpdateResult.count === 0) {
-        throw new ConflictException(
-          "Cette candidature n'est plus valide (annulée ou déjà traitée)."
-        );
+        if (animal.animalStatus !== "available") {
+          throw new ConflictException("Cet animal n'est plus disponible.");
+        }
+
+        // Mise à jour de la demande acceptée
+        const appUpdateResult = await tx.application.updateMany({
+          where: {
+            pfcUserId: candidateId,
+            animalId: animalId,
+            deletedAt: null,
+            applicationStatus: "pending",
+          },
+          data: { applicationStatus: "approved" },
+        });
+
+        if (appUpdateResult.count === 0) {
+          throw new ConflictException(
+            "Cette candidature n'est plus valide (annulée ou déjà traitée)."
+          );
+        }
+
+        // Récupération de l'application modifiée pour la suite
+        const updatedApp = await tx.application.findUniqueOrThrow({
+          where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+          include: {
+            user: { select: { id: true, email: true, individualProfile: true } },
+            animal: { select: { id: true, name: true, photos: true } },
+          },
+        });
+
+        // Mise à jour du statut de l'animal
+        const newAnimalStatus = updatedApp.applicationType === "adoption" ? "adopted" : "foster_care";
+        await tx.animal.update({
+          where: { id: animalId },
+          data: { animalStatus: newAnimalStatus },
+        });
+
+        // Récupération des candidats à refuser avant de modifier leur statut
+        const pendingApps = await tx.application.findMany({
+          where: {
+            animalId: animalId,
+            pfcUserId: { not: candidateId },
+            applicationStatus: "pending",
+            deletedAt: null,
+          },
+          include: {
+            user: { select: { email: true, individualProfile: true } },
+            animal: { select: { name: true } },
+          },
+        });
+
+        // Refus automatique des autres demandes en attente
+        await tx.application.updateMany({
+          where: {
+            animalId: animalId,
+            pfcUserId: { not: candidateId },
+            applicationStatus: "pending",
+            deletedAt: null,
+          },
+          data: { applicationStatus: "rejected" },
+        });
+
+        return { application: updatedApp, pendingApplications: pendingApps };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       }
+    );
 
-      // Récupération de l'application modifiée pour la suite
-      const updatedApp = await tx.application.findUniqueOrThrow({
-        where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
-        include: {
-          user: { select: { id: true, email: true, individualProfile: true } },
-          animal: { select: { id: true, name: true, photos: true } },
-        },
-      });
-
-      // Mise à jour conditionnelle du statut de l'animal (Optimistic Concurrency Control)
-      // Empêche d'écraser une adoption concurrente grâce au verrou de ligne (Row-Level Lock) de PostgreSQL
-      const newAnimalStatus = updatedApp.applicationType === "adoption" ? "adopted" : "foster_care";
-      const animalUpdateResult = await tx.animal.updateMany({
-        where: {
-          id: animalId,
-          animalStatus: "available",
-        },
-        data: { animalStatus: newAnimalStatus },
-      });
-
-      if (animalUpdateResult.count === 0) {
-        throw new ConflictException("Cet animal a déjà été adopté ou placé entre-temps.");
-      }
-
-      // Récupération des candidats à refuser avant de modifier leur statut
-      const pendingApps = await tx.application.findMany({
-        where: {
-          animalId: animalId,
-          pfcUserId: { not: candidateId },
-          applicationStatus: "pending" as ApplicationStatus,
-          deletedAt: null,
-        },
-        include: {
-          user: { select: { email: true, individualProfile: true } },
-          animal: { select: { name: true } },
-        },
-      });
-
-      // Refus automatique des autres demandes en attente
-      await tx.application.updateMany({
-        where: {
-          animalId: animalId,
-          pfcUserId: { not: candidateId },
-          applicationStatus: "pending" as ApplicationStatus,
-          deletedAt: null,
-        },
-        data: { applicationStatus: "rejected" as ApplicationStatus },
-      });
-
-      return { application: updatedApp, pendingApplications: pendingApps };
-    });
-
-    // 2. Envoi des emails en parallèle via Promise.allSettled (non-bloquant)
+    // 2. Envoi des emails (non-bloquant)
     const emailPromises = [
-      // Notification d'acceptation
       (async () => {
         if (!application.user?.email) return;
         try {
-          // 🛡️ FIX : firstname n'existe pas dans le schéma actuel, on utilise l'email ou un fallback
           const recipientName = application.user.email.split("@")[0] || "Candidat";
           await this.emailsService.sendAcceptanceEmail(
             application.user.email,
@@ -281,15 +283,12 @@ export class ApplicationsService {
             application.animal.name
           );
         } catch (error: unknown) {
-          const msg = error instanceof Error ? error.message : "Erreur inconnue";
-          this.logger.error(`⚠️ [Email Error] Acceptation à ${application.user.email} : ${msg}`);
+          this.logger.error(`⚠️ [Email Error] Acceptation à ${application.user.email} : ${error}`);
         }
       })(),
-      // Notifications de refus
       ...pendingApplications.map(async (rejectedApp) => {
         if (!rejectedApp.user?.email) return;
         try {
-          // 🛡️ FIX : firstname n'existe pas dans le schéma actuel
           const recipientName = rejectedApp.user.email.split("@")[0] || "Candidat";
           await this.emailsService.sendRejectionEmail(
             rejectedApp.user.email,
@@ -297,13 +296,11 @@ export class ApplicationsService {
             rejectedApp.animal.name
           );
         } catch (error: unknown) {
-          const msg = error instanceof Error ? error.message : "Erreur inconnue";
-          this.logger.error(`⚠️ [Email Error] Rejet à ${rejectedApp.user.email} : ${msg}`);
+          this.logger.error(`⚠️ [Email Error] Rejet à ${rejectedApp.user.email} : ${error}`);
         }
       }),
     ];
 
-    // Exécution parallèle sans bloquer la réponse de l'API
     Promise.allSettled(emailPromises);
 
     return {
