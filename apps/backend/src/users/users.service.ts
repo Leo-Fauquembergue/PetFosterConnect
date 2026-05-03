@@ -146,6 +146,17 @@ export class UsersService {
         }
       }
 
+      // Si c'est un individu, on rejette ses candidatures en attente
+      if (user.role === "individual") {
+        await tx.application.updateMany({
+          where: {
+            pfcUserId: id,
+            applicationStatus: "pending",
+          },
+          data: { applicationStatus: "rejected" },
+        });
+      }
+
       // 2. Construction de l'objet d'update pour l'anonymisation
       const updateData: Prisma.PfcUserUpdateInput = {
         deletedAt: now,

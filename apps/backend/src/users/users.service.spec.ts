@@ -144,6 +144,27 @@ describe("UsersService", () => {
       expect(result.password).toBeUndefined();
     });
 
+    it("doit rejeter les candidatures en attente si l'utilisateur est un individu", async () => {
+      const individualUser = { id: 1, role: UserRole.individual };
+      mockPrisma.pfcUser.findUnique.mockResolvedValue(individualUser);
+
+      mockPrisma.pfcUser.update.mockResolvedValue({
+        id: 1,
+        email: "anonymized_1@deleted.com",
+        deletedAt: new Date(),
+      });
+
+      await service.remove(1);
+
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
+        where: {
+          pfcUserId: 1,
+          applicationStatus: "pending",
+        },
+        data: { applicationStatus: "rejected" },
+      });
+    });
+
     it("doit cascader le soft-delete sur les animaux non placés et rejeter toutes les candidatures si c'est un refuge", async () => {
       const shelterUser = { id: 5, role: UserRole.shelter };
       mockPrisma.pfcUser.findUnique.mockResolvedValue(shelterUser);
