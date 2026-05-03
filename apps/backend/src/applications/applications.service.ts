@@ -233,7 +233,8 @@ export class ApplicationsService {
         });
 
         // Mise à jour du statut de l'animal
-        const newAnimalStatus = updatedApp.applicationType === "adoption" ? "adopted" : "foster_care";
+        const newAnimalStatus =
+          updatedApp.applicationType === "adoption" ? "adopted" : "foster_care";
         await tx.animal.update({
           where: { id: animalId },
           data: { animalStatus: newAnimalStatus },

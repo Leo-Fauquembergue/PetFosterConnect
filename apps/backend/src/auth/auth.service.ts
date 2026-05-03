@@ -4,18 +4,32 @@ import { JwtService } from "@nestjs/jwt";
 import { LoginDto, RegisterDto } from "@projet/shared-types";
 import * as argon2 from "argon2";
 import { UsersService } from "../users/users.service";
+import { RefreshTokenService } from "./refresh-token.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private refreshTokenService: RefreshTokenService
   ) {}
+
+  async generateAuthTokens(userId: number, email: string, role: string) {
+    const csrfToken = randomBytes(32).toString("hex");
+    const accessToken = this.jwtService.sign({ sub: userId, email, role, csrfToken });
+    const refreshToken = randomBytes(64).toString("hex");
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 jours
+
+    await this.refreshTokenService.createRefreshToken(userId, refreshToken, expiresAt);
+
+    return { accessToken, refreshToken, csrfToken };
+  }
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
 
-    // 🛡️ SÉCURITÉ : On bloque la connexion si l'utilisateur est soft-deleted
     if (!user || user.deletedAt) {
       throw new UnauthorizedException("Email ou mot de passe incorrect");
     }
@@ -23,21 +37,12 @@ export class AuthService {
     const isValid = await argon2.verify(user.password, dto.password);
     if (!isValid) throw new UnauthorizedException("Email ou mot de passe incorrect");
 
-    const csrfToken = randomBytes(32).toString("hex");
-
-    const token = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      csrfToken, // 🛡️ SÉCURITÉ : Bindé au JWT
-    });
-
+    const tokens = await this.generateAuthTokens(user.id, user.email, user.role);
     const userSafe = await this.usersService.getProfile(user.id);
-    return { user: userSafe, token, csrfToken };
+    return { user: userSafe, ...tokens };
   }
 
   async register(dto: RegisterDto) {
-    // 🛡️ VÉRIFICATION : L'email est-il déjà pris par un utilisateur ACTIF ?
     const existingUser = await this.usersService.findByEmail(dto.email);
     if (existingUser && !existingUser.deletedAt) {
       throw new UnauthorizedException("Cet email est déjà utilisé.");
@@ -51,16 +56,8 @@ export class AuthService {
       shelterName: dto.shelterName ?? "",
     });
 
-    const csrfToken = randomBytes(32).toString("hex");
-
-    const token = this.jwtService.sign({
-      sub: newUser.id,
-      email: newUser.email,
-      role: newUser.role,
-      csrfToken, // 🛡️ SÉCURITÉ : Bindé au JWT
-    });
-
+    const tokens = await this.generateAuthTokens(newUser.id, newUser.email, newUser.role);
     const userSafe = await this.usersService.getProfile(newUser.id);
-    return { user: userSafe, token, csrfToken };
+    return { user: userSafe, ...tokens };
   }
 }

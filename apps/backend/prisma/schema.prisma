@@ -141,6 +141,8 @@ model PfcUser {
   bookmarks          Bookmark[]
   /// Animaux publiés (Uniquement pour les comptes 'shelter')
   animals            Animal[] 
+  /// Liste des jetons de rafraîchissement
+  refreshTokens      RefreshToken[]
 
   @@index([deletedAt]) // 🛡️ CORRECTION PERF : Empêche le Sequential Scan
   @@map("pfc_user")
@@ -286,4 +288,18 @@ model Bookmark {
   @@id([pfcUserId, animalId])
   @@index([animalId])
   @@map("bookmark")
-}
+  }
+
+  model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @map("token_hash")
+  userId    Int      @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user PfcUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_token")
+  }
