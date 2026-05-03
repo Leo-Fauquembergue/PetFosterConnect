@@ -53,7 +53,7 @@ describe("ShelterController (integration)", () => {
   });
 
   it("1. devrait retourner tous les refuges", async () => {
-    const result = await controller.findAll();
+    const result = await controller.findAll(10);
     expect(result.length).toBe(1);
     expect(result[0].shelterName).toBe("Refuge Test");
   });

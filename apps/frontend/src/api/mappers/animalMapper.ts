@@ -1,11 +1,27 @@
 import type { AnimalWithRelations } from "@projet/shared-types";
 
-export interface UIAnimal extends AnimalWithRelations {
+export interface UIAnimal {
+  id: number;
+  name: string;
+  age: string;
+  sex: string;
+  animalStatus: string;
+  description: string;
   speciesName: string;
   mainPhoto: string;
   shelterName: string;
-  displayLocation: string; // Alias for shelterName or similar
-  raw: AnimalWithRelations;
+  displayLocation: string;
+  shelterAddress: string;
+  photos: string[];
+  height: number;
+  weight: number;
+  acceptChildren: boolean;
+  acceptOtherAnimals: boolean;
+  needGarden: boolean;
+  treatment: string;
+  deletedAt: Date | null;
+  species?: { name: string };
+  shelter?: { id: number; shelterProfile?: { shelterName: string } };
 }
 
 export const mapToUIAnimal = (
@@ -21,7 +37,12 @@ export const mapToUIAnimal = (
     rawShelterName === "DELETED" ? "Ancien refuge" : rawShelterName || "Refuge partenaire";
 
   return {
-    ...animal,
+    id: animal.id,
+    name: animal.name,
+    age: animal.age || "Non renseigné",
+    sex: animal.sex || "unknown",
+    animalStatus: animal.animalStatus || "unavailable",
+    description: animal.description || "",
     speciesName:
       typeof animal.species === "string"
         ? animal.species
@@ -29,7 +50,21 @@ export const mapToUIAnimal = (
     mainPhoto,
     shelterName: displayLocation,
     displayLocation,
-    raw: animal,
+    shelterAddress: animal.shelter?.address || "Non communiquée",
+    photos: photos,
+    height: animal.height || 0,
+    weight: animal.weight || 0,
+    acceptChildren: animal.acceptChildren ?? false,
+    acceptOtherAnimals: animal.acceptOtherAnimals ?? false,
+    needGarden: animal.needGarden ?? false,
+    treatment: animal.treatment || "Aucun traitement particulier",
+    deletedAt: animal.deletedAt ? new Date(animal.deletedAt) : null,
+    species: animal.species
+      ? { name: typeof animal.species === "string" ? animal.species : animal.species.name }
+      : undefined,
+    shelter: animal.shelter
+      ? { id: animal.shelter.id, shelterProfile: animal.shelter.shelterProfile }
+      : undefined,
   };
 };
 

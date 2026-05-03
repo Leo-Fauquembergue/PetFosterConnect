@@ -104,6 +104,7 @@ npm run dev              # Lance backend + frontend en parallèle
 npm run dev:backend      # Lance uniquement le backend
 npm run dev:frontend     # Lance uniquement le frontend
 npm run build            # Build complet du projet
+npm run prisma:seed      # Peupler la base de données avec des données de test
 ```
 
 ### Scripts Docker
@@ -119,6 +120,7 @@ npm run docker:down      # Arrête PostgreSQL
 npm run prisma:generate  # Génère le client Prisma
 npm run prisma:migrate   # Applique les migrations
 npm run prisma:studio    # Ouvre Prisma Studio (interface graphique)
+npm run prisma:seed      # Peupler la base de données avec des données de test
 ```
 
 Pour Prisma Studio :

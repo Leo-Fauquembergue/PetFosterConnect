@@ -21,6 +21,7 @@
     "docker:down": "docker compose down",
     "prisma:generate": "npm run prisma generate --workspace=backend",
     "prisma:migrate": "npm run prisma migrate dev --workspace=backend",
+    "prisma:seed": "npm run prisma db seed --workspace=backend",
     "prisma:studio": "npm run prisma studio --workspace=backend",
     "// --- Quality ---": "",
     "format": "biome format --write .",

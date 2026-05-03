@@ -115,13 +115,6 @@ export default function AnimalDetail() {
     const animalUrl = `${window.location.origin}/animaux/${animal.id}`;
     const qrData = await QRCode.toDataURL(animalUrl);
 
-    const logoUrl = animal.shelter?.shelterProfile?.logo;
-    if (logoUrl) {
-      const logoWidthShelter = 40;
-      const logoXShelter = (pageWidth - logoWidthShelter) / 2;
-      pdf.addImage(logoUrl, "PNG", logoXShelter, 10, logoWidthShelter, 40);
-    }
-
     pdf.addImage(qrData, "PNG", pageWidth - 40 - 10, 250, 40, 40);
     const imgWidth = pageWidth * 0.9;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -265,8 +258,7 @@ export default function AnimalDetail() {
               <p className="text-sm font-semibold text-gray-900">{animal.shelterName}</p>
               {animal.shelterName !== "Ancien refuge" && (
                 <p className="text-xs text-gray-500">
-                  <span className="font-medium">Adresse :</span>{" "}
-                  {animal.raw.shelter?.address || "Non communiquée"}
+                  <span className="font-medium">Adresse :</span> {animal.shelterAddress}
                 </p>
               )}
             </div>
