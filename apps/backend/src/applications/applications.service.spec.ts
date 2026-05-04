@@ -187,7 +187,7 @@ describe("ApplicationsService", () => {
       };
 
       // Simuler le fonctionnement interne de updateStatus utilisé par rejectApplication
-      jest.spyOn(service, 'updateStatus').mockResolvedValue(fakeApp as any);
+      jest.spyOn(service, "updateStatus").mockResolvedValue(fakeApp as never);
 
       const result = await service.rejectApplication(candidateId, animalId);
 

@@ -34,7 +34,13 @@ export function extractErrorMessage(error: unknown, defaultMessage: string): str
   return defaultMessage;
 }
 
-const NO_REDIRECT_API_ROUTES = ["/auth/login", "/auth/register", "/auth/me", "/auth/refresh", "/auth/logout"];
+const NO_REDIRECT_API_ROUTES = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/me",
+  "/auth/refresh",
+  "/auth/logout",
+];
 
 // État de rafraîchissement
 let isRefreshing = false;

@@ -5,6 +5,7 @@ import { UserRole } from "@prisma/client";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
+import { EmailsService } from "../src/emails/emails.service";
 import { PrismaService } from "../src/prisma/prisma.service";
 
 describe("Applications (E2E) - Security & IDOR", () => {
@@ -24,7 +25,14 @@ describe("Applications (E2E) - Security & IDOR", () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(EmailsService)
+      .useValue({
+        sendAcceptanceEmail: jest.fn().mockResolvedValue({}),
+        sendRejectionEmail: jest.fn().mockResolvedValue({}),
+        sendMail: jest.fn().mockResolvedValue({}),
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.use(cookieParser());
@@ -178,6 +186,9 @@ describe("Applications (E2E) - Security & IDOR", () => {
 
     beforeAll(async () => {
       const species = await prisma.species.findFirst();
+      const speciesId = species?.id;
+      if (!speciesId) throw new Error("No species found for test");
+
       const animal = await prisma.animal.create({
         data: {
           name: "CancelTest",
@@ -187,7 +198,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
           description: "Test cancel",
           weight: 4,
           pfcUserId: legitShelterId,
-          speciesId: species!.id,
+          speciesId: speciesId,
         },
       });
       newAnimalId = animal.id;
@@ -198,7 +209,7 @@ describe("Applications (E2E) - Security & IDOR", () => {
           animalId: newAnimalId,
           applicationType: "adoption",
           message: "Test cancel message",
-        }
+        },
       });
     });
 

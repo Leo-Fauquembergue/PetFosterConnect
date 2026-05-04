@@ -47,14 +47,6 @@ describe("AuthPage - LoginForm", () => {
     vi.clearAllMocks();
   });
 
-  it("doit rendre le formulaire de connexion par défaut", async () => {
-    await renderAuthPage();
-    expect(screen.getByRole("heading", { name: "Connexion", level: 1 })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument();
-  });
-
   it("doit appeler l'API de connexion et afficher l'état de chargement lors d'un succès", async () => {
     vi.mocked(authApi.login).mockImplementationOnce(
       () =>

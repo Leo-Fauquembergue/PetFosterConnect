@@ -2,12 +2,12 @@ import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserRole } from "@prisma/client";
+import * as argon2 from "argon2";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
-import { PrismaService } from "../src/prisma/prisma.service";
 import { COOKIE_NAME } from "../src/constants";
-import * as argon2 from "argon2";
+import { PrismaService } from "../src/prisma/prisma.service";
 
 describe("Auth & CSRF (E2E)", () => {
   let app: INestApplication;
@@ -15,7 +15,6 @@ describe("Auth & CSRF (E2E)", () => {
   let jwtService: JwtService;
 
   let userToken: string;
-  let userId: number;
   const csrfToken = "valid-csrf-token";
 
   beforeAll(async () => {
@@ -37,7 +36,6 @@ describe("Auth & CSRF (E2E)", () => {
     const user = await prisma.pfcUser.create({
       data: { email: "auth@test.com", password: hashedPassword, role: UserRole.individual },
     });
-    userId = user.id;
     userToken = jwtService.sign({ sub: user.id, email: user.email, role: user.role, csrfToken });
   });
 
@@ -81,13 +79,13 @@ describe("Auth & CSRF (E2E)", () => {
         .set("x-csrf-token", csrfToken)
         .send({
           email: "auth@test.com",
-          password: "password"
+          password: "password",
         })
         .expect(201);
 
       const cookies = response.get("Set-Cookie") || [];
-      expect(cookies.some(c => c.includes(COOKIE_NAME))).toBe(true);
-      expect(cookies.some(c => c.includes("refresh_token"))).toBe(true);
+      expect(cookies.some((c) => c.includes(COOKIE_NAME))).toBe(true);
+      expect(cookies.some((c) => c.includes("refresh_token"))).toBe(true);
       expect(response.body.csrfToken).toBeDefined();
     });
 
@@ -97,7 +95,7 @@ describe("Auth & CSRF (E2E)", () => {
         .set("x-csrf-token", csrfToken)
         .send({
           email: "auth@test.com",
-          password: "wrongpassword"
+          password: "wrongpassword",
         })
         .expect(401);
     });
@@ -109,8 +107,8 @@ describe("Auth & CSRF (E2E)", () => {
         .expect(201);
 
       const cookies = response.get("Set-Cookie") || [];
-      expect(cookies.some(c => c.includes(`${COOKIE_NAME}=;`))).toBe(true);
-      expect(cookies.some(c => c.includes("refresh_token=;"))).toBe(true);
+      expect(cookies.some((c) => c.includes(`${COOKIE_NAME}=;`))).toBe(true);
+      expect(cookies.some((c) => c.includes("refresh_token=;"))).toBe(true);
     });
   });
 
@@ -118,6 +116,7 @@ describe("Auth & CSRF (E2E)", () => {
     it("doit refuser le rafraîchissement sans refresh_token", async () => {
       await request(app.getHttpServer())
         .post("/auth/refresh")
+        .set("x-csrf-token", csrfToken)
         .expect(401);
     });
 
@@ -127,19 +126,21 @@ describe("Auth & CSRF (E2E)", () => {
         .set("x-csrf-token", csrfToken)
         .send({
           email: "auth@test.com",
-          password: "password"
+          password: "password",
         })
         .expect(201);
-      
+
       const cookies = loginResponse.get("Set-Cookie") || [];
-      
+      const realCsrfToken = loginResponse.body.csrfToken;
+
       const refreshResponse = await request(app.getHttpServer())
         .post("/auth/refresh")
         .set("Cookie", cookies)
+        .set("x-csrf-token", realCsrfToken)
         .expect(201);
-      
+
       const newCookies = refreshResponse.get("Set-Cookie") || [];
-      expect(newCookies.some(c => c.includes(COOKIE_NAME))).toBe(true);
+      expect(newCookies.some((c) => c.includes(COOKIE_NAME))).toBe(true);
       expect(refreshResponse.body.csrfToken).toBeDefined();
       expect(refreshResponse.body.csrfToken).not.toBe(loginResponse.body.csrfToken);
     });

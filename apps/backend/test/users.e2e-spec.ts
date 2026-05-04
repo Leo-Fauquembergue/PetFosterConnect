@@ -6,7 +6,6 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
-import { COOKIE_NAME } from "../src/constants";
 
 describe("Users (E2E) - Profile Security & Anonymization", () => {
   let app: INestApplication;
@@ -14,7 +13,7 @@ describe("Users (E2E) - Profile Security & Anonymization", () => {
   let jwtService: JwtService;
 
   let userAToken: string;
-  let userBToken: string;
+  let _userBToken: string;
   let userAId: number;
   let userBId: number;
   const csrfToken = "test-csrf-token";
@@ -41,13 +40,23 @@ describe("Users (E2E) - Profile Security & Anonymization", () => {
       data: { email: "userA@test.com", password: "password", role: UserRole.individual },
     });
     userAId = userA.id;
-    userAToken = jwtService.sign({ sub: userA.id, email: userA.email, role: userA.role, csrfToken });
+    userAToken = jwtService.sign({
+      sub: userA.id,
+      email: userA.email,
+      role: userA.role,
+      csrfToken,
+    });
 
     const userB = await prisma.pfcUser.create({
       data: { email: "userB@test.com", password: "password", role: UserRole.individual },
     });
     userBId = userB.id;
-    userBToken = jwtService.sign({ sub: userB.id, email: userB.email, role: userB.role, csrfToken });
+    _userBToken = jwtService.sign({
+      sub: userB.id,
+      email: userB.email,
+      role: userB.role,
+      csrfToken,
+    });
   });
 
   afterAll(async () => {

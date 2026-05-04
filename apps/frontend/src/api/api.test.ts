@@ -1,11 +1,43 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import api from "./api";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import api, { extractErrorMessage } from "./api";
+
+describe("extractErrorMessage", () => {
+  it("retourne le message par défaut si l'erreur n'est pas une erreur Axios", () => {
+    expect(extractErrorMessage(new Error("Standard error"), "Default")).toBe("Default");
+    expect(extractErrorMessage(null, "Default")).toBe("Default");
+  });
+
+  it("extrait un message string simple", () => {
+    const error = {
+      isAxiosError: true,
+      response: { data: { message: "Server error message" } },
+    };
+    expect(extractErrorMessage(error, "Default")).toBe("Server error message");
+  });
+
+  it("extrait le premier message d'un ZodError stringifié", () => {
+    const zodError = JSON.stringify([{ message: "Zod validation failed" }]);
+    const error = {
+      isAxiosError: true,
+      response: { data: { message: { errors: { message: zodError } } } },
+    };
+    expect(extractErrorMessage(error, "Default")).toBe("Zod validation failed");
+  });
+
+  it("extrait la propriété 'error' si 'message' n'est pas présent", () => {
+    const error = {
+      isAxiosError: true,
+      response: { data: { error: "Fallback error property" } },
+    };
+    expect(extractErrorMessage(error, "Default")).toBe("Fallback error property");
+  });
+});
 
 describe("Axios Interceptors - Sécurité", () => {
   beforeEach(() => {
     vi.spyOn(window, "dispatchEvent");
     // Intercepter l'adaptateur pour empêcher les appels réseau
-    api.defaults.adapter = vi.fn();
+    (api.defaults as unknown as { adapter: unknown }).adapter = vi.fn();
   });
 
   afterEach(() => {
@@ -23,7 +55,7 @@ describe("Axios Interceptors - Sécurité", () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (api.defaults.adapter as any).mockRejectedValueOnce(error403);
+    (api.defaults.adapter as import("vitest").Mock).mockRejectedValueOnce(error403);
 
     await expect(api.get("/test-route")).rejects.toEqual(error403);
 
@@ -31,7 +63,10 @@ describe("Axios Interceptors - Sécurité", () => {
       expect.objectContaining({ type: "auth:forbidden" })
     );
 
-    Object.defineProperty(window, "location", { value: { pathname: originalPath }, writable: true });
+    Object.defineProperty(window, "location", {
+      value: { pathname: originalPath },
+      writable: true,
+    });
   });
 
   it("doit émettre 'auth:unauthorized' si le rafraîchissement échoue", async () => {
@@ -51,7 +86,7 @@ describe("Axios Interceptors - Sécurité", () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (api.defaults.adapter as any)
+    (api.defaults.adapter as import("vitest").Mock)
       .mockRejectedValueOnce(error401)
       .mockRejectedValueOnce(refreshError);
 
@@ -61,6 +96,9 @@ describe("Axios Interceptors - Sécurité", () => {
       expect.objectContaining({ type: "auth:unauthorized" })
     );
 
-    Object.defineProperty(window, "location", { value: { pathname: originalPath }, writable: true });
+    Object.defineProperty(window, "location", {
+      value: { pathname: originalPath },
+      writable: true,
+    });
   });
 });
