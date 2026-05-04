@@ -8,6 +8,7 @@
     "dev": "tsc --watch"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "typescript": "^5.3.3"
   },
   "dependencies": {
