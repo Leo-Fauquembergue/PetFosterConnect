@@ -22,10 +22,6 @@ describe("JwtStrategy", () => {
     strategy = new JwtStrategy(configService, prisma);
   });
 
-  it("should be defined", () => {
-    expect(strategy).toBeDefined();
-  });
-
   describe("jwtFromRequest", () => {
     it("should prioritize Bearer token over Cookie", () => {
       // Accessing private property for testing purposes

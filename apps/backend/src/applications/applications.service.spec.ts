@@ -173,6 +173,36 @@ describe("ApplicationsService", () => {
     });
   });
 
+  describe("rejectApplication (Critical Business Flow)", () => {
+    it("doit rejeter la candidature et envoyer un email de refus", async () => {
+      const candidateId = 5;
+      const animalId = 10;
+
+      const fakeApp = {
+        pfcUserId: candidateId,
+        animalId,
+        applicationStatus: "rejected",
+        user: { email: "loser@test.com" },
+        animal: { name: "Rex" },
+      };
+
+      // Simuler le fonctionnement interne de updateStatus utilisé par rejectApplication
+      jest.spyOn(service, 'updateStatus').mockResolvedValue(fakeApp as any);
+
+      const result = await service.rejectApplication(candidateId, animalId);
+
+      expect(service.updateStatus).toHaveBeenCalledWith(candidateId, animalId, {
+        applicationStatus: "rejected",
+      });
+      expect(mockEmailsService.sendRejectionEmail).toHaveBeenCalledWith(
+        "loser@test.com",
+        "loser", // pseudo firstname extrait de l'email
+        "Rex"
+      );
+      expect(result.message).toBe("Candidature refusée");
+    });
+  });
+
   describe("cancelOwn", () => {
     it("doit annuler sa propre demande", async () => {
       const candidateId = 5;

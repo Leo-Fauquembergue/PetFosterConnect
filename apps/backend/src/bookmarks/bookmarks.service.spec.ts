@@ -58,8 +58,4 @@ describe("BookmarksService", () => {
     });
     expect(mockPrisma.$queryRaw).toHaveBeenCalled();
   });
-
-  it("devrait être défini", () => {
-    expect(service).toBeDefined();
-  });
 });
