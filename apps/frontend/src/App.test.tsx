@@ -71,4 +71,24 @@ describe("App - Routing & Security", () => {
       expect(screen.getByText(/Tableau de Bord/i)).toBeInTheDocument();
     });
   });
+
+  it("ne doit PAS rediriger vers /connexion si l'utilisateur est déconnecté sur une route publique", async () => {
+    // getMe échoue (utilisateur non connecté)
+    vi.mocked(authApi.getMe).mockRejectedValueOnce(new Error("Unauthorized"));
+
+    render(
+      <MemoryRouter initialEntries={["/animaux"]}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      // On vérifie qu'on est bien TOUJOURS sur la page des animaux
+      expect(screen.getByText(/Nos animaux à adopter/i)).toBeInTheDocument();
+      // Et qu'on n'est PAS sur la page de connexion
+      expect(screen.queryByText(/Heureux de vous revoir/i)).not.toBeInTheDocument();
+    });
+  });
 });

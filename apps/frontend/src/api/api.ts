@@ -81,9 +81,6 @@ api.interceptors.response.use(
     }
 
     if (status !== 401 || originalRequest._retry || isAuthApiRequest) {
-      if (status === 401 && currentPath !== "/connexion" && currentPath !== "/inscription") {
-        window.dispatchEvent(new CustomEvent("auth:unauthorized"));
-      }
       return Promise.reject(error);
     }
 

@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { AxiosAdapter } from "axios";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import api, { extractErrorMessage } from "./api";
 
 describe("extractErrorMessage", () => {
@@ -34,10 +35,13 @@ describe("extractErrorMessage", () => {
 });
 
 describe("Axios Interceptors - Sécurité", () => {
+  let mockAdapter: Mock;
+
   beforeEach(() => {
     vi.spyOn(window, "dispatchEvent");
     // Intercepter l'adaptateur pour empêcher les appels réseau
-    (api.defaults as unknown as { adapter: unknown }).adapter = vi.fn();
+    mockAdapter = vi.fn();
+    api.defaults.adapter = mockAdapter as unknown as AxiosAdapter;
   });
 
   afterEach(() => {
@@ -54,8 +58,7 @@ describe("Axios Interceptors - Sécurité", () => {
       response: { status: 403 },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (api.defaults.adapter as import("vitest").Mock).mockRejectedValueOnce(error403);
+    mockAdapter.mockRejectedValueOnce(error403);
 
     await expect(api.get("/test-route")).rejects.toEqual(error403);
 
@@ -85,10 +88,7 @@ describe("Axios Interceptors - Sécurité", () => {
       response: { status: 401 },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (api.defaults.adapter as import("vitest").Mock)
-      .mockRejectedValueOnce(error401)
-      .mockRejectedValueOnce(refreshError);
+    mockAdapter.mockRejectedValueOnce(error401).mockRejectedValueOnce(refreshError);
 
     await expect(api.get("/test-route")).rejects.toEqual(refreshError);
 
@@ -100,5 +100,21 @@ describe("Axios Interceptors - Sécurité", () => {
       value: { pathname: originalPath },
       writable: true,
     });
+  });
+
+  it("ne doit PAS émettre 'auth:unauthorized' si la route /auth/me échoue en 401", async () => {
+    const error401Me = {
+      isAxiosError: true,
+      config: { url: "/auth/me" },
+      response: { status: 401 },
+    };
+
+    mockAdapter.mockRejectedValueOnce(error401Me);
+
+    await expect(api.get("/auth/me")).rejects.toEqual(error401Me);
+
+    expect(window.dispatchEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "auth:unauthorized" })
+    );
   });
 });

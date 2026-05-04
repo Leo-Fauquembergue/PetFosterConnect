@@ -42,7 +42,6 @@ function App() {
     const handleUnauthorized = () => {
       setUser(null);
       setIsLoggedIn(false);
-      navigate("/connexion");
     };
 
     const handleForbidden = () => {
