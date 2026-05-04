@@ -37,7 +37,7 @@ export const animalApi = {
     return response.data;
   },
 
-  // --- Méthodes Admin ---
+  // Méthodes Admin
   getAllAdmin: async (signal?: AbortSignal): Promise<AnimalWithRelations[]> => {
     const response = await api.get<AnimalWithRelations[]>("/animals/admin/all", { signal });
     return response.data;

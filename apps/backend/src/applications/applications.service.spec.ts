@@ -8,6 +8,7 @@ describe("ApplicationsService", () => {
   let service: ApplicationsService;
 
   const mockPrisma = {
+    $transaction: jest.fn().mockImplementation((callback) => callback(mockPrisma)),
     application: {
       create: jest.fn(),
       findMany: jest.fn(),
@@ -15,6 +16,7 @@ describe("ApplicationsService", () => {
       updateMany: jest.fn(),
       findUnique: jest.fn(),
       upsert: jest.fn(), // ⚡ AJOUT : Mock de upsert
+      findUniqueOrThrow: jest.fn(),
     },
     animal: {
       findUnique: jest.fn(),
@@ -106,6 +108,68 @@ describe("ApplicationsService", () => {
           },
         })
       );
+    });
+  });
+
+  describe("acceptApplication (Critical Business Flow)", () => {
+    it("doit valider l'adoption, changer le statut de l'animal et rejeter les autres candidats de manière atomique", async () => {
+      const candidateId = 5;
+      const animalId = 10;
+      const otherCandidateId = 99;
+
+      const fakeApp = {
+        pfcUserId: candidateId,
+        animalId,
+        applicationType: "adoption",
+        user: { email: "winner@test.com" },
+        animal: { id: animalId, name: "Rex" },
+      };
+
+      const pendingApps = [
+        {
+          pfcUserId: otherCandidateId,
+          user: { email: "loser@test.com" },
+          animal: { name: "Rex" },
+        },
+      ];
+
+      // Mock des étapes de la transaction
+      mockPrisma.animal.findUnique.mockResolvedValue({
+        id: animalId,
+        animalStatus: "available",
+        deletedAt: null,
+      });
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
+      // On ajoute le mock pour findUniqueOrThrow qui est utilisé dans la transaction
+      mockPrisma.application.findUniqueOrThrow = jest.fn().mockResolvedValue(fakeApp);
+      mockPrisma.application.findMany.mockResolvedValue(pendingApps);
+
+      const result = await service.acceptApplication(candidateId, animalId);
+
+      // 1. Vérification de l'atomicité métier via transaction
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+
+      // 2. Vérification de la mise à jour de l'animal (Statut 'adopted' car applicationType = 'adoption')
+      expect(mockPrisma.animal.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: animalId },
+          data: { animalStatus: "adopted" },
+        })
+      );
+
+      // 3. Vérification du rejet en cascade des autres candidats
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            animalId,
+            pfcUserId: { not: candidateId },
+            applicationStatus: "pending",
+          }),
+          data: { applicationStatus: "rejected" },
+        })
+      );
+
+      expect(result.message).toContain("Candidature acceptée");
     });
   });
 

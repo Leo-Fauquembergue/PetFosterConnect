@@ -29,7 +29,7 @@ import { UsersService } from "./users.service";
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // --- 1. ROUTES SPÉCIFIQUES (Profils) D'ABORD ---
+  // Routes spécifiques pour les profils.
 
   @Get(":id/profile")
   @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
@@ -98,7 +98,7 @@ export class UsersController {
     return this.usersService.updatePassword(id, dto);
   }
 
-  // --- 2. ROUTES GÉNÉRIQUES CRUD (Avec paramètre dynamique) ENSUITE ---
+  // Routes génériques CRUD.
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

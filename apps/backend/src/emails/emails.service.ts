@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import * as handlebars from "handlebars";
 import * as nodemailer from "nodemailer";
 
@@ -8,23 +9,26 @@ import * as nodemailer from "nodemailer";
 export class EmailsService {
   private transporter;
   private readonly logger = new Logger(EmailsService.name);
-  private readonly baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  private readonly baseUrl: string;
   private readonly templatesDir = path.join(__dirname, "templates");
   private readonly templateCache: Map<string, handlebars.TemplateDelegate> = new Map();
 
-  constructor() {
-    // ... (transporter config remains same)
-    if (process.env.SMTP_HOST) {
+  constructor(private readonly configService: ConfigService) {
+    this.baseUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:5173";
+
+    const smtpHost = this.configService.get<string>("SMTP_HOST");
+
+    if (smtpHost) {
       this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
+        host: smtpHost,
+        port: this.configService.get<number>("SMTP_PORT"),
         secure: false,
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: this.configService.get<string>("SMTP_USER"),
+          pass: this.configService.get<string>("SMTP_PASS"),
         },
       });
-      this.logger.log("📧 Configuration SMTP chargée depuis .env");
+      this.logger.log("📧 Configuration SMTP chargée depuis ConfigService");
     } else {
       this.logger.log("👻 Pas de config SMTP détectée, création d'un compte Ethereal...");
       nodemailer.createTestAccount().then((account) => {
@@ -41,8 +45,11 @@ export class EmailsService {
 
   async sendMail(to: string, subject: string, text: string, html: string) {
     this.logger.log(`📨 Envoi d’un mail à : ${to}`);
+    const from =
+      this.configService.get<string>("SMTP_FROM") || this.configService.get<string>("SMTP_USER");
+
     const info = await this.transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from,
       to,
       subject,
       text,
@@ -52,9 +59,7 @@ export class EmailsService {
     return info;
   }
 
-  // -------------------------------
-  // Moteur de Template (Handlebars)
-  // -------------------------------
+  // Moteur de template (Handlebars).
 
   private getTemplate(name: string): handlebars.TemplateDelegate {
     const cachedTemplate = this.templateCache.get(name);
@@ -88,9 +93,7 @@ export class EmailsService {
     }
   }
 
-  // -------------------------------
-  // Méthodes publiques
-  // -------------------------------
+  // Méthodes publiques.
 
   async sendAcceptanceEmail(to: string, firstname: string, animalName: string) {
     const html = this.compileTemplate("acceptance", { firstname, animalName });

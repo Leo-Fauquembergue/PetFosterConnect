@@ -61,12 +61,22 @@ export class ApplicationsController {
   @Roles(UserRole.shelter, UserRole.admin)
   @CheckOwner({ type: "animal", idParam: "animalId" })
   @ApiOperation({ summary: "Mettre à jour le statut d'une demande" })
-  update(
+  async update(
     @Param("animalId", new ZodPipe(IdSchema)) animalId: number,
     @Param("candidateId", new ZodPipe(IdSchema)) candidateId: number,
     @Body(new ZodPipe(sharedTypes.UpdateApplicationStatusSchema))
     updateDto: sharedTypes.UpdateApplicationStatusDto
   ) {
+    // ⚡ ROUTAGE MÉTIER : On utilise les méthodes spécialisées pour gérer les effets de bord (transaction, emails)
+    if (updateDto.applicationStatus === "approved") {
+      return this.applicationsService.acceptApplication(candidateId, animalId);
+    }
+
+    if (updateDto.applicationStatus === "rejected") {
+      return this.applicationsService.rejectApplication(candidateId, animalId);
+    }
+
+    // Fallback pour les autres cas (théoriquement non atteints via les routes refuges standards)
     return this.applicationsService.updateStatus(candidateId, animalId, updateDto);
   }
 
