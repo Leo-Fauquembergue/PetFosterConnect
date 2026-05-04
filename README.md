@@ -19,6 +19,7 @@ Application web de mise en relation entre refuges et familles d'accueil pour ani
 - **Frontend**: React + TypeScript + Tailwind CSS + Vite
 - **Monorepo**: npm workspaces
 - **Documentation API**: Swagger/OpenAPI
+- **Qualité**: Biome (Linter & Formatter)
 
 ## Prérequis
 
@@ -57,11 +58,13 @@ cp apps/backend/.env.example apps/backend/.env
 # Éditer apps/backend/.env si nécessaire
 ```
 
-Exemple de configuration dans `apps/backend/.env` :
+Exemple de configuration minimale dans `apps/backend/.env` :
 
 ```env
-DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/petfosterconnect?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/petfosterconnect?schema=public"
 PORT=3001
+JWT_SECRET="votre_secret_jwt_a_changer"
+FRONTEND_URL="http://localhost:5173"
 ```
 
 ### 5. Initialiser Prisma
@@ -105,10 +108,19 @@ Accès aux services :
 
 ```bash
 npm run dev              # Lance backend + frontend en parallèle
+npm run build            # Build complet du projet (Shared Types -> Backend -> Frontend)
 npm run dev:backend      # Lance uniquement le backend
 npm run dev:frontend     # Lance uniquement le frontend
-npm run build            # Build complet du projet (Shared Types + Apps)
-npm run prisma:seed      # Peupler la base de données avec des données de test
+```
+
+### Scripts de Qualité & Tests
+
+```bash
+npm run format           # Formater le code avec Biome
+npm run lint             # Vérifier le linting avec Biome
+npm run test             # Lancer tous les tests (BE & FE)
+npm run test:backend     # Lancer les tests backend
+npm run test:frontend    # Lancer les tests frontend
 ```
 
 ### Scripts Docker
@@ -140,7 +152,9 @@ projet/
 │   │   │   ├── applications/
 │   │   │   ├── auth/
 │   │   │   ├── bookmarks/
+│   │   │   ├── common/   # Filtres, guards, middlewares globaux
 │   │   │   ├── emails/
+│   │   │   ├── health/   # Check de santé de l'API
 │   │   │   ├── shelters/
 │   │   │   ├── species/
 │   │   │   ├── users/
@@ -169,8 +183,6 @@ npm run prisma:migrate
 # Visualiser la base de données
 npm run prisma:studio
 ```
-
-Pour des commandes plus spécifiques, vous pouvez naviguer dans `apps/backend` ou utiliser `npx prisma --workspace=backend`.
 
 ## Documentation API (Swagger)
 
@@ -225,10 +237,3 @@ npm run docker:down && npm run docker:up
 ```bash
 npm run prisma:generate
 ```
-
-### Port déjà utilisé
-
-Si le port 3001 ou 5173 est déjà utilisé, modifiez :
-
-- Backend : `apps/backend/.env` → `PORT=3002`
-- Frontend : `apps/frontend/vite.config.ts` → `server: { port: 5174 }`
