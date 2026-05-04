@@ -1,47 +1,19 @@
-import type { AnimalWithRelations } from "@projet/shared-types";
-import axios from "axios";
 import { PawPrint, Search } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
-import { animalApi } from "../api/animalApi";
+import { useMemo, useState } from "react";
 import AnimalCard from "../components/cards/AnimalCard";
 import Loader from "../components/ui/Loader";
+import { useAnimals } from "../hooks/useAnimals";
 
 const AnimalList = () => {
-  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [filteredAnimals, setFilteredAnimals] = useState<AnimalWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { animals, loading, error } = useAnimals();
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        const data = await animalApi.getAllAnimals();
-        setAnimals(data);
-        setFilteredAnimals(data);
-      } catch (err: unknown) {
-        setError(true);
-        let errorMessage = "Impossible de charger les animaux.";
-        if (axios.isAxiosError(err)) {
-          errorMessage = err.response?.data?.message || errorMessage;
-        }
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnimals();
-  }, []);
-
   // Filtrage en temps réel
-  useEffect(() => {
-    const filtered = animals.filter((animal) => {
+  const filteredAnimals = useMemo(() => {
+    return animals.filter((animal) => {
       const searchLower = searchTerm.toLowerCase();
       return animal.name?.toLowerCase().includes(searchLower);
     });
-    setFilteredAnimals(filtered);
   }, [searchTerm, animals]);
 
   if (loading) {
@@ -76,7 +48,7 @@ const AnimalList = () => {
         {/* Gestion liste vide */}
         {animals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="bg-orange-100 p-4 rounded-full mb-4">
+            <div className="bg-primary/10 p-4 rounded-full mb-4">
               <PawPrint className="w-12 h-12 text-primary" />
             </div>
             <h3 className="text-xl font-bold text-gray-700">Aucun animal pour le moment</h3>
@@ -94,9 +66,8 @@ const AnimalList = () => {
                   placeholder="Rechercher par nom"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                 />
-                {/* ⚡ Le SVG a été remplacé par l'icône Search de lucide-react */}
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
             </div>
@@ -104,13 +75,7 @@ const AnimalList = () => {
             {/* Grille d'animaux */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredAnimals.map((animal) => (
-                <Link
-                  key={animal.id}
-                  to={`/animaux/${animal.id}`}
-                  className="block transition-transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl"
-                >
-                  <AnimalCard {...animal} />
-                </Link>
+                <AnimalCard key={animal.id} animal={animal} />
               ))}
             </div>
 

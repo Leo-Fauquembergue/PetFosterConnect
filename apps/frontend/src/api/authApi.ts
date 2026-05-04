@@ -1,33 +1,45 @@
-import type { LoginDto, RegisterDto, User } from "@projet/shared-types";
+import type { LoginDto, RegisterDto, UserWithProfiles } from "@projet/shared-types";
 import api from "./api";
 
 export const authApi = {
+  getCsrfToken: async () => {
+    const response = await api.get<{ csrfToken: string }>("/auth/csrf");
+    api.defaults.headers.common["x-csrf-token"] = response.data.csrfToken;
+    return response.data.csrfToken;
+  },
+
   login: async (credentials: LoginDto) => {
-    const response = await api.post<{ access_token: string; user: User }>(
-      "/auth/login",
-      credentials
-    );
-    // Standardisation de l'état : on force un appel à /auth/me pour garantir que le contexte React
-    // aura toujours exactement la même structure (id, email, role) qu'après un rafraîchissement
-    const meResponse = await api.get<User>("/auth/me");
-    return { access_token: response.data.access_token, user: meResponse.data };
+    const response = await api.post<{
+      access_token: string;
+      user: UserWithProfiles;
+      csrfToken: string;
+    }>("/auth/login", credentials);
+    // On met à jour le header CSRF immédiatement après la connexion
+    api.defaults.headers.common["x-csrf-token"] = response.data.csrfToken;
+    return response.data;
   },
 
   register: async (data: RegisterDto) => {
-    const response = await api.post<{ access_token: string; user: User }>("/auth/register", data);
-    // Standardisation de l'état
-    const meResponse = await api.get<User>("/auth/me");
-    return { access_token: response.data.access_token, user: meResponse.data };
+    const response = await api.post<{
+      access_token: string;
+      user: UserWithProfiles;
+      csrfToken: string;
+    }>("/auth/register", data);
+    // On met à jour le header CSRF immédiatement après l'inscription
+    api.defaults.headers.common["x-csrf-token"] = response.data.csrfToken;
+    return response.data;
   },
 
   logout: async () => {
     // Fait un appel à la route backend qui efface le cookie HttpOnly
     const response = await api.post("/auth/logout");
+    // Optionnel : On peut remettre un token bidon pour les futures requêtes anonymes
+    api.defaults.headers.common["x-csrf-token"] = "initial";
     return response.data;
   },
 
   getMe: async () => {
-    const response = await api.get<User>("/auth/me");
+    const response = await api.get<UserWithProfiles>("/auth/me");
     return response.data;
   },
 };

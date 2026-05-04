@@ -17,6 +17,20 @@ describe("UsersService", () => {
       findMany: jest.fn(),
       update: jest.fn(),
     },
+    animal: {
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    application: {
+      updateMany: jest.fn(),
+    },
+    refreshToken: {
+      deleteMany: jest.fn(),
+    },
+    bookmark: {
+      deleteMany: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrisma)),
   };
 
   beforeEach(async () => {
@@ -44,7 +58,7 @@ describe("UsersService", () => {
       const dto = {
         email: "test@test.com",
         password: "password123",
-        role: UserRole.individual, // ⚡ Fin du 'as any'
+        role: UserRole.individual,
         phoneNumber: "0600000000",
         address: "Paris",
       };
@@ -105,6 +119,88 @@ describe("UsersService", () => {
         select: expect.any(Object),
       });
       expect(result.password).toBeUndefined();
+    });
+  });
+
+  describe("remove", () => {
+    it("doit anonymiser les données utilisateur lors de la suppression", async () => {
+      const mockUser = { id: 1, role: UserRole.individual };
+      mockPrisma.pfcUser.findUnique.mockResolvedValue(mockUser);
+
+      const updatedMockUser = {
+        id: 1,
+        email: "deleted_1_123456@pfc.internal",
+        deletedAt: new Date(),
+      };
+      mockPrisma.pfcUser.update.mockResolvedValue(updatedMockUser);
+
+      const result = (await service.remove(1)) as Partial<User>;
+
+      expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: 1 } });
+      expect(mockPrisma.bookmark.deleteMany).toHaveBeenCalledWith({ where: { pfcUserId: 1 } });
+      expect(mockPrisma.pfcUser.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 1 },
+          data: expect.objectContaining({
+            password: "ANONYMIZED_PURGED",
+            phoneNumber: null,
+            address: null,
+          }),
+        })
+      );
+      expect(result.deletedAt).toBeDefined();
+      expect(result.password).toBeUndefined();
+    });
+
+    it("doit rejeter les candidatures en attente si l'utilisateur est un individu", async () => {
+      const individualUser = { id: 1, role: UserRole.individual };
+      mockPrisma.pfcUser.findUnique.mockResolvedValue(individualUser);
+
+      mockPrisma.pfcUser.update.mockResolvedValue({
+        id: 1,
+        email: "deleted_1@pfc.internal",
+        deletedAt: new Date(),
+      });
+
+      await service.remove(1);
+
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
+        where: { pfcUserId: 1, applicationStatus: "pending" },
+        data: { applicationStatus: "rejected" },
+      });
+    });
+
+    it("doit cascader le soft-delete sur les animaux non placés et rejeter toutes les candidatures si c'est un refuge", async () => {
+      const shelterUser = { id: 5, role: UserRole.shelter };
+      mockPrisma.pfcUser.findUnique.mockResolvedValue(shelterUser);
+
+      const shelterAnimals = [
+        { id: 10, animalStatus: "available" },
+        { id: 11, animalStatus: "adopted" },
+        { id: 12, animalStatus: "unavailable" },
+      ];
+      mockPrisma.animal.findMany.mockResolvedValue(shelterAnimals);
+
+      const updatedShelterUser = {
+        id: 5,
+        email: "deleted_5_123456@pfc.internal",
+        deletedAt: new Date(),
+      };
+      mockPrisma.pfcUser.update.mockResolvedValue(updatedShelterUser);
+
+      await service.remove(5);
+
+      expect(mockPrisma.animal.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: [10, 12] } },
+        data: { deletedAt: expect.any(Date) },
+      });
+
+      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith({
+        where: { animalId: { in: [10, 11, 12] }, applicationStatus: "pending" },
+        data: { applicationStatus: "rejected" },
+      });
+
+      expect(mockPrisma.pfcUser.update).toHaveBeenCalled();
     });
   });
 });

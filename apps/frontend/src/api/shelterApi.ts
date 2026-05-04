@@ -6,23 +6,23 @@ import type {
 import api from "./api";
 
 export const shelterApi = {
-  getAllShelters: async (): Promise<ShelterWithRelations[]> => {
-    const response = await api.get<ShelterWithRelations[]>("/shelters");
+  getAllShelters: async (signal?: AbortSignal): Promise<ShelterWithRelations[]> => {
+    const response = await api.get<ShelterWithRelations[]>("/shelters", { signal });
     return response.data;
   },
 
-  getFeaturedShelters: async (): Promise<ShelterWithRelations[]> => {
-    const response = await api.get<ShelterWithRelations[]>("/shelters?limit=3");
+  getFeaturedShelters: async (signal?: AbortSignal): Promise<ShelterWithRelations[]> => {
+    const response = await api.get<ShelterWithRelations[]>("/shelters?limit=3", { signal });
     return response.data;
   },
 
-  getShelterAnimals: async (id: number): Promise<AnimalWithRelations[]> => {
-    const response = await api.get<AnimalWithRelations[]>(`/shelters/${id}/animals`);
+  getShelterAnimals: async (id: number, signal?: AbortSignal): Promise<AnimalWithRelations[]> => {
+    const response = await api.get<AnimalWithRelations[]>(`/shelters/${id}/animals`, { signal });
     return response.data;
   },
 
-  getShelterById: async (id: number): Promise<ShelterDetailResponse> => {
-    const response = await api.get<ShelterDetailResponse>(`/shelters/${id}`);
+  getShelterById: async (id: number, signal?: AbortSignal): Promise<ShelterDetailResponse> => {
+    const response = await api.get<ShelterDetailResponse>(`/shelters/${id}`, { signal });
     return response.data;
   },
 };

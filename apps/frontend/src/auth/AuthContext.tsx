@@ -1,14 +1,16 @@
-// ⚡ Importation stricte du User
-import type { User } from "@projet/shared-types";
+// ⚡ Importation stricte du UserWithProfiles
+import type { LoginDto, RegisterDto, UserWithProfiles } from "@projet/shared-types";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { authApi } from "../api/authApi";
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  setIsLoggedIn: (val: boolean) => void;
+  setIsLoggedIn: (value: boolean) => void;
   logout: () => Promise<void>;
-  user: User | null; // ⚡ Fin du "any"
-  setUser: (user: User | null) => void;
+  login: (credentials: LoginDto) => Promise<void>;
+  register: (data: RegisterDto) => Promise<void>;
+  user: UserWithProfiles | null; // ⚡ Utilisation du type étendu
+  setUser: (user: UserWithProfiles | null) => void;
   isLoading: boolean;
 }
 
@@ -16,12 +18,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null); // ⚡ Typage du state
+  const [user, setUser] = useState<UserWithProfiles | null>(null); // ⚡ Typage du state
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        await authApi.getCsrfToken(); // Récupère et configure le jeton CSRF
         const data = await authApi.getMe();
         setUser(data);
         setIsLoggedIn(true);
@@ -35,6 +38,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
+  const login = async (credentials: LoginDto) => {
+    const res = await authApi.login(credentials);
+    setUser(res.user);
+    setIsLoggedIn(true);
+  };
+
+  const register = async (data: RegisterDto) => {
+    const res = await authApi.register(data);
+    setUser(res.user);
+    setIsLoggedIn(true);
+  };
+
   const logout = async () => {
     await authApi.logout();
     setIsLoggedIn(false);
@@ -42,7 +57,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, logout, user, setUser, isLoading }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, setIsLoggedIn, logout, login, register, user, setUser, isLoading }}
+    >
       {children}
     </AuthContext.Provider>
   );

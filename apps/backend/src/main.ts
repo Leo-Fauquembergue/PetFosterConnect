@@ -36,7 +36,7 @@ async function bootstrap() {
     },
     credentials: true, // Requis pour tes cookies/sessions Vercel <-> Render
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "x-csrf-token"],
   });
 
   // DOCUMENTATION SWAGGER

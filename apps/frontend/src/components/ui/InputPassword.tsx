@@ -27,7 +27,7 @@ const InputPassword = forwardRef<HTMLInputElement, InputPasswordProps>(
             type={show ? "text" : "password"}
             className={`
               w-full px-4 py-2 pr-12 border rounded-lg outline-none transition-all
-              font-openSans text-text-main
+              font-openSans text-gray-800
               ${
                 error
                   ? "border-error focus:ring-2 focus:ring-error/20"
@@ -41,7 +41,7 @@ const InputPassword = forwardRef<HTMLInputElement, InputPasswordProps>(
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 transition-colors p-1"
             aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
             aria-controls={inputId}
           >

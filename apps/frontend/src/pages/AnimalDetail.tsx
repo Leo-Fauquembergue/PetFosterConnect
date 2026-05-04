@@ -1,13 +1,14 @@
-import type { AnimalDetailResponse } from "@projet/shared-types";
-import { AxiosError } from "axios";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type CreateApplicationDto, CreateApplicationSchema, UserRole } from "@projet/shared-types";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { AlertCircle, Heart } from "lucide-react";
 import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { animalApi } from "../api/animalApi";
+import { extractErrorMessage } from "../api/api";
 import { applicationApi } from "../api/applicationApi";
 import { bookmarkApi } from "../api/bookmarkApi";
 import SiteLogo from "../assets/Logo.png";
@@ -18,102 +19,63 @@ import Button from "../components/ui/Button";
 import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
+import { useAnimal } from "../hooks/useAnimal";
 
 export default function AnimalDetail() {
-  const { userId, id } = useParams<{ userId: string; id: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [hasApplied, setHasApplied] = useState(false);
-  const [animal, setAnimal] = useState<AnimalDetailResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [adoptMessage, setAdoptMessage] = useState("");
-  const [fosterMessage, setFosterMessage] = useState("");
+  const [hasAppliedLocally, setHasAppliedLocally] = useState(false);
+  const {
+    animal,
+    loading,
+    error,
+    isFavorite,
+    setIsFavorite,
+    selectedPhoto,
+    setSelectedPhoto,
+    myApplicationStatus,
+    setMyApplicationStatus,
+  } = useAnimal(id);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Détermination de l'état d'affichage
+  const effectiveStatus = hasAppliedLocally ? "pending" : myApplicationStatus;
 
-  useEffect(() => {
-    const fetchAnimal = async () => {
-      try {
-        const data = (await animalApi.getAnimalById(Number(id))) as AnimalDetailResponse;
+  // Formulaire d'adoption
+  const adoptForm = useForm<CreateApplicationDto>({
+    resolver: zodResolver(CreateApplicationSchema),
+    defaultValues: {
+      animalId: Number(id),
+      applicationType: "adoption",
+      message: "",
+    },
+  });
 
-        setAnimal(data);
-        if (data.isBookmarked !== undefined) {
-          setIsFavorite(data.isBookmarked);
-        }
+  // Formulaire de FA (Foster)
+  const fosterForm = useForm<CreateApplicationDto>({
+    resolver: zodResolver(CreateApplicationSchema),
+    defaultValues: {
+      animalId: Number(id),
+      applicationType: "foster",
+      message: "",
+    },
+  });
 
-        if (data.photos && data.photos.length > 0) {
-          setSelectedPhoto(data.photos[0]);
-        }
-      } catch (_err) {
-        setError("Impossible de charger les détails de l'animal.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) fetchAnimal();
-  }, [id]);
-
-  const handleError = (err: unknown) => {
-    const axiosError = err as AxiosError<{ message: unknown }>;
-    const errorData = axiosError.response?.data?.message;
-
-    if (errorData && typeof errorData === "object" && "errors" in errorData) {
-      const errObj = errorData as { errors: { message: string } };
-      if (errObj.errors?.message) {
-        try {
-          const parsedZodError = JSON.parse(errObj.errors.message);
-          if (parsedZodError[0]?.message) {
-            toast.error(parsedZodError[0].message);
-            return;
-          }
-        } catch (_e) {
-          // Ignorer l'erreur de parsing et passer au fallback
-        }
-      }
-    }
-
-    toast.error(typeof errorData === "string" ? errorData : "Erreur lors de la demande");
-  };
-
-  const handleAdopt = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onApplicationSubmit = async (data: CreateApplicationDto) => {
     if (!user) return navigate("/connexion");
-    setIsSubmitting(true);
     try {
-      await applicationApi.createApplication({
-        animalId: Number(id),
-        applicationType: "adoption",
-        message: adoptMessage,
-      });
-      setHasApplied(true);
-      toast.success("Demande d'adoption envoyée !");
+      await applicationApi.createApplication(data);
+      setHasAppliedLocally(true);
+      setMyApplicationStatus("pending");
+      toast.success(
+        data.applicationType === "adoption"
+          ? "Demande d'adoption envoyée !"
+          : "Demande de famille d'accueil envoyée !"
+      );
     } catch (err) {
-      handleError(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleFoster = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return navigate("/connexion");
-    setIsSubmitting(true);
-    try {
-      await applicationApi.createApplication({
-        animalId: Number(id),
-        applicationType: "foster",
-        message: fosterMessage,
-      });
-      setHasApplied(true);
-      toast.success("Demande de famille d'accueil envoyée !");
-    } catch (err) {
-      handleError(err);
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage = extractErrorMessage(err, "Erreur lors de la demande");
+      toast.error(errorMessage);
     }
   };
 
@@ -125,8 +87,8 @@ export default function AnimalDetail() {
       setIsFavorite(responseData.bookmarked);
       toast.success(responseData.message);
     } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      toast.error(axiosError.response?.data?.message || "Erreur réseau");
+      const errorMessage = extractErrorMessage(err, "Erreur réseau");
+      toast.error(errorMessage);
     }
   };
 
@@ -156,13 +118,6 @@ export default function AnimalDetail() {
     const animalUrl = `${window.location.origin}/animaux/${animal.id}`;
     const qrData = await QRCode.toDataURL(animalUrl);
 
-    const logoUrl = animal.shelter?.shelterProfile?.logoUrl;
-    if (logoUrl) {
-      const logoWidthShelter = 40;
-      const logoXShelter = (pageWidth - logoWidthShelter) / 2;
-      pdf.addImage(logoUrl, "PNG", logoXShelter, 10, logoWidthShelter, 40);
-    }
-
     pdf.addImage(qrData, "PNG", pageWidth - 40 - 10, 250, 40, 40);
     const imgWidth = pageWidth * 0.9;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -189,9 +144,7 @@ export default function AnimalDetail() {
 
   const photoArray = Array.isArray(animal.photos) ? (animal.photos as string[]) : [];
   const isShelterOwner =
-    user?.role === "shelter" &&
-    Number(user?.id) === Number(userId) &&
-    (animal.shelter?.pfcUserId ? Number(animal.shelter.pfcUserId) === Number(userId) : true);
+    user?.role === UserRole.shelter && Number(user?.id) === Number(animal.shelter?.id);
 
   return (
     <div className="bg-bgapp font-openSans text-gray-800">
@@ -238,10 +191,9 @@ export default function AnimalDetail() {
             <div className="flex justify-between items-start mb-2 w-full">
               <div>
                 <h1 className="text-4xl font-bold font-montserrat text-black">{animal.name}</h1>
-                <p className="text-lg text-gray-600">{animal.species?.name}</p>
+                <p className="text-lg text-gray-600">{animal.speciesName}</p>
               </div>
 
-              {/* ⚡ AJOUT : Remplacement du vide par une indication claire de l'état du badge */}
               {animal.animalStatus === "available" ? (
                 <Badge label="Disponible" variant="success" />
               ) : animal.animalStatus === "adopted" ? (
@@ -305,13 +257,12 @@ export default function AnimalDetail() {
 
             <div className="mt-6 mb-8 w-full">
               <h2 className="text-xl font-bold text-success mb-1 font-montserrat">Proposé par</h2>
-              <p className="text-sm font-semibold text-gray-900">
-                {animal.shelter?.shelterProfile?.shelterName || "Refuge partenaire"}
-              </p>
-              <p className="text-xs text-gray-500">
-                <span className="font-medium">Adresse :</span>{" "}
-                {animal.shelter?.address || "Non communiquée"}
-              </p>
+              <p className="text-sm font-semibold text-gray-900">{animal.shelterName}</p>
+              {animal.shelterName !== "Ancien refuge" && (
+                <p className="text-xs text-gray-500">
+                  <span className="font-medium">Adresse :</span> {animal.shelterAddress}
+                </p>
+              )}
             </div>
 
             <div className="border-t-2 border-gray-300 pt-6 flex flex-col gap-4 w-full mt-auto no-print">
@@ -324,57 +275,86 @@ export default function AnimalDetail() {
                 >
                   Modifier
                 </Button>
-              ) : hasApplied ? (
-                <p className="text-green-600 font-semibold">
-                  Demande déjà réalisée pour cet animal ✅
-                </p>
+              ) : effectiveStatus === "pending" ? (
+                <div className="text-center p-4 bg-warning/10 rounded-lg text-warning border border-warning/20">
+                  <p className="font-semibold">Demande en cours d'examen ✅</p>
+                  <p className="text-xs">Le refuge a bien reçu votre message.</p>
+                </div>
+              ) : effectiveStatus === "approved" ? (
+                <div className="text-center p-4 bg-success/10 rounded-lg text-success border border-success/20">
+                  <p className="font-semibold">Félicitations ! Votre demande a été acceptée 🐾</p>
+                </div>
+              ) : effectiveStatus === "rejected" ? (
+                <div className="text-center p-4 bg-error/10 rounded-lg text-error border border-error/20">
+                  <p className="font-semibold">Candidature non retenue pour le moment.</p>
+                </div>
               ) : animal.animalStatus === "available" ? (
-                <>
-                  <form onSubmit={handleAdopt} className="flex items-start gap-4">
-                    <div className="flex-grow">
-                      <Input
-                        label="Message d'adoption"
-                        placeholder="Pourquoi souhaitez-vous adopter ?"
-                        className="bg-white"
-                        value={adoptMessage}
-                        onChange={(e) => setAdoptMessage(e.target.value)}
-                      />
-                    </div>
-                    <div className="w-40 mt-[26px]">
-                      <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Envoi..." : "Adopter"}
-                      </Button>
-                    </div>
-                  </form>
-                  <form onSubmit={handleFoster} className="flex items-start gap-4">
-                    <div className="flex-grow">
-                      <Input
-                        label="Message pour l'accueil"
-                        placeholder="Vos disponibilités et motivations..."
-                        className="bg-white"
-                        value={fosterMessage}
-                        onChange={(e) => setFosterMessage(e.target.value)}
-                      />
-                    </div>
-                    <div className="w-40 mt-[26px]">
-                      <Button variant="primary" fullWidth type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Envoi..." : "Accueillir"}
-                      </Button>
-                    </div>
-                  </form>
-                </>
+                (effectiveStatus === "cancelled" || !effectiveStatus) && (
+                  <>
+                    {effectiveStatus === "cancelled" && (
+                      <p className="text-xs text-gray-500 mb-2 italic">
+                        Vous aviez annulé votre précédente demande. Vous pouvez en soumettre une
+                        nouvelle.
+                      </p>
+                    )}
+                    <form
+                      onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
+                      className="flex items-start gap-4"
+                    >
+                      <div className="flex-grow">
+                        <Input
+                          label="Message d'adoption"
+                          placeholder="Pourquoi souhaitez-vous adopter ?"
+                          className="bg-white"
+                          {...adoptForm.register("message")}
+                          error={adoptForm.formState.errors.message?.message}
+                        />
+                      </div>
+                      <div className="w-40 mt-[26px]">
+                        <Button
+                          variant="primary"
+                          fullWidth
+                          type="submit"
+                          disabled={adoptForm.formState.isSubmitting}
+                        >
+                          {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
+                        </Button>
+                      </div>
+                    </form>
+                    <form
+                      onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
+                      className="flex items-start gap-4"
+                    >
+                      <div className="flex-grow">
+                        <Input
+                          label="Message pour l'accueil"
+                          placeholder="Vos disponibilités et motivations..."
+                          className="bg-white"
+                          {...fosterForm.register("message")}
+                          error={fosterForm.formState.errors.message?.message}
+                        />
+                      </div>
+                      <div className="w-40 mt-[26px]">
+                        <Button
+                          variant="primary"
+                          fullWidth
+                          type="submit"
+                          disabled={fosterForm.formState.isSubmitting}
+                        >
+                          {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
+                        </Button>
+                      </div>
+                    </form>
+                  </>
+                )
               ) : (
                 <div className="text-center p-4 bg-gray-50 rounded-lg text-gray-500 border border-gray-200">
                   <p>Cet animal n'est actuellement plus disponible à l'adoption.</p>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={exportToPDF}
-                className="bg-primary text-white px-4 py-2 rounded"
-              >
+              <Button type="button" onClick={exportToPDF} variant="primary">
                 Exporter en PDF
-              </button>
+              </Button>
             </div>
           </div>
         </div>

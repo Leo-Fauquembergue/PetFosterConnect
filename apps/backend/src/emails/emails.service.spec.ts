@@ -1,3 +1,4 @@
+import { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EmailsService } from "./emails.service";
 
@@ -17,9 +18,20 @@ jest.mock("nodemailer", () => ({
 describe("EmailsService", () => {
   let service: EmailsService;
 
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      if (key === "FRONTEND_URL") return "http://localhost:5173";
+      if (key === "SMTP_HOST") return "smtp.test.com";
+      if (key === "SMTP_PORT") return 587;
+      if (key === "SMTP_USER") return "test@test.com";
+      if (key === "SMTP_PASS") return "password";
+      return null;
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EmailsService],
+      providers: [EmailsService, { provide: ConfigService, useValue: mockConfigService }],
     }).compile();
 
     service = module.get<EmailsService>(EmailsService);

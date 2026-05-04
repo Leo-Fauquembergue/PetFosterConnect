@@ -7,18 +7,18 @@ import type {
 import api from "./api";
 
 export const animalApi = {
-  getAllAnimals: async (): Promise<AnimalWithRelations[]> => {
-    const response = await api.get<AnimalWithRelations[]>("/animals");
+  getAllAnimals: async (signal?: AbortSignal): Promise<AnimalWithRelations[]> => {
+    const response = await api.get<AnimalWithRelations[]>("/animals", { signal });
     return response.data;
   },
 
-  getLatestAnimals: async (): Promise<AnimalWithRelations[]> => {
-    const response = await api.get<AnimalWithRelations[]>("/animals?limit=3");
+  getLatestAnimals: async (signal?: AbortSignal): Promise<AnimalWithRelations[]> => {
+    const response = await api.get<AnimalWithRelations[]>("/animals?limit=3", { signal });
     return response.data;
   },
 
-  getAnimalById: async (id: number): Promise<AnimalWithRelations> => {
-    const response = await api.get<AnimalWithRelations>(`/animals/${id}`);
+  getAnimalById: async (id: number, signal?: AbortSignal): Promise<AnimalWithRelations> => {
+    const response = await api.get<AnimalWithRelations>(`/animals/${id}`, { signal });
     return response.data;
   },
 
@@ -37,9 +37,9 @@ export const animalApi = {
     return response.data;
   },
 
-  // --- Méthodes Admin ---
-  getAllAdmin: async (): Promise<Animal[]> => {
-    const response = await api.get<Animal[]>("/animals/admin/all");
+  // Méthodes Admin
+  getAllAdmin: async (signal?: AbortSignal): Promise<AnimalWithRelations[]> => {
+    const response = await api.get<AnimalWithRelations[]>("/animals/admin/all", { signal });
     return response.data;
   },
 

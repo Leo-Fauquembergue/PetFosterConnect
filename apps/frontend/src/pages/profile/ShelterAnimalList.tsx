@@ -1,14 +1,13 @@
-import type { AnimalWithRelations } from "@projet/shared-types";
-import { AxiosError } from "axios";
 import { Pencil, RotateCcw, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
-import { shelterApi } from "../../api/shelterApi";
 import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+import { useShelterAnimals } from "../../hooks/useShelterAnimals";
 
 // Dictionnaire pour la traduction des statuts
 const statusLabels: Record<string, string> = {
@@ -20,30 +19,12 @@ const statusLabels: Record<string, string> = {
 
 export default function ShelterAnimalList() {
   const { id } = useParams<{ id: string }>();
-  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { animals, setAnimals, loading } = useShelterAnimals(id);
 
   const [actionToConfirm, setActionToConfirm] = useState<{
     type: "delete" | "restore";
     id: number;
   } | null>(null);
-
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        const data = await shelterApi.getShelterAnimals(Number(id));
-        setAnimals(data);
-      } catch (error) {
-        const axiosError = error as AxiosError<{ message: string }>;
-        const errorMessage =
-          axiosError.response?.data?.message || "Erreur de chargement des animaux.";
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) fetchAnimals();
-  }, [id]);
 
   const handleConfirmAction = async () => {
     if (!actionToConfirm) return;
@@ -115,34 +96,34 @@ export default function ShelterAnimalList() {
                   <td className="px-6 py-4 text-right flex gap-2 justify-end">
                     <Link
                       to={`/utilisateur/${id}/animaux/${animal.id}`}
-                      className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                      className="text-info hover:bg-info/10 p-2 rounded-full transition-colors"
                       title="Voir / Modifier"
                     >
                       <Pencil className="w-5 h-5" />
                     </Link>
 
                     {animal.deletedAt ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           animal.id && setActionToConfirm({ type: "restore", id: animal.id })
                         }
-                        className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors"
+                        className="text-primary hover:text-primary p-2"
                         title="Restaurer"
                       >
                         <RotateCcw className="w-4 h-4" />
-                      </button>
+                      </Button>
                     ) : (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           animal.id && setActionToConfirm({ type: "delete", id: animal.id })
                         }
-                        className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
+                        className="text-gray-400 hover:text-error p-2"
                         title="Supprimer"
                       >
                         <Trash2 className="w-5 h-5" />
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>

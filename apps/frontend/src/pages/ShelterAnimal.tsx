@@ -1,15 +1,17 @@
 // ⚡ CORRECTION : Import depuis shared-types plutôt que depuis shelterApi.ts
-import type { AnimalWithRelations, ShelterDetailResponse } from "@projet/shared-types";
+import type { ShelterDetailResponse } from "@projet/shared-types";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { mapToUIAnimal, type UIAnimal } from "../api/mappers/animalMapper";
 import { shelterApi } from "../api/shelterApi";
-import _AnimalCard from "../components/cards/AnimalCard";
+import AnimalCard from "../components/cards/AnimalCard";
 import BackBanner from "../components/ui/BackBanner";
 import Loader from "../components/ui/Loader";
 
 const ShelterAnimalsPage = () => {
   const { id } = useParams<{ id: string }>();
   const [shelter, setShelter] = useState<ShelterDetailResponse | null>(null);
+  const [animals, setAnimals] = useState<UIAnimal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -19,6 +21,11 @@ const ShelterAnimalsPage = () => {
       try {
         const data = await shelterApi.getShelterById(Number(id));
         setShelter(data);
+        if (data.user?.animals) {
+          setAnimals(
+            data.user.animals.map((a) => mapToUIAnimal(a, { shelterName: data.shelterName }))
+          );
+        }
       } catch (_err) {
         setError(true);
       } finally {
@@ -31,7 +38,7 @@ const ShelterAnimalsPage = () => {
   if (loading) return <Loader text="Chargement des animaux du refuge..." />;
   if (error)
     return (
-      <p className="text-center text-red-500 my-12 font-medium">
+      <p className="text-center text-error my-12 font-medium">
         Erreur lors du chargement des animaux.
       </p>
     );
@@ -43,7 +50,7 @@ const ShelterAnimalsPage = () => {
       <BackBanner to="/refuges" />
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">{`Animaux du ${shelter.shelterName}`}</h1>
-        {!shelter.user?.animals || shelter.user.animals.length === 0 ? (
+        {animals.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[300px] bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center mt-8">
             <span className="text-4xl mb-4">🐾</span>
             <p className="text-gray-600 text-lg font-medium">Aucun animal pour le moment.</p>
@@ -53,10 +60,8 @@ const ShelterAnimalsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-            {shelter.user.animals.map((animal: AnimalWithRelations) => (
-              <Link key={animal.id} to={`/animaux/${animal.id}`}>
-                <_AnimalCard {...animal} />
-              </Link>
+            {animals.map((animal) => (
+              <AnimalCard key={animal.id} animal={animal} />
             ))}
           </div>
         )}

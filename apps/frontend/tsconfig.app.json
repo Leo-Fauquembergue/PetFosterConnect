@@ -25,7 +25,6 @@
     "noUncheckedSideEffectImports": true,
 
     /* Types partagés */
-    "baseUrl": ".",
     "paths": {
       "@projet/shared-types": ["../../packages/shared-types/src/index.ts"]
     }

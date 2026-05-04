@@ -1,16 +1,17 @@
-import type { UpdateUserDto, User } from "@projet/shared-types";
-import { isAxiosError } from "axios";
+import { type UpdateUserDto, UserRole } from "@projet/shared-types";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
 import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
+import { useAdminUsers } from "../../hooks/useAdminUsers";
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { users, setUsers, loading } = useAdminUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
@@ -19,25 +20,6 @@ export default function AdminUsers() {
     type: "delete" | "restore";
     id: number;
   } | null>(null);
-
-  // Fetch
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await userApi.getAllUsers();
-        setUsers(data);
-      } catch (error: unknown) {
-        let errorMessage = "Impossible de charger les utilisateurs.";
-        if (isAxiosError(error)) {
-          errorMessage = error.response?.data?.message || errorMessage;
-        }
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
 
   // LOGIQUE DE FILTRAGE
   const filteredUsers = users.filter((user) => {
@@ -55,7 +37,7 @@ export default function AdminUsers() {
       if (type === "delete") {
         await userApi.deleteUser(id);
         setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u)));
-        toast.success("Utilisateur banni");
+        toast.success("Utilisateur supprimé et anonymisé");
       } else {
         await userApi.updateUser(id, { deletedAt: null } as Partial<UpdateUserDto> & {
           deletedAt: null;
@@ -64,10 +46,10 @@ export default function AdminUsers() {
         toast.success("Utilisateur restauré");
       }
     } catch (error: unknown) {
-      let errorMessage = "Une erreur est survenue lors de l'opération.";
-      if (isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || errorMessage;
-      }
+      const errorMessage = extractErrorMessage(
+        error,
+        "Une erreur est survenue lors de l'opération."
+      );
       toast.error(errorMessage);
     } finally {
       setActionToConfirm(null);
@@ -107,9 +89,9 @@ export default function AdminUsers() {
           onChange={(e) => setRoleFilter(e.target.value)}
         >
           <option value="all">Tous les rôles</option>
-          <option value="individual">Particuliers</option>
-          <option value="shelter">Refuges</option>
-          <option value="admin">Admins</option>
+          <option value={UserRole.individual}>Particuliers</option>
+          <option value={UserRole.shelter}>Refuges</option>
+          <option value={UserRole.admin}>Admins</option>
         </select>
       </div>
 
@@ -136,11 +118,11 @@ export default function AdminUsers() {
                     <Badge
                       label={user.role}
                       className={
-                        user.role === "admin"
-                          ? "text-purple-700"
-                          : user.role === "shelter"
-                            ? "text-orange-700"
-                            : "text-blue-700"
+                        user.role === UserRole.admin
+                          ? "text-admin"
+                          : user.role === UserRole.shelter
+                            ? "text-primary"
+                            : "text-info"
                       }
                     />
                   </td>
@@ -153,29 +135,29 @@ export default function AdminUsers() {
                       variant={user.deletedAt ? "error" : "success"}
                     />
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex justify-end gap-2">
                     {user.deletedAt ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           user.id && setActionToConfirm({ type: "restore", id: user.id })
                         }
-                        className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors inline-flex items-center gap-1"
+                        className="text-primary hover:text-primary p-2"
                         title="Restaurer l'utilisateur"
                       >
                         <RotateCcw className="w-4 h-4" /> Restaurer
-                      </button>
+                      </Button>
                     ) : (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() =>
                           user.id && setActionToConfirm({ type: "delete", id: user.id })
                         }
-                        className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
+                        className="text-gray-400 hover:text-error p-2"
                         title="Bannir l'utilisateur"
                       >
                         <Trash2 className="w-5 h-5" />
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>
@@ -197,12 +179,12 @@ export default function AdminUsers() {
         onConfirm={handleConfirmAction}
         title={
           actionToConfirm?.type === "delete"
-            ? "Bannir l'utilisateur ?"
+            ? "Supprimer et anonymiser l'utilisateur ?"
             : "Restaurer l'utilisateur ?"
         }
         message={
           actionToConfirm?.type === "delete"
-            ? "L'utilisateur ne pourra plus se connecter."
+            ? "Cette action est irréversible et conforme au RGPD. Les données personnelles seront effacées."
             : "L'utilisateur retrouvera l'accès à son compte."
         }
       />

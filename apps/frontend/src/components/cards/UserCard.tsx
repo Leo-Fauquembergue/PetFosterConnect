@@ -1,4 +1,8 @@
-import type { UserCardProps } from "@projet/shared-types";
+import { UserRole, type UserWithProfiles } from "@projet/shared-types";
+
+interface UserCardProps {
+  user: UserWithProfiles;
+}
 
 export default function UserCard({ user }: UserCardProps) {
   return (
@@ -19,7 +23,7 @@ export default function UserCard({ user }: UserCardProps) {
       )}
 
       {/* Profil particulier */}
-      {user.role === "individual" && (
+      {user.role === UserRole.individual && (
         <div className="mt-4">
           <h4 className="text-md font-bold text-success mb-2">Profil particulier</h4>
           {user.individualProfile ? (
@@ -31,10 +35,7 @@ export default function UserCard({ user }: UserCardProps) {
               <li>Enfants : {user.individualProfile.haveChildren ? "Oui" : "Non"}</li>
               <li>Famille d’accueil : {user.individualProfile.availableFamily ? "Oui" : "Non"}</li>
               {user.individualProfile.availableFamily && user.individualProfile.availableTime && (
-                <li>
-                  Disponibilité:{" "}
-                  {new Date(user.individualProfile.availableTime).toLocaleDateString("fr-FR")}
-                </li>
+                <li>Disponibilité: {user.individualProfile.availableTime}</li>
               )}
             </ul>
           ) : (
@@ -46,7 +47,7 @@ export default function UserCard({ user }: UserCardProps) {
       )}
 
       {/* Profil refuge */}
-      {user.role === "shelter" && (
+      {user.role === UserRole.shelter && (
         <div className="mt-4 border-t pt-4">
           <h4 className="text-md font-bold text-primary mb-2">Informations Refuge</h4>
           {user.shelterProfile ? (
@@ -54,9 +55,9 @@ export default function UserCard({ user }: UserCardProps) {
               <p className="text-sm font-semibold text-gray-800">
                 {user.shelterProfile.shelterName || "Nom non renseigné"}
               </p>
-              <p className="text-xs text-gray-500">
-                SIRET : {user.shelterProfile.siret || "Non renseigné"}
-              </p>
+              {user.shelterProfile.siret && (
+                <p className="text-xs text-gray-500">SIRET : {user.shelterProfile.siret}</p>
+              )}
               <p className="text-sm text-gray-600 italic line-clamp-3">
                 {user.shelterProfile.description || "Aucune description fournie."}
               </p>

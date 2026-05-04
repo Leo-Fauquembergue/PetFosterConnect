@@ -1,133 +1,70 @@
-import type {
-  IndividualProfile,
-  ShelterProfile,
-  UpdateUserWithIndividualProfileDto,
-  UpdateUserWithShelterProfileDto,
-  User,
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  type UpdateUserWithIndividualProfileDto,
+  UpdateUserWithIndividualProfileSchema,
+  type UpdateUserWithShelterProfileDto,
+  UpdateUserWithShelterProfileSchema,
+  UserRole,
+  type UserWithProfiles,
 } from "@projet/shared-types";
-import axios from "axios";
 import { useEffect, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
 import UserCard from "../../components/cards/UserCard";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
-
-// ⚡ Typage strict englobant les relations Prisma optionnelles
-type UserWithProfiles = User & {
-  individualProfile?: IndividualProfile | null;
-  shelterProfile?: ShelterProfile | null;
-};
-
-// Typage unifié du state formData englobant les deux DTOs
-type ProfileFormData = Partial<
-  UpdateUserWithIndividualProfileDto & UpdateUserWithShelterProfileDto
->;
-
-// ⚡ Types stricts attendus par les composants enfants pour satisfaire TS2322
-type ExpectedIndividualProps = {
-  email: string;
-  phoneNumber: string;
-  address: string;
-  surface: number;
-  housingType: string;
-  haveGarden: boolean;
-  haveAnimals: boolean;
-  haveChildren: boolean;
-  availableFamily: boolean;
-  availableTime?: string;
-};
-
-type ExpectedShelterProps = {
-  logo: string;
-  email: string;
-  phoneNumber: string;
-  address: string;
-  shelterName: string;
-  siret: string;
-  description: string;
-};
+import Button from "../../components/ui/Button";
+import { useUserProfile } from "../../hooks/useUserProfile";
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [user, setUser] = useState<UserWithProfiles | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, setUser, loading, formData } = useUserProfile(id);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState<ProfileFormData>({});
+  const methods = useForm({
+    resolver: zodResolver(
+      user?.role === UserRole.individual
+        ? UpdateUserWithIndividualProfileSchema
+        : UpdateUserWithShelterProfileSchema
+    ),
+    defaultValues: formData,
+  });
 
+  const { reset, handleSubmit } = methods;
+
+  // Mettre à jour les valeurs par défaut quand formData est chargé
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!id) return;
-      try {
-        const data = await userApi.getProfile(Number(id));
-        const userData = data as UserWithProfiles;
-        setUser(userData);
-
-        if (userData.role === "individual") {
-          setFormData({
-            email: userData.email ?? "",
-            phoneNumber: userData.phoneNumber ?? "",
-            address: userData.address ?? "",
-            surface: userData.individualProfile?.surface ?? 0,
-            housingType: userData.individualProfile?.housingType ?? "other",
-            haveGarden: userData.individualProfile?.haveGarden ?? false,
-            haveAnimals: userData.individualProfile?.haveAnimals ?? false,
-            haveChildren: userData.individualProfile?.haveChildren ?? false,
-            availableFamily: userData.individualProfile?.availableFamily ?? false,
-            availableTime: userData.individualProfile?.availableTime ?? "",
-          });
-        } else if (userData.role === "shelter") {
-          setFormData({
-            email: userData.email ?? "",
-            phoneNumber: userData.phoneNumber ?? "",
-            address: userData.address ?? "",
-            shelterName: userData.shelterProfile?.shelterName ?? "",
-            siret: userData.shelterProfile?.siret ?? "",
-            description: userData.shelterProfile?.description ?? "",
-            logo: userData.shelterProfile?.logo ?? "",
-          });
-        }
-        setLoading(false);
-      } catch (err: unknown) {
-        let errorMessage = "Impossible de charger le profil.";
-        if (axios.isAxiosError(err)) {
-          errorMessage = err.response?.data?.message || errorMessage;
-        }
-        toast.error(errorMessage);
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [id]);
+    if (formData) {
+      reset(formData);
+    }
+  }, [formData, reset]);
 
   if (loading) return <p>Chargement...</p>;
   if (!user) return <p>Utilisateur introuvable</p>;
 
-  const handleChange = (field: string, value: unknown) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (
+    data: UpdateUserWithIndividualProfileDto | UpdateUserWithShelterProfileDto
+  ) => {
     setIsSubmitting(true);
 
     try {
       let updatedUser: UserWithProfiles;
 
-      if (user.role === "individual") {
+      if (user.role === UserRole.individual) {
         updatedUser = (await userApi.updateIndividualProfile(
           user.id as number,
-          formData as UpdateUserWithIndividualProfileDto
+          data as UpdateUserWithIndividualProfileDto
         )) as UserWithProfiles;
       } else {
         updatedUser = (await userApi.updateShelterProfile(
           user.id as number,
-          formData as UpdateUserWithShelterProfileDto
+          data as UpdateUserWithShelterProfileDto
         )) as UserWithProfiles;
       }
 
@@ -135,10 +72,7 @@ export default function UserProfilePage() {
       setIsEditing(false);
       toast.success("Profil mis à jour avec succès !");
     } catch (err: unknown) {
-      let errorMessage = "Impossible de mettre à jour le profil.";
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.message || errorMessage;
-      }
+      const errorMessage = extractErrorMessage(err, "Impossible de mettre à jour le profil.");
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -151,13 +85,9 @@ export default function UserProfilePage() {
         {!isEditing ? (
           <>
             <UserCard user={user} />
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="mt-4 bg-primary text-white px-4 py-2 rounded"
-            >
+            <Button variant="primary" onClick={() => setIsEditing(true)} className="mt-4">
               Modifier
-            </button>
+            </Button>
 
             <div className="mt-6 border-t pt-4">
               <h2 className="text-lg font-semibold">Modifier le mot de passe</h2>
@@ -165,35 +95,23 @@ export default function UserProfilePage() {
             </div>
           </>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {user.role === "individual" ? (
-              <IndividualProfileForm
-                formData={formData as ExpectedIndividualProps}
-                onChange={(field, value) => handleChange(field, value)}
-              />
-            ) : (
-              <ShelterProfileForm
-                formData={formData as ExpectedShelterProps}
-                onChange={(field, value) => handleChange(field, value)}
-              />
-            )}
-            <div className="flex justify-between">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
-              </button>
-            </div>
-          </form>
+          <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {user.role === UserRole.individual ? (
+                <IndividualProfileForm />
+              ) : (
+                <ShelterProfileForm siret={user.shelterProfile?.siret} />
+              )}
+              <div className="flex justify-between gap-4">
+                <Button variant="neutral" onClick={() => setIsEditing(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={isSubmitting} className="flex-grow">
+                  {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
+                </Button>
+              </div>
+            </form>
+          </FormProvider>
         )}
       </div>
     </div>

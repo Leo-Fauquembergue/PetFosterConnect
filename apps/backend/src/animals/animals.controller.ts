@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -22,11 +21,14 @@ import {
 import { UserRole } from "@prisma/client";
 import type { CreateAnimalDto, RequestWithUser, UpdateAnimalDto } from "@projet/shared-types";
 import { CreateAnimalSchema, UpdateAnimalSchema } from "@projet/shared-types";
+import { CheckOwner } from "../auth/decorators/check-owner.decorator";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { OptionalJwtAuthGuard } from "../auth/guards/optional-jwt-auth.guard";
+import { ResourceOwnerGuard } from "../auth/guards/resource-owner.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
+import { IdSchema, LimitSchema } from "../common/schemas/params.schema";
 import { AnimalsService } from "./animals.service";
 
 @ApiTags("animals")
@@ -59,11 +61,8 @@ export class AnimalsController {
     status: 200,
     description: "Liste des animaux retournée avec succès",
   })
-  findAll(@Query("limit") limit?: string) {
-    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
-    const safeLimit = parsedLimit && !Number.isNaN(parsedLimit) ? Math.min(parsedLimit, 50) : 50;
-
-    return this.animalsService.findAll(false, safeLimit);
+  findAll(@Query("limit", new ZodPipe(LimitSchema)) limit: number) {
+    return this.animalsService.findAll(false, limit);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -89,7 +88,7 @@ export class AnimalsController {
   @ApiParam({ name: "id", description: "ID de l'animal", type: Number })
   @ApiResponse({ status: 200, description: "Animal trouvé" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
-  async findOne(@Param("id", ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+  async findOne(@Param("id", new ZodPipe(IdSchema)) id: number, @Req() req: RequestWithUser) {
     const userId = req.user?.id;
     return this.animalsService.findOne(id, userId);
   }
@@ -101,12 +100,13 @@ export class AnimalsController {
     status: 200,
     description: "Liste des animaux du refuge retournée avec succès",
   })
-  async findByShelter(@Param("id") id: string) {
-    return this.animalsService.findAllByShelter(Number(id));
+  async findByShelter(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.animalsService.findAllByShelter(id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(UserRole.shelter, UserRole.admin)
+  @CheckOwner({ type: "animal", idParam: "id" })
   @Patch(":id")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour un animal" })
@@ -116,15 +116,15 @@ export class AnimalsController {
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
   update(
-    @Param("id", ParseIntPipe) id: number,
-    @Body(new ZodPipe(UpdateAnimalSchema)) updateAnimalDto: UpdateAnimalDto,
-    @Req() req: RequestWithUser
+    @Param("id", new ZodPipe(IdSchema)) id: number,
+    @Body(new ZodPipe(UpdateAnimalSchema)) updateAnimalDto: UpdateAnimalDto
   ) {
-    return this.animalsService.update(id, updateAnimalDto, req.user);
+    return this.animalsService.update(id, updateAnimalDto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(UserRole.shelter, UserRole.admin)
+  @CheckOwner({ type: "animal", idParam: "id" })
   @Delete(":id")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Supprimer un animal" })
@@ -132,7 +132,7 @@ export class AnimalsController {
   @ApiResponse({ status: 200, description: "Animal supprimé avec succès" })
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Animal non trouvé" })
-  remove(@Param("id", ParseIntPipe) id: number, @Req() req: RequestWithUser) {
-    return this.animalsService.remove(id, req.user);
+  remove(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.animalsService.remove(id);
   }
 }

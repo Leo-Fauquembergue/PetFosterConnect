@@ -57,7 +57,7 @@ export default function Legal() {
               http://petfosterconnect.com
             </Link>
             . Pour en savoir plus sur ces traitements, vous pouvez consulter la{" "}
-            <Link to="/confidentialite" className="text-primary-400 underline">
+            <Link to="/confidentialite" className="text-primary underline">
               politique de confidentialité
             </Link>
             .

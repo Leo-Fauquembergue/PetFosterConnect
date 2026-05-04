@@ -47,14 +47,6 @@ describe("AuthPage - LoginForm", () => {
     vi.clearAllMocks();
   });
 
-  it("doit rendre le formulaire de connexion par défaut", async () => {
-    await renderAuthPage();
-    expect(screen.getByRole("heading", { name: "Connexion", level: 1 })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument();
-  });
-
   it("doit appeler l'API de connexion et afficher l'état de chargement lors d'un succès", async () => {
     vi.mocked(authApi.login).mockImplementationOnce(
       () =>
@@ -70,6 +62,7 @@ describe("AuthPage - LoginForm", () => {
                   phoneNumber: "0600000000",
                   address: "Paris",
                 } as unknown as User,
+                csrfToken: "fake-csrf-token",
               }),
             50
           )
@@ -119,5 +112,73 @@ describe("AuthPage - LoginForm", () => {
         expect.any(Object)
       );
     });
+  });
+});
+
+describe("AuthPage - RegisterForm", () => {
+  const renderRegisterPage = async (): Promise<RenderResult> => {
+    const view = render(
+      <MemoryRouter initialEntries={["/inscription"]}>
+        <AuthProvider>
+          <AuthPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(screen.queryByRole("progressbar")).not.toBeInTheDocument());
+    return view;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("doit rendre le formulaire d'inscription", async () => {
+    await renderRegisterPage();
+    expect(screen.getByRole("heading", { name: "Inscription", level: 1 })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Téléphone/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Adresse/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Créer mon compte" })).toBeInTheDocument();
+  });
+
+  it("doit appeler l'API d'inscription lors d'un succès (Particulier)", async () => {
+    vi.mocked(authApi.register).mockResolvedValueOnce({
+      access_token: "fake-jwt-token",
+      user: {
+        id: 1,
+        email: "new@test.com",
+        role: UserRole.individual,
+      } as unknown as User,
+      csrfToken: "fake-csrf-token",
+    });
+
+    await renderRegisterPage();
+
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "new@test.com" } });
+    fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "Password123!" } });
+
+    // Sélectionner le rôle particulier (déjà par défaut normalement, mais cliquons pour être sûr)
+    fireEvent.click(screen.getByLabelText("Particulier"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Créer mon compte" }));
+
+    await waitFor(() => {
+      expect(authApi.register).toHaveBeenCalledWith({
+        email: "new@test.com",
+        password: "Password123!",
+        role: UserRole.individual,
+      });
+      expect(toast.success).toHaveBeenCalledWith("Compte créé avec succès 🎉", expect.any(Object));
+    });
+  });
+
+  it("doit afficher les champs du refuge lors de la sélection du rôle Association", async () => {
+    await renderRegisterPage();
+
+    fireEvent.click(screen.getByLabelText("Association"));
+
+    expect(screen.getByLabelText("Siret")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nom du refuge")).toBeInTheDocument();
   });
 });

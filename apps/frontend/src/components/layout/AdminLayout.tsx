@@ -1,9 +1,12 @@
 import { Home, LayoutDashboard, LogOut, Menu, PawPrint, Users, X } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import logo from "../../assets/Logo.png";
+import { useAuth } from "../../auth/AuthContext";
 import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
+import Button from "../ui/Button";
 
 export default function AdminLayout() {
+  const { logout } = useAuth();
   // Remplacement du useState par le hook
   const { isOpen, open, close } = useDisclosure();
 
@@ -12,7 +15,7 @@ export default function AdminLayout() {
     `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
       isActive
         ? "bg-primary text-white shadow-md font-semibold"
-        : "text-gray-600 hover:bg-orange-50 hover:text-primary"
+        : "text-gray-600 hover:bg-primary/10 hover:text-primary"
     }`;
 
   // SIDEBAR
@@ -46,20 +49,21 @@ export default function AdminLayout() {
       <div className="p-4 border-t border-gray-100 space-y-2 bg-gray-50/50">
         <NavLink
           to="/"
-          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-500 hover:text-secondary transition rounded-md hover:bg-gray-100"
+          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-500 hover:text-secondary transition rounded-md hover:bg-secondary/10"
           onClick={close}
         >
           <Home size={18} />
           <span>Retour au site</span>
         </NavLink>
 
-        <button
-          type="button"
-          className="flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-red-50 w-full rounded-lg transition font-medium"
+        <Button
+          variant="ghost"
+          onClick={() => logout()}
+          className="text-error hover:bg-error/10 w-full justify-start px-4 py-2 text-sm font-medium"
         >
           <LogOut size={18} />
           <span>Déconnexion</span>
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -73,10 +77,10 @@ export default function AdminLayout() {
 
       {/* SIDEBAR MOBILE */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity cursor-pointer"
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity cursor-pointer w-full h-full border-none"
           onClick={close}
-          aria-hidden="true"
         />
       )}
 
@@ -115,7 +119,7 @@ export default function AdminLayout() {
           {/* Bouton Burger */}
           <button
             type="button"
-            onClick={open} // Remplacement de setIsMobileMenuOpen(true)
+            onClick={open}
             className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             aria-label="Ouvrir le menu"
           >

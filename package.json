@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm run build:shared && npm run build --workspace=backend && npm run build --workspace=frontend",
     "// --- Build Shared Types First ---": "",
     "build:shared": "npm run build --workspace=@projet/shared-types",
     "// --- Backend ---": "",
@@ -21,13 +22,17 @@
     "docker:down": "docker compose down",
     "prisma:generate": "npm run prisma generate --workspace=backend",
     "prisma:migrate": "npm run prisma migrate dev --workspace=backend",
+    "prisma:seed": "npm run prisma db seed --workspace=backend",
     "prisma:studio": "npm run prisma studio --workspace=backend",
     "// --- Quality ---": "",
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:backend": "npm run test --workspace=backend",
+    "test:frontend": "npm run test --workspace=frontend",
+    "test:watch": "npm run test:watch --workspace=backend",
     "test:e2e": "bash ./apps/backend/test/setup-e2e.sh"
   },
   "devDependencies": {
@@ -48,33 +53,5 @@
   "dependencies": {
     "@nestjs/mapped-types": "*",
     "zod": "^4.3.5"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": ".",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "ts-jest",
-        {
-          "isolatedModules": true
-        }
-      ]
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "./coverage",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/apps/"
-    ],
-    "moduleNameMapper": {
-      "^@app/prisma(|/.*)$": "<rootDir>/apps/backend/src/prisma/$1"
-    }
   }
 }

@@ -3,13 +3,42 @@ import { forwardRef, useId } from "react";
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
+  onlyDigits?: boolean;
 };
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = "", id, ...props }, ref) => {
+  ({ label, error, className = "", id, onlyDigits, onKeyDown, ...props }, ref) => {
     // Si l'utilisateur fournit un ID, on l'utilise, sinon on en génère un
     const generatedId = useId();
     const inputId = id || generatedId;
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (onlyDigits) {
+        // Autoriser : Backspace, Tab, Enter, Escape, Arrow keys, Delete, Home, End
+        const isControlKey = [
+          "Backspace",
+          "Tab",
+          "Enter",
+          "Escape",
+          "ArrowLeft",
+          "ArrowRight",
+          "Delete",
+          "Home",
+          "End",
+        ].includes(e.key);
+
+        // Autoriser : Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X (et Cmd sur Mac)
+        const isShortcut =
+          (e.ctrlKey || e.metaKey) && ["a", "c", "v", "x"].includes(e.key.toLowerCase());
+
+        if (!isControlKey && !isShortcut && !/^\d$/.test(e.key)) {
+          e.preventDefault();
+        }
+      }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
+    };
 
     return (
       <div className="flex flex-col gap-1 w-full">
@@ -21,16 +50,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           id={inputId}
           ref={ref}
-          className={`
-            w-full px-4 py-2 border rounded-lg outline-none transition-all
-            font-openSans text-text-main
-            ${
-              error
-                ? "border-error focus:ring-2 focus:ring-error/20"
-                : "border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
-            }
-            ${className}
-          `}
+          onKeyDown={handleKeyDown}
+          className={
+            "w-full px-4 py-2 border rounded-lg outline-none transition-all font-openSans text-gray-800 " +
+            (error
+              ? "border-error focus:ring-2 focus:ring-error/20"
+              : "border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20") +
+            " " +
+            className
+          }
           {...props}
         />
         {error && <span className="text-xs text-error">{error}</span>}

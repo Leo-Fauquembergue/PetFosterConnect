@@ -1,6 +1,8 @@
+import { UserRole } from "@projet/shared-types";
 import { Home, LogOut, PawPrint, UserCircle } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import Button from "../ui/Button";
 
 export default function UserLayout() {
   const { user, logout } = useAuth();
@@ -23,7 +25,7 @@ export default function UserLayout() {
               Mon Profil
             </NavLink>
 
-            {user?.role === "shelter" && (
+            {user?.role === UserRole.shelter && (
               <NavLink
                 to={`/utilisateur/${user?.id}/animaux`}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
@@ -45,14 +47,14 @@ export default function UserLayout() {
             <span>Retour au site</span>
           </NavLink>
 
-          <button
-            type="button"
-            onClick={logout}
-            className="flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-red-50 w-full rounded-lg transition font-medium"
+          <Button
+            variant="ghost"
+            onClick={() => logout()}
+            className="text-error hover:bg-red-50 w-full justify-start px-4 py-2 text-sm font-medium"
           >
             <LogOut size={18} />
             <span>Déconnexion</span>
-          </button>
+          </Button>
         </div>
       </aside>
 

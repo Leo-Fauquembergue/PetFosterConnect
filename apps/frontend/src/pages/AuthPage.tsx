@@ -1,11 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type LoginDto, LoginSchema, type RegisterDto, RegisterSchema } from "@projet/shared-types";
+import {
+  type LoginDto,
+  LoginSchema,
+  type RegisterDto,
+  RegisterSchema,
+  UserRole,
+} from "@projet/shared-types";
 import axios from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { authApi } from "../api/authApi";
+import { extractErrorMessage } from "../api/api";
 
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/ui/Button";
@@ -31,13 +37,13 @@ export default function AuthPage() {
                 ? "Connectez-vous pour suivre vos demandes et retrouver vos favoris."
                 : "Créez un compte pour proposer votre aide ou adopter votre futur compagnon."}
             </p>
-            <button
-              type="button"
+            <Button
+              variant="outline-white"
               onClick={() => setIsLoginView(!isLoginView)}
-              className="px-6 py-2 border-2 border-white rounded-full font-bold hover:bg-white hover:text-secondary transition"
+              className="rounded-full font-bold"
             >
               {isLoginView ? "Créer un compte" : "Se connecter"}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -68,43 +74,34 @@ export default function AuthPage() {
 
 // LOGIN
 function LoginForm() {
-  const { setIsLoggedIn, setUser } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginDto>({
     resolver: zodResolver(LoginSchema),
   });
 
   const onSubmit = async (data: LoginDto) => {
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
-      const res = await authApi.login(data);
-      setIsLoggedIn(true);
-      setUser(res.user);
+      await login(data);
       toast.success("Connexion réussie !", {
         position: "top-right",
         autoClose: 2000,
       });
       navigate("/");
     } catch (error: unknown) {
-      if (axios.isAxiosError<{ message: string }>(error)) {
-        if (error.response?.status === 401) {
-          toast.error("Email ou mot de passe incorrect !", { position: "top-right" });
-        } else {
-          const errorMessage =
-            error.response?.data?.message || "Erreur serveur. Veuillez réessayer.";
-          toast.error(errorMessage, { position: "top-right" });
-        }
+      const errorMessage = extractErrorMessage(error, "Erreur serveur. Veuillez réessayer.");
+
+      // Gestion spécifique du 401 pour un message plus précis
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        toast.error("Email ou mot de passe incorrect !", { position: "top-right" });
       } else {
-        toast.error("Erreur serveur. Veuillez réessayer.", { position: "top-right" });
+        toast.error(errorMessage, { position: "top-right" });
       }
-    } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -140,45 +137,36 @@ function RegisterForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     watch,
   } = useForm<RegisterDto>({
     resolver: zodResolver(RegisterSchema),
   });
 
   const navigate = useNavigate();
-  const { setIsLoggedIn, setUser } = useAuth();
+  const { register: registerUser } = useAuth();
   const selectedRole = watch("role");
-  const [isSubmitting, setIsSubmitting] = useState(false); // ⚡ AJOUT
 
   const onSubmit = async (data: RegisterDto) => {
-    setIsSubmitting(true); // ⚡ VERROUILLAGE
     try {
-      await authApi.register(data);
-      setIsLoggedIn(true);
-      const me = await authApi.getMe();
-      setUser(me);
+      await registerUser(data);
       toast.success("Compte créé avec succès 🎉", {
         position: "top-right",
         autoClose: 2000,
       });
       navigate("/");
     } catch (err: unknown) {
-      if (axios.isAxiosError<{ message: string }>(err)) {
-        if (err.response?.status === 409) {
-          toast.error("Cet email est déjà utilisé", { position: "top-right" });
-        } else {
-          const errorMessage =
-            err.response?.data?.message || "Erreur lors de l'inscription. Veuillez réessayer.";
-          toast.error(errorMessage, { position: "top-right" });
-        }
+      const errorMessage = extractErrorMessage(
+        err,
+        "Erreur lors de l'inscription. Veuillez réessayer."
+      );
+
+      // Gestion spécifique du 409
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        toast.error("Cet email est déjà utilisé", { position: "top-right" });
       } else {
-        toast.error("Erreur lors de l'inscription. Veuillez réessayer.", {
-          position: "top-right",
-        });
+        toast.error(errorMessage, { position: "top-right" });
       }
-    } finally {
-      setIsSubmitting(false); // ⚡ DÉVERROUILLAGE
     }
   };
 
@@ -192,8 +180,8 @@ function RegisterForm() {
       />
 
       {/* Champs conditionnels */}
-      {selectedRole === "shelter" && (
-        <>
+      {selectedRole === UserRole.shelter && (
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-4">
           <Input label="Siret" type="text" {...register("siret")} error={errors.siret?.message} />
           <Input
             label="Nom du refuge"
@@ -201,7 +189,7 @@ function RegisterForm() {
             {...register("shelterName")}
             error={errors.shelterName?.message}
           />
-        </>
+        </div>
       )}
 
       <div className="flex flex-col gap-2">
@@ -211,7 +199,7 @@ function RegisterForm() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                value="individual"
+                value={UserRole.individual}
                 {...register("role")}
                 className="accent-primary"
               />
@@ -220,7 +208,7 @@ function RegisterForm() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                value="shelter"
+                value={UserRole.shelter}
                 {...register("role")}
                 className="accent-primary"
               />

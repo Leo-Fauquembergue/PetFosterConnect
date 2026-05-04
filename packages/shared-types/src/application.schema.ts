@@ -4,7 +4,7 @@ import { z } from "zod";
 export const ApplicationTypeEnum = z.enum(["adoption", "foster"]);
 export type ApplicationType = z.infer<typeof ApplicationTypeEnum>;
 
-export const ApplicationStatusEnum = z.enum(["pending", "approved", "rejected"]);
+export const ApplicationStatusEnum = z.enum(["pending", "approved", "rejected", "cancelled"]);
 export type ApplicationStatus = z.infer<typeof ApplicationStatusEnum>;
 
 // APPLICATION (Demande)

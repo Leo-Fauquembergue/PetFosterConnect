@@ -1,24 +1,34 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as handlebars from "handlebars";
 import * as nodemailer from "nodemailer";
 
 @Injectable()
 export class EmailsService {
   private transporter;
   private readonly logger = new Logger(EmailsService.name);
-  private readonly baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  private readonly baseUrl: string;
+  private readonly templatesDir = path.join(__dirname, "templates");
+  private readonly templateCache: Map<string, handlebars.TemplateDelegate> = new Map();
 
-  constructor() {
-    if (process.env.SMTP_HOST) {
+  constructor(private readonly configService: ConfigService) {
+    this.baseUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:5173";
+
+    const smtpHost = this.configService.get<string>("SMTP_HOST");
+
+    if (smtpHost) {
       this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
+        host: smtpHost,
+        port: this.configService.get<number>("SMTP_PORT"),
         secure: false,
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: this.configService.get<string>("SMTP_USER"),
+          pass: this.configService.get<string>("SMTP_PASS"),
         },
       });
-      this.logger.log("📧 Configuration SMTP chargée depuis .env");
+      this.logger.log("📧 Configuration SMTP chargée depuis ConfigService");
     } else {
       this.logger.log("👻 Pas de config SMTP détectée, création d'un compte Ethereal...");
       nodemailer.createTestAccount().then((account) => {
@@ -35,8 +45,11 @@ export class EmailsService {
 
   async sendMail(to: string, subject: string, text: string, html: string) {
     this.logger.log(`📨 Envoi d’un mail à : ${to}`);
+    const from =
+      this.configService.get<string>("SMTP_FROM") || this.configService.get<string>("SMTP_USER");
+
     const info = await this.transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from,
       to,
       subject,
       text,
@@ -46,76 +59,59 @@ export class EmailsService {
     return info;
   }
 
-  // -------------------------------
-  // Templates factorisés
-  // -------------------------------
+  // Moteur de template (Handlebars).
 
-  private baseHtmlTemplate(content: string): string {
-    return `
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-        <header style="width:100%; background-color:#2D6A4F; padding:15px; text-align:center; color:#fff;">
-          <h2 style="margin:0;">🐾 Pet Foster Connect</h2>
-        </header>
-        
-        <div style="padding:20px;">
-          ${content}
-        </div>
-    
-        <footer style="width:100%; background-color:#2D6A4F; padding:10px; text-align:center; color:#fff; font-size:12px;">
-          Merci de votre intérêt et de votre engagement 🐾<br/>
-          Cet email est généré automatiquement par Pet Foster Connect.
-        </footer>
-      </div>
-    `;
+  private getTemplate(name: string): handlebars.TemplateDelegate {
+    const cachedTemplate = this.templateCache.get(name);
+    if (cachedTemplate) {
+      return cachedTemplate;
+    }
+
+    const filePath = path.join(this.templatesDir, `${name}.hbs`);
+    if (!fs.existsSync(filePath)) {
+      this.logger.error(`❌ Template manquant: ${filePath}`);
+      throw new Error(`Template ${name} introuvable`);
+    }
+
+    const source = fs.readFileSync(filePath, "utf-8");
+    const template = handlebars.compile(source);
+    this.templateCache.set(name, template);
+    return template;
   }
 
-  private acceptTemplate(firstname: string, animalName: string): string {
-    const content = `
-      <p>Bonjour <b>${firstname}</b>,</p>
-      <p>Félicitations 🎉 ! Votre candidature pour l’animal <b>${animalName}</b> a été <span style="color: green; font-weight: bold;">acceptée</span>.</p>
-      <p>Nous vous contacterons rapidement pour organiser la suite du processus.</p>
-      <div style="text-align:center; margin: 20px 0;">
-        <a href="${this.baseUrl}/connexion" style="display:inline-block; padding:12px 24px; background:#F28C28; color:#fff; text-decoration:none; border-radius:5px; font-weight:bold;">
-          Voir ma candidature
-        </a>
-      </div>
-    `;
-    return this.baseHtmlTemplate(content);
+  private compileTemplate(templateName: string, data: Record<string, unknown>): string {
+    try {
+      const layout = this.getTemplate("layout");
+      const template = this.getTemplate(templateName);
+
+      // Injection du contenu spécifique dans le layout
+      const body = template({ ...data, baseUrl: this.baseUrl });
+      return layout({ body });
+    } catch (error) {
+      this.logger.error(`💥 Erreur compilation template ${templateName}:`, error);
+      throw error;
+    }
   }
 
-  private rejectTemplate(firstname: string, animalName: string): string {
-    const content = `
-      <p>Bonjour <b>${firstname}</b>,</p>
-      <p>Nous sommes désolés 😔. Votre candidature pour l’animal <b>${animalName}</b> a été <span style="color: red; font-weight: bold;">refusée</span>.</p>
-      <p>N’hésitez pas à consulter nos autres animaux disponibles, peut-être qu’un futur compagnon vous attend.</p>
-      <div style="text-align:center; margin: 20px 0;">
-        <a href="${this.baseUrl}/animaux" style="display:inline-block; padding:12px 24px; background:#F28C28; color:#fff; text-decoration:none; border-radius:5px; font-weight:bold;">
-          Voir les animaux disponibles
-        </a>
-      </div>
-    `;
-    return this.baseHtmlTemplate(content);
-  }
-
-  // -------------------------------
-  // Méthodes publiques
-  // -------------------------------
+  // Méthodes publiques.
 
   async sendAcceptanceEmail(to: string, firstname: string, animalName: string) {
+    const html = this.compileTemplate("acceptance", { firstname, animalName });
     return this.sendMail(
       to,
       "Votre candidature a été acceptée",
       "Félicitations, votre demande a été validée !",
-      this.acceptTemplate(firstname, animalName)
+      html
     );
   }
 
   async sendRejectionEmail(to: string, firstname: string, animalName: string) {
+    const html = this.compileTemplate("rejection", { firstname, animalName });
     return this.sendMail(
       to,
       "Votre candidature a été refusée",
       "Nous sommes désolés, votre demande n’a pas été retenue.",
-      this.rejectTemplate(firstname, animalName)
+      html
     );
   }
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { IndividualProfile, ShelterProfile } from "./profile.schema";
 
 // 1. Zod Enum (remplace le TS Enum classique pour la compatibilité avec erasableSyntaxOnly)
 export const UserRoleEnum = z.enum(["individual", "shelter", "admin"], {
@@ -24,7 +25,12 @@ export const UserSchema = z
         error: "Le mot de passe doit contenir au moins un caractère spécial",
       }),
     role: UserRoleEnum,
-    phoneNumber: z.string().max(20).nullable().optional(),
+    phoneNumber: z
+      .string()
+      .max(20)
+      .regex(/^[0-9]*$/, { message: "Le numéro de téléphone ne doit contenir que des chiffres" })
+      .nullable()
+      .optional(),
     address: z.string().max(255).nullable().optional(),
     createdAt: z.date().optional(),
     updatedAt: z.date().nullable().optional(),
@@ -33,6 +39,11 @@ export const UserSchema = z
   .strict();
 
 export type User = z.infer<typeof UserSchema>;
+
+export type UserWithProfiles = User & {
+  individualProfile?: IndividualProfile | null;
+  shelterProfile?: ShelterProfile | null;
+};
 
 // DTOs (Data Transfer Objects)
 export const RegisterSchema = UserSchema.pick({

@@ -1,22 +1,15 @@
-import type { Animal } from "@projet/shared-types";
-import axios from "axios";
 import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
 import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import Loader from "../../components/ui/Loader";
-
-// Type étendu pour matcher le retour API (Relations Prisma)
-type AnimalWithRelations = Animal & {
-  species: { name: string };
-  shelter: { shelterProfile: { shelterName: string } | null };
-};
+import { useAdminAnimals } from "../../hooks/useAdminAnimals";
 
 export default function AdminAnimals() {
-  const [animals, setAnimals] = useState<AnimalWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { animals, loading, setAnimals } = useAdminAnimals();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -25,25 +18,6 @@ export default function AdminAnimals() {
     type: "delete" | "restore";
     id: number;
   } | null>(null);
-
-  // Fetch
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        const data = await animalApi.getAllAdmin();
-        setAnimals(data as AnimalWithRelations[]);
-      } catch (error: unknown) {
-        let errorMessage = "Impossible de charger la liste des animaux.";
-        if (axios.isAxiosError<{ message: string }>(error)) {
-          errorMessage = error.response?.data?.message || errorMessage;
-        }
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnimals();
-  }, []);
 
   // FILTRAGE
   const filteredAnimals = animals.filter((animal) => {
@@ -145,14 +119,14 @@ export default function AdminAnimals() {
                   </td>
                   <td className="px-6 py-4 text-right flex justify-end gap-2">
                     {animal.deletedAt ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() => animal.id && openRestoreModal(animal.id)}
-                        className="text-primary hover:bg-orange-50 p-2 rounded-full transition-colors inline-flex items-center gap-1"
+                        className="text-primary hover:text-primary p-2"
                         title="Restaurer"
                       >
                         <RotateCcw className="w-4 h-4" /> Restaurer
-                      </button>
+                      </Button>
                     ) : (
                       <>
                         <a
@@ -164,14 +138,14 @@ export default function AdminAnimals() {
                         >
                           <Eye className="w-5 h-5" />
                         </a>
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
                           onClick={() => animal.id && openDeleteModal(animal.id)}
-                          className="text-gray-400 hover:text-error hover:bg-red-50 p-2 rounded-full transition-colors"
+                          className="text-gray-400 hover:text-error p-2"
                           title="Supprimer"
                         >
                           <Trash2 className="w-5 h-5" />
-                        </button>
+                        </Button>
                       </>
                     )}
                   </td>

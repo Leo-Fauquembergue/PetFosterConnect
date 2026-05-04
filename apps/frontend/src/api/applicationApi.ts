@@ -12,13 +12,13 @@ export const applicationApi = {
     return response.data;
   },
 
-  getSentApplications: async (): Promise<ApplicationSentResponse[]> => {
-    const response = await api.get("/applications/sent");
+  getSentApplications: async (signal?: AbortSignal): Promise<ApplicationSentResponse[]> => {
+    const response = await api.get("/applications/sent", { signal });
     return response.data;
   },
 
-  getReceivedApplications: async (): Promise<ApplicationReceivedResponse[]> => {
-    const response = await api.get("/applications/received");
+  getReceivedApplications: async (signal?: AbortSignal): Promise<ApplicationReceivedResponse[]> => {
+    const response = await api.get("/applications/received", { signal });
     return response.data;
   },
 
@@ -36,18 +36,13 @@ export const applicationApi = {
     return response.data;
   },
 
-  acceptApplication: async (candidateId: number, animalId: number) => {
-    const response = await api.post(`/applications/${candidateId}/${animalId}/accept`);
-    return response.data;
-  },
-
-  rejectApplication: async (candidateId: number, animalId: number) => {
-    const response = await api.post(`/applications/${candidateId}/${animalId}/reject`);
-    return response.data;
-  },
-
   deleteApplication: async (candidateId: number, animalId: number) => {
     const response = await api.delete(`/applications/${animalId}/${candidateId}`);
+    return response.data;
+  },
+
+  cancelOwnApplication: async (animalId: number) => {
+    const response = await api.delete(`/applications/me/${animalId}`);
     return response.data;
   },
 };

@@ -3,7 +3,7 @@ import type { ApplicationStatus, ApplicationType } from "../application.schema";
 import type { IndividualProfile, ShelterProfile } from "../profile.schema";
 import type { User } from "../user.schema";
 
-// --- APPLICATIONS ---
+// APPLICATIONS
 
 export interface ApplicationSentResponse {
   pfcUserId: number;
@@ -40,7 +40,7 @@ export interface ApplicationReceivedResponse {
   };
 }
 
-// --- SHELTERS ---
+// SHELTERS
 
 export type ShelterWithRelations = ShelterProfile & {
   user?: User;
@@ -52,7 +52,7 @@ export type ShelterDetailResponse = ShelterProfile & {
   };
 };
 
-// --- UI COMPONENTS ---
+// UI COMPONENTS
 
 export interface UserCardProps {
   user: User & {

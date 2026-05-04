@@ -1,7 +1,10 @@
-import { isAxiosError } from "axios";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type UpdatePasswordDto, UpdatePasswordSchema } from "@projet/shared-types";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
+import Button from "../ui/Button";
 import InputPassword from "../ui/InputPassword";
 
 type Props = {
@@ -9,51 +12,48 @@ type Props = {
 };
 
 export default function PasswordForm({ userId }: Props) {
-  const [formData, setFormData] = useState({
-    oldPassword: "",
-    newPassword: "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdatePasswordDto>({
+    resolver: zodResolver(UpdatePasswordSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+    },
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const onSubmit = async (data: UpdatePasswordDto) => {
     try {
-      await userApi.updatePassword(userId, formData);
+      await userApi.updatePassword(userId, data);
       toast.success("Mot de passe modifié avec succès !");
-      setFormData({ oldPassword: "", newPassword: "" });
+      reset();
     } catch (err: unknown) {
-      // ⚡ Type Guard : Prévient les crashs si l'API est injoignable
-      let errorMessage = "Erreur lors de la modification du mot de passe.";
-      if (isAxiosError(err)) {
-        errorMessage = err.response?.data?.message || errorMessage;
-      }
+      const errorMessage = extractErrorMessage(
+        err,
+        "Erreur lors de la modification du mot de passe."
+      );
       toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <InputPassword
         label="Ancien mot de passe"
-        value={formData.oldPassword}
-        onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
+        {...register("oldPassword")}
+        error={errors.oldPassword?.message}
       />
       <InputPassword
         label="Nouveau mot de passe"
-        value={formData.newPassword}
-        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+        {...register("newPassword")}
+        error={errors.newPassword?.message}
       />
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
+      <Button type="submit" disabled={isSubmitting} variant="info" fullWidth className="md:w-auto">
         {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
-      </button>
+      </Button>
     </form>
   );
 }

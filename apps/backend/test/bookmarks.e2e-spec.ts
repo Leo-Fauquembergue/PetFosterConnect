@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserRole } from "@prisma/client";
+import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
@@ -13,6 +14,7 @@ describe("Bookmarks (E2E)", () => {
   let userToken: string;
   let userId: number;
   let animalId: number;
+  const csrfToken = "test-csrf-token";
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -20,6 +22,7 @@ describe("Bookmarks (E2E)", () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
 
@@ -35,7 +38,12 @@ describe("Bookmarks (E2E)", () => {
       data: { email: "test@fav.com", password: "123", role: UserRole.individual },
     });
     userId = user.id;
-    userToken = jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+    userToken = jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      csrfToken,
+    });
 
     const species = await prisma.species.create({ data: { name: "Chat" } });
 
@@ -56,8 +64,10 @@ describe("Bookmarks (E2E)", () => {
   });
 
   it("POST /bookmarks/toggle -> doit bloquer l'accès sans token (401)", async () => {
+    // Note: On envoie le header CSRF pour passer le middleware et atteindre l'AuthGuard (401)
     await request(app.getHttpServer())
       .post("/bookmarks/toggle")
+      .set("x-csrf-token", "any-token")
       .send({ animalId: animalId })
       .expect(401);
   });
@@ -66,6 +76,7 @@ describe("Bookmarks (E2E)", () => {
     await request(app.getHttpServer())
       .post("/bookmarks/toggle")
       .set("Authorization", `Bearer ${userToken}`)
+      .set("x-csrf-token", csrfToken)
       .send({ animalId: "invalid_id" }) // Zod attend un nombre
       .expect(400);
   });
@@ -75,6 +86,7 @@ describe("Bookmarks (E2E)", () => {
     const res1 = await request(app.getHttpServer())
       .post("/bookmarks/toggle")
       .set("Authorization", `Bearer ${userToken}`)
+      .set("x-csrf-token", csrfToken)
       .send({ animalId: animalId })
       .expect(201);
 
@@ -84,6 +96,7 @@ describe("Bookmarks (E2E)", () => {
     const res2 = await request(app.getHttpServer())
       .post("/bookmarks/toggle")
       .set("Authorization", `Bearer ${userToken}`)
+      .set("x-csrf-token", csrfToken)
       .send({ animalId: animalId })
       .expect(201);
 

@@ -1,42 +1,15 @@
-// ⚡ Typage strict pour éviter les erreurs d'objets ou les AxiosError brutes
-import type { AnimalWithRelations } from "@projet/shared-types";
-import { AxiosError } from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { bookmarkApi } from "../../api/bookmarkApi";
-import { useAuth } from "../../auth/AuthContext";
+import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
-
-// Interface locale pour mapper la réponse de l'API des favoris
-export type BookmarkWithAnimal = {
-  pfcUserId: number;
-  animalId: number;
-  createdAt: Date | string;
-  animal: AnimalWithRelations;
-};
+import { useBookmarks } from "../../hooks/useBookmarks";
 
 export default function BookmarksPage() {
-  const { user } = useAuth();
-  // ⚡ Typage strict
-  const [bookmarks, setBookmarks] = useState<BookmarkWithAnimal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { bookmarks, setBookmarks, loading } = useBookmarks();
   const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    bookmarkApi
-      .getMyBookmarks()
-      .then((data) => setBookmarks(data))
-      .catch((err: unknown) => {
-        // ⚡ Fin du any
-        const axiosError = err as AxiosError<{ message: string }>;
-        const errorMessage =
-          axiosError.response?.data?.message || "Impossible de charger vos favoris ❌";
-        toast.error(errorMessage, { position: "top-right" });
-      })
-      .finally(() => setLoading(false));
-  }, [user]);
 
   const handleToggle = async (animalId: number) => {
     setDeletingId(animalId);
@@ -50,10 +23,7 @@ export default function BookmarksPage() {
         autoClose: 2000,
       });
     } catch (err: unknown) {
-      // ⚡ Fin du any
-      const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Erreur lors de la mise à jour du favori ❌";
+      const errorMessage = extractErrorMessage(err, "Erreur lors de la mise à jour du favori ❌");
       toast.error(errorMessage, { position: "top-right" });
     } finally {
       setDeletingId(null);
@@ -95,7 +65,7 @@ export default function BookmarksPage() {
                 <div>
                   <Link
                     to={`/animaux/${bm.animal.id}`}
-                    className="text-xl font-semibold text-[#F28C28] hover:underline"
+                    className="text-xl font-semibold text-primary hover:underline"
                   >
                     {bm.animal?.name}
                   </Link>
@@ -106,20 +76,16 @@ export default function BookmarksPage() {
                 {bm.animal?.description || "Pas de description"}
               </p>
               <div className="mt-4 flex gap-3">
-                <Link
-                  to={`/animaux/${bm.animal.id}`}
-                  className="px-4 py-2 bg-[#F28C28] text-white rounded hover:bg-[#F28C28]/80 transition"
-                >
-                  Voir détails
+                <Link to={`/animaux/${bm.animal.id}`}>
+                  <Button variant="primary">Voir détails</Button>
                 </Link>
-                <button
-                  type="button"
+                <Button
+                  variant="danger"
                   onClick={() => handleToggle(bm.animalId)}
                   disabled={isDeleting}
-                  className={`px-4 py-2 bg-red-600 text-white rounded transition ${isDeleting ? "opacity-50 cursor-not-allowed" : "hover:bg-red-700"}`}
                 >
                   {isDeleting ? "Retrait..." : "Retirer des favoris"}
-                </button>
+                </Button>
               </div>
               <p className="mt-2 text-xs text-gray-400">
                 Ajouté le {new Date(bm.createdAt).toLocaleDateString("fr-FR")}

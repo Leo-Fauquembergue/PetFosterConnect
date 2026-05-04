@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Put,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "@prisma/client";
 // ⚡ Import des types uniquement pour le typage (compile-time)
@@ -26,11 +15,13 @@ import {
   UpdateUserWithIndividualProfileSchema,
   UpdateUserWithShelterProfileSchema,
 } from "@projet/shared-types";
+import { CheckOwner } from "../auth/decorators/check-owner.decorator";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
+import { ResourceOwnerGuard } from "../auth/guards/resource-owner.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
+import { IdSchema } from "../common/schemas/params.schema";
 import { UsersService } from "./users.service";
 
 @ApiTags("users")
@@ -38,10 +29,11 @@ import { UsersService } from "./users.service";
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // --- 1. ROUTES SPÉCIFIQUES (Profils) D'ABORD ---
+  // Routes spécifiques pour les profils.
 
   @Get(":id/profile")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Récupérer le profil complet d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -52,44 +44,47 @@ export class UsersController {
     description: "Accès refusé - vous ne pouvez voir que votre propre profil",
   })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  getProfile(@Param("id") id: string) {
-    return this.usersService.getProfile(Number(id));
+  getProfile(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.usersService.getProfile(id);
   }
 
   @Put(":id/individual-profile")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le profil individuel d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Profil individuel mis à jour avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  @UsePipes(new ZodPipe(UpdateUserWithIndividualProfileSchema))
   async updateIndividualProfile(
-    @Param("id") id: string,
-    @Body() updateDto: UpdateUserWithIndividualProfileDto
+    @Param("id", new ZodPipe(IdSchema)) id: number,
+    @Body(new ZodPipe(UpdateUserWithIndividualProfileSchema))
+    updateDto: UpdateUserWithIndividualProfileDto
   ) {
-    return this.usersService.updateIndividualProfile(Number(id), updateDto);
+    return this.usersService.updateIndividualProfile(id, updateDto);
   }
 
   @Put(":id/shelter-profile")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le profil refuge d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Profil refuge mis à jour avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  @UsePipes(new ZodPipe(UpdateUserWithShelterProfileSchema))
   async updateShelterProfile(
-    @Param("id") id: string,
-    @Body() updateDto: UpdateUserWithShelterProfileDto
+    @Param("id", new ZodPipe(IdSchema)) id: number,
+    @Body(new ZodPipe(UpdateUserWithShelterProfileSchema))
+    updateDto: UpdateUserWithShelterProfileDto
   ) {
-    return this.usersService.updateShelterProfile(Number(id), updateDto);
+    return this.usersService.updateShelterProfile(id, updateDto);
   }
 
   @Put(":id/password")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour le mot de passe d'un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -97,13 +92,13 @@ export class UsersController {
   @ApiResponse({ status: 400, description: "Données invalides ou ancien mot de passe incorrect" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   async updatePassword(
-    @Param("id") id: string,
+    @Param("id", new ZodPipe(IdSchema)) id: number,
     @Body(new ZodPipe(UpdatePasswordSchema)) dto: UpdatePasswordDto
   ) {
-    return this.usersService.updatePassword(Number(id), dto);
+    return this.usersService.updatePassword(id, dto);
   }
 
-  // --- 2. ROUTES GÉNÉRIQUES CRUD (Avec paramètre dynamique) ENSUITE ---
+  // Routes génériques CRUD.
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -112,8 +107,7 @@ export class UsersController {
   @ApiOperation({ summary: "Créer un nouvel utilisateur (Admin)" })
   @ApiResponse({ status: 201, description: "Utilisateur créé avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides ou email déjà utilisé" })
-  @UsePipes(new ZodPipe(sharedTypes.RegisterSchema))
-  create(@Body() body: sharedTypes.RegisterDto) {
+  create(@Body(new ZodPipe(sharedTypes.RegisterSchema)) body: sharedTypes.RegisterDto) {
     return this.usersService.create(body);
   }
 
@@ -128,18 +122,20 @@ export class UsersController {
   }
 
   @Get(":id")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Récupérer un utilisateur par son ID" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Utilisateur trouvé" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  findOne(@Param("id") id: string) {
-    return this.usersService.findOne(Number(id));
+  findOne(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(":id")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
@@ -147,20 +143,21 @@ export class UsersController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
   update(
-    @Param("id") id: string,
+    @Param("id", new ZodPipe(IdSchema)) id: number,
     @Body(new ZodPipe(UpdateUserSchema)) body: sharedTypes.UpdateUserDto // 🛡️ SÉCURITÉ : Application du pipe Zod
   ) {
-    return this.usersService.update(Number(id), body);
+    return this.usersService.update(id, body);
   }
 
   @Delete(":id")
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @ApiBearerAuth()
   @ApiOperation({ summary: "Supprimer un utilisateur" })
   @ApiParam({ name: "id", description: "ID de l'utilisateur", type: Number })
   @ApiResponse({ status: 200, description: "Utilisateur supprimé avec succès" })
   @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
-  remove(@Param("id") id: string) {
-    return this.usersService.remove(Number(id));
+  remove(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.usersService.remove(id);
   }
 }

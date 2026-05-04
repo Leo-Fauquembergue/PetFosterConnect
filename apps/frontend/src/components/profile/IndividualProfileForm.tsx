@@ -1,50 +1,40 @@
+import { type UpdateUserWithIndividualProfileDto } from "@projet/shared-types";
+import { useFormContext } from "react-hook-form";
 import Checkbox from "../ui/Checkbox";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 
-type Props = {
-  formData: {
-    email: string;
-    phoneNumber: string;
-    address: string;
-    surface: number;
-    housingType: string;
-    haveGarden: boolean;
-    haveAnimals: boolean;
-    haveChildren: boolean;
-    availableFamily: boolean;
-    availableTime?: string;
-  };
-  onChange: <K extends keyof Props["formData"]>(field: K, value: Props["formData"][K]) => void;
-};
+export default function IndividualProfileForm() {
+  const {
+    register,
+    watch,
+    formState: { errors },
+  } = useFormContext<UpdateUserWithIndividualProfileDto>();
 
-export default function IndividualProfileForm({ formData, onChange }: Props) {
+  const availableFamily = watch("availableFamily");
+
   return (
     <div className="space-y-4">
-      <Input
-        label="Email"
-        type="email"
-        value={formData.email}
-        onChange={(e) => onChange("email", e.target.value)}
-      />
+      <Input label="Email" type="email" {...register("email")} error={errors.email?.message} />
       <Input
         label="Téléphone"
         type="tel"
-        value={formData.phoneNumber}
-        onChange={(e) => onChange("phoneNumber", e.target.value)}
+        onlyDigits
+        {...register("phoneNumber")}
+        error={errors.phoneNumber?.message}
       />
       <Input
         label="Adresse complète"
         type="text"
-        value={formData.address}
-        onChange={(e) => onChange("address", e.target.value)}
+        {...register("address")}
+        error={errors.address?.message}
       />
 
       <div className="grid grid-cols-2 gap-4">
         <Select
           label="Type de logement"
-          value={formData.housingType}
-          onChange={(e) => onChange("housingType", e.target.value)}
+          {...register("housingType")}
+          error={errors.housingType?.message}
         >
           <option value="house">Maison</option>
           <option value="apartment">Appartement</option>
@@ -53,43 +43,29 @@ export default function IndividualProfileForm({ formData, onChange }: Props) {
         <Input
           label="Surface (m²)"
           type="number"
-          value={formData.surface}
-          onChange={(e) => onChange("surface", Number(e.target.value))}
+          {...register("surface", {
+            setValueAs: (v) => (v === "" ? null : Number(v)),
+          })}
+          error={errors.surface?.message}
         />
       </div>
 
       <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded-md">
-        <Checkbox
-          label="J'ai un jardin clos"
-          checked={formData.haveGarden}
-          onChange={(e) => onChange("haveGarden", e.target.checked)}
-        />
-        <Checkbox
-          label="J'ai d'autres animaux"
-          checked={formData.haveAnimals}
-          onChange={(e) => onChange("haveAnimals", e.target.checked)}
-        />
-        <Checkbox
-          label="J'ai des enfants à charge"
-          checked={formData.haveChildren}
-          onChange={(e) => onChange("haveChildren", e.target.checked)}
-        />
+        <Checkbox label="J'ai un jardin clos" {...register("haveGarden")} />
+        <Checkbox label="J'ai d'autres animaux" {...register("haveAnimals")} />
+        <Checkbox label="J'ai des enfants à charge" {...register("haveChildren")} />
       </div>
 
       <div className="border-t pt-4">
-        <Checkbox
-          label="Je souhaite devenir Famille d'Accueil"
-          checked={formData.availableFamily}
-          onChange={(e) => onChange("availableFamily", e.target.checked)}
-        />
-        {formData.availableFamily && (
+        <Checkbox label="Je souhaite devenir Famille d'Accueil" {...register("availableFamily")} />
+        {availableFamily && (
           <div className="mt-4">
             <Input
               label="Mes disponibilités"
               type="text"
-              value={formData.availableTime || ""}
-              onChange={(e) => onChange("availableTime", e.target.value)}
+              {...register("availableTime")}
               placeholder="Ex: Soir et week-end, télétravail..."
+              error={errors.availableTime?.message}
             />
           </div>
         )}

@@ -1,12 +1,5 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from "@nestjs/common";
+import { ConflictException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import type { RequestWithUser } from "@projet/shared-types";
 import {
   ApplicationStatus,
   CreateApplicationDto,
@@ -14,8 +7,6 @@ import {
 } from "@projet/shared-types";
 import { EmailsService } from "../emails/emails.service";
 import { PrismaService } from "../prisma/prisma.service";
-
-type UserPayload = RequestWithUser["user"];
 
 @Injectable()
 export class ApplicationsService {
@@ -27,9 +18,35 @@ export class ApplicationsService {
   ) {}
 
   async create(userId: number, createDto: CreateApplicationDto) {
+    const animal = await this.prisma.animal.findUnique({
+      where: { id: createDto.animalId },
+      select: { deletedAt: true, animalStatus: true },
+    });
+
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException("Animal introuvable ou supprimé.");
+    }
+
+    if (animal.animalStatus !== "available") {
+      throw new ConflictException("Cet animal n'est plus disponible pour une candidature.");
+    }
+
     try {
-      return await this.prisma.application.create({
-        data: {
+      // ⚡ RE-APPLY LOGIC : Si une demande annulée existe, on la réactive au lieu d'en créer une nouvelle
+      return await this.prisma.application.upsert({
+        where: {
+          pfcUserId_animalId: {
+            pfcUserId: userId,
+            animalId: createDto.animalId,
+          },
+        },
+        update: {
+          applicationType: createDto.applicationType,
+          message: createDto.message,
+          applicationStatus: "pending", // On repasse en attente
+          deletedAt: null, // On restaure si c'était soft-deleted
+        },
+        create: {
           pfcUserId: userId,
           animalId: createDto.animalId,
           applicationType: createDto.applicationType,
@@ -51,7 +68,17 @@ export class ApplicationsService {
     return this.prisma.application.findMany({
       where: { pfcUserId: userId, deletedAt: null },
       include: {
-        animal: true,
+        animal: {
+          include: {
+            shelter: {
+              select: {
+                shelterProfile: {
+                  select: { shelterName: true },
+                },
+              },
+            },
+          },
+        },
         user: { select: { id: true, email: true, phoneNumber: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -60,7 +87,15 @@ export class ApplicationsService {
 
   findAllReceived(shelterId: number) {
     return this.prisma.application.findMany({
-      where: { animal: { pfcUserId: shelterId }, deletedAt: null },
+      where: {
+        animal: {
+          pfcUserId: shelterId,
+          deletedAt: null,
+        },
+        deletedAt: null,
+        // ⚡ FILTRE : Exclut explicitement les candidatures annulées
+        applicationStatus: { notIn: ["cancelled"] },
+      },
       select: {
         pfcUserId: true,
         animalId: true,
@@ -80,33 +115,49 @@ export class ApplicationsService {
   // Route Admin restaurée précédemment
   findAll() {
     return this.prisma.application.findMany({
+      where: { deletedAt: null },
       include: {
-        animal: true,
+        animal: {
+          include: {
+            shelter: {
+              select: {
+                shelterProfile: {
+                  select: { shelterName: true },
+                },
+              },
+            },
+          },
+        },
         user: {
-          include: { individualProfile: true },
+          select: { id: true, email: true, phoneNumber: true, role: true, individualProfile: true },
         },
       },
+      orderBy: { createdAt: "desc" },
     });
   }
 
-  async updateStatus(
-    candidateId: number,
-    animalId: number,
-    updateDto: UpdateApplicationStatusDto,
-    user: UserPayload
-  ) {
+  async updateStatus(candidateId: number, animalId: number, updateDto: UpdateApplicationStatusDto) {
     const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
+    if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
 
-    // Vérification IDOR stricte
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Vous ne gérez pas cet animal.");
+    // Empêcher de mettre à jour une candidature supprimée (ou déjà approuvée si on rejette)
+    const updateResult = await this.prisma.application.updateMany({
+      where: {
+        pfcUserId: candidateId,
+        animalId: animalId,
+        deletedAt: null,
+        applicationStatus: "pending", // On ne peut changer le statut que si elle est en attente
+      },
+      data: { applicationStatus: updateDto.applicationStatus as ApplicationStatus },
+    });
+
+    if (updateResult.count === 0) {
+      throw new ConflictException("Candidature introuvable, déjà traitée ou annulée.");
     }
 
-    return this.prisma.application.update({
+    return this.prisma.application.findUnique({
       where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
-      data: { applicationStatus: updateDto.applicationStatus as ApplicationStatus },
       include: {
         user: { select: { id: true, email: true, individualProfile: true } },
         animal: { select: { id: true, name: true, photos: true } },
@@ -114,112 +165,161 @@ export class ApplicationsService {
     });
   }
 
-  async remove(candidateId: number, animalId: number, user: UserPayload) {
-    const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
+  async cancelOwn(candidateId: number, animalId: number) {
+    // Un utilisateur ne peut annuler que si la demande est toujours 'pending'
+    const updateResult = await this.prisma.application.updateMany({
+      where: {
+        pfcUserId: candidateId,
+        animalId: animalId,
+        deletedAt: null,
+        applicationStatus: "pending",
+      },
+      data: { applicationStatus: "cancelled" },
+    });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
-
-    // Vérification IDOR stricte
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Vous ne gérez pas cet animal.");
+    if (updateResult.count === 0) {
+      throw new ConflictException("Impossible d'annuler cette demande (déjà traitée ou annulée).");
     }
 
-    return this.prisma.application.update({
+    return this.prisma.application.findUnique({
       where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
-      data: { deletedAt: new Date() },
     });
   }
 
-  async acceptApplication(candidateId: number, animalId: number, user: UserPayload) {
-    // 1. On regroupe les opérations BDD dans une transaction pour l'atomicité
-    const { application, pendingApplications } = await this.prisma.$transaction(async (tx) => {
-      // Vérification IDOR (logique extraite de updateStatus pour être dans la transaction)
-      const animal = await tx.animal.findUnique({ where: { id: animalId } });
-      if (!animal) throw new NotFoundException("Animal introuvable");
-      if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-        throw new ForbiddenException("Vous ne gérez pas cet animal.");
-      }
+  async remove(candidateId: number, animalId: number) {
+    const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
 
-      // Mise à jour de la demande acceptée
-      const updatedApp = await tx.application.update({
-        where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
-        data: { applicationStatus: "approved" as ApplicationStatus },
-        include: {
-          user: { select: { id: true, email: true, individualProfile: true } },
-          animal: { select: { id: true, name: true, photos: true } },
-        },
-      });
+    if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
 
-      // Mise à jour du statut de l'animal
-      const newAnimalStatus = updatedApp.applicationType === "adoption" ? "adopted" : "foster_care";
-      await tx.animal.update({
-        where: { id: animalId },
-        data: { animalStatus: newAnimalStatus },
-      });
-
-      // Récupération des candidats à refuser avant de modifier leur statut
-      const pendingApps = await tx.application.findMany({
-        where: {
-          animalId: animalId,
-          pfcUserId: { not: candidateId },
-          applicationStatus: "pending" as ApplicationStatus,
-        },
-        include: {
-          user: { select: { email: true, individualProfile: true } },
-          animal: { select: { name: true } },
-        },
-      });
-
-      // Refus automatique des autres demandes
-      await tx.application.updateMany({
-        where: {
-          animalId: animalId,
-          pfcUserId: { not: candidateId },
-          applicationStatus: "pending" as ApplicationStatus,
-        },
-        data: { applicationStatus: "rejected" as ApplicationStatus },
-      });
-
-      return { application: updatedApp, pendingApplications: pendingApps };
+    const updateResult = await this.prisma.application.updateMany({
+      where: {
+        pfcUserId: candidateId,
+        animalId: animalId,
+        deletedAt: null,
+      },
+      data: { deletedAt: new Date() },
     });
 
-    // 2. Envoi des emails en parallèle via Promise.allSettled (non-bloquant)
+    if (updateResult.count === 0) {
+      throw new NotFoundException("Demande introuvable ou déjà supprimée.");
+    }
+
+    return { message: "Demande archivée/supprimée avec succès" };
+  }
+
+  async acceptApplication(candidateId: number, animalId: number) {
+    // 1. On regroupe les opérations BDD dans une transaction Serializable pour l'atomicité et l'isolation stricte
+    const { application, pendingApplications } = await this.prisma.$transaction(
+      async (tx) => {
+        // Vérification et verrouillage de l'animal
+        const animal = await tx.animal.findUnique({
+          where: { id: animalId },
+          select: { id: true, animalStatus: true, deletedAt: true },
+        });
+
+        if (!animal || animal.deletedAt)
+          throw new NotFoundException("Animal introuvable ou supprimé");
+
+        if (animal.animalStatus !== "available") {
+          throw new ConflictException("Cet animal n'est plus disponible.");
+        }
+
+        // Mise à jour de la demande acceptée
+        const appUpdateResult = await tx.application.updateMany({
+          where: {
+            pfcUserId: candidateId,
+            animalId: animalId,
+            deletedAt: null,
+            applicationStatus: "pending",
+          },
+          data: { applicationStatus: "approved" },
+        });
+
+        if (appUpdateResult.count === 0) {
+          throw new ConflictException(
+            "Cette candidature n'est plus valide (annulée ou déjà traitée)."
+          );
+        }
+
+        // Récupération de l'application modifiée pour la suite
+        const updatedApp = await tx.application.findUniqueOrThrow({
+          where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+          include: {
+            user: { select: { id: true, email: true, individualProfile: true } },
+            animal: { select: { id: true, name: true, photos: true } },
+          },
+        });
+
+        // Mise à jour du statut de l'animal
+        const newAnimalStatus =
+          updatedApp.applicationType === "adoption" ? "adopted" : "foster_care";
+        await tx.animal.update({
+          where: { id: animalId },
+          data: { animalStatus: newAnimalStatus },
+        });
+
+        // Récupération des candidats à refuser avant de modifier leur statut
+        const pendingApps = await tx.application.findMany({
+          where: {
+            animalId: animalId,
+            pfcUserId: { not: candidateId },
+            applicationStatus: "pending",
+            deletedAt: null,
+          },
+          include: {
+            user: { select: { email: true, individualProfile: true } },
+            animal: { select: { name: true } },
+          },
+        });
+
+        // Refus automatique des autres demandes en attente
+        await tx.application.updateMany({
+          where: {
+            animalId: animalId,
+            pfcUserId: { not: candidateId },
+            applicationStatus: "pending",
+            deletedAt: null,
+          },
+          data: { applicationStatus: "rejected" },
+        });
+
+        return { application: updatedApp, pendingApplications: pendingApps };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      }
+    );
+
+    // 2. Envoi des emails (non-bloquant)
     const emailPromises = [
-      // Notification d'acceptation
       (async () => {
         if (!application.user?.email) return;
         try {
-          const firstname =
-            (application.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
+          const recipientName = application.user.email.split("@")[0] || "Candidat";
           await this.emailsService.sendAcceptanceEmail(
             application.user.email,
-            firstname,
+            recipientName,
             application.animal.name
           );
         } catch (error: unknown) {
-          const msg = error instanceof Error ? error.message : "Erreur inconnue";
-          this.logger.error(`⚠️ [Email Error] Acceptation à ${application.user.email} : ${msg}`);
+          this.logger.error(`⚠️ [Email Error] Acceptation à ${application.user.email} : ${error}`);
         }
       })(),
-      // Notifications de refus
       ...pendingApplications.map(async (rejectedApp) => {
         if (!rejectedApp.user?.email) return;
         try {
-          const firstname =
-            (rejectedApp.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
+          const recipientName = rejectedApp.user.email.split("@")[0] || "Candidat";
           await this.emailsService.sendRejectionEmail(
             rejectedApp.user.email,
-            firstname,
+            recipientName,
             rejectedApp.animal.name
           );
         } catch (error: unknown) {
-          const msg = error instanceof Error ? error.message : "Erreur inconnue";
-          this.logger.error(`⚠️ [Email Error] Rejet à ${rejectedApp.user.email} : ${msg}`);
+          this.logger.error(`⚠️ [Email Error] Rejet à ${rejectedApp.user.email} : ${error}`);
         }
       }),
     ];
 
-    // Exécution parallèle sans bloquer la réponse de l'API
     Promise.allSettled(emailPromises);
 
     return {
@@ -228,23 +328,22 @@ export class ApplicationsService {
     };
   }
 
-  async rejectApplication(candidateId: number, animalId: number, user: UserPayload) {
-    const application = await this.updateStatus(
-      candidateId,
-      animalId,
-      {
-        applicationStatus: "rejected",
-      },
-      user
-    );
+  async rejectApplication(candidateId: number, animalId: number) {
+    const application = await this.updateStatus(candidateId, animalId, {
+      applicationStatus: "rejected",
+    });
+
+    if (!application) {
+      throw new NotFoundException("Candidature introuvable post-rejet.");
+    }
 
     try {
       if (application.user?.email) {
-        const firstname =
-          (application.user.individualProfile as { firstname?: string })?.firstname || "Candidat";
+        // 🛡️ FIX : firstname n'existe pas dans le schéma actuel
+        const recipientName = application.user.email.split("@")[0] || "Candidat";
         await this.emailsService.sendRejectionEmail(
           application.user.email,
-          firstname,
+          recipientName,
           application.animal.name
         );
       }

@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -21,11 +10,14 @@ import {
 import { UserRole } from "@prisma/client";
 import * as sharedTypes from "@projet/shared-types";
 import { AnimalsService } from "../animals/animals.service";
+import { CheckOwner } from "../auth/decorators/check-owner.decorator";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { ProfileAccessGuard } from "../auth/guards/profile-access.guard";
+import { ResourceOwnerGuard } from "../auth/guards/resource-owner.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ZodPipe } from "../common/pipes/zod.pipe";
+import { IdSchema, LimitSchema } from "../common/schemas/params.schema";
+import { UsersService } from "../users/users.service";
 import { SheltersService } from "./shelters.service";
 
 @ApiTags("shelters")
@@ -33,7 +25,8 @@ import { SheltersService } from "./shelters.service";
 export class SheltersController {
   constructor(
     private readonly sheltersService: SheltersService,
-    private readonly animalsService: AnimalsService
+    private readonly animalsService: AnimalsService,
+    private readonly usersService: UsersService
   ) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -43,8 +36,10 @@ export class SheltersController {
   @ApiOperation({ summary: "Créer un profil de refuge" })
   @ApiResponse({ status: 201, description: "Refuge créé avec succès" })
   @ApiResponse({ status: 400, description: "Données invalides" })
-  @UsePipes(new ZodPipe(sharedTypes.CreateShelterProfileSchema))
-  create(@Body() body: sharedTypes.CreateShelterProfileDto) {
+  create(
+    @Body(new ZodPipe(sharedTypes.CreateShelterProfileSchema))
+    body: sharedTypes.CreateShelterProfileDto
+  ) {
     return this.sheltersService.create(body);
   }
 
@@ -60,13 +55,8 @@ export class SheltersController {
     status: 200,
     description: "Liste des refuges retournée avec succès",
   })
-  findAll(@Query("limit") limit?: string) {
-    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
-    // 🛡️ PATCH DoS : Plafond strict à 50 et fallback sécurisé si NaN
-    const safeLimit = parsedLimit && !Number.isNaN(parsedLimit) ? Math.min(parsedLimit, 50) : 50;
-
-    // On passe safeLimit au service
-    return this.sheltersService.findAll(safeLimit);
+  findAll(@Query("limit", new ZodPipe(LimitSchema)) limit: number) {
+    return this.sheltersService.findAll(limit);
   }
 
   @Get(":id")
@@ -74,8 +64,8 @@ export class SheltersController {
   @ApiParam({ name: "id", description: "ID du refuge", type: Number })
   @ApiResponse({ status: 200, description: "Refuge trouvé" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
-  findOne(@Param("id") id: string) {
-    return this.sheltersService.findOne(Number(id));
+  findOne(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.sheltersService.findOne(id);
   }
 
   @Get(":id/animals")
@@ -86,11 +76,12 @@ export class SheltersController {
     description: "Liste des animaux du refuge retournée avec succès",
   })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
-  findAnimals(@Param("id") id: string) {
-    return this.animalsService.findAllByShelter(Number(id));
+  findAnimals(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    return this.animalsService.findAllByShelter(id);
   }
 
-  @UseGuards(JwtAuthGuard, ProfileAccessGuard)
+  @UseGuards(JwtAuthGuard, ResourceOwnerGuard)
+  @CheckOwner({ type: "user", idParam: "id" })
   @Put(":id")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Mettre à jour un refuge" })
@@ -99,9 +90,12 @@ export class SheltersController {
   @ApiResponse({ status: 400, description: "Données invalides" })
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
-  @UsePipes(new ZodPipe(sharedTypes.UpdateShelterProfileSchema))
-  update(@Param("id") id: string, @Body() body: sharedTypes.UpdateShelterProfileDto) {
-    return this.sheltersService.update(Number(id), body);
+  update(
+    @Param("id", new ZodPipe(IdSchema)) id: number,
+    @Body(new ZodPipe(sharedTypes.UpdateShelterProfileSchema))
+    body: sharedTypes.UpdateShelterProfileDto
+  ) {
+    return this.sheltersService.update(id, body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -113,7 +107,8 @@ export class SheltersController {
   @ApiResponse({ status: 200, description: "Refuge supprimé avec succès" })
   @ApiResponse({ status: 403, description: "Accès refusé" })
   @ApiResponse({ status: 404, description: "Refuge non trouvé" })
-  remove(@Param("id") id: string) {
-    return this.sheltersService.remove(Number(id));
+  remove(@Param("id", new ZodPipe(IdSchema)) id: number) {
+    // 🛡️ SÉCURITÉ : On délègue à UsersService pour assurer la cascade du soft-delete
+    return this.usersService.remove(id);
   }
 }

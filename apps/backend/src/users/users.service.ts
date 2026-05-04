@@ -99,17 +99,103 @@ export class UsersService {
     });
   }
 
-  remove(id: number) {
-    return this.prisma.pfcUser.update({
+  async remove(id: number) {
+    const user = await this.prisma.pfcUser.findUnique({
       where: { id },
-      data: { deletedAt: new Date() },
-      select: safeUserSelect,
+      include: { individualProfile: true, shelterProfile: true },
+    });
+    if (!user || user.deletedAt) throw new NotFoundException("Utilisateur introuvable");
+
+    const now = new Date();
+    const anonymizedEmail = `deleted_${id}_${now.getTime()}@pfc.internal`;
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Invalidation immédiate de toutes les sessions
+      await tx.refreshToken.deleteMany({ where: { userId: id } });
+
+      // 2. Suppression physique des données de comportement
+      await tx.bookmark.deleteMany({ where: { pfcUserId: id } });
+
+      // 3. Gestion des relations d'animaux/candidatures (logique métier)
+      if (user.role === "shelter") {
+        const shelterAnimals = await tx.animal.findMany({
+          where: { pfcUserId: id, deletedAt: null },
+          select: { id: true, animalStatus: true },
+        });
+
+        if (shelterAnimals.length > 0) {
+          const animalIds = shelterAnimals.map((a) => a.id);
+          await tx.application.updateMany({
+            where: { animalId: { in: animalIds }, applicationStatus: "pending" },
+            data: { applicationStatus: "rejected" },
+          });
+
+          const animalsToRemoveIds = shelterAnimals
+            .filter((a) => a.animalStatus === "available" || a.animalStatus === "unavailable")
+            .map((a) => a.id);
+
+          if (animalsToRemoveIds.length > 0) {
+            await tx.animal.updateMany({
+              where: { id: { in: animalsToRemoveIds } },
+              data: { deletedAt: now },
+            });
+          }
+        }
+      }
+
+      if (user.role === "individual") {
+        await tx.application.updateMany({
+          where: { pfcUserId: id, applicationStatus: "pending" },
+          data: { applicationStatus: "rejected" },
+        });
+      }
+
+      // 4. Purge et anonymisation stricte
+      const updateData: Prisma.PfcUserUpdateInput = {
+        deletedAt: now,
+        email: anonymizedEmail,
+        password: "ANONYMIZED_PURGED",
+        phoneNumber: null,
+        address: null,
+      };
+
+      if (user.individualProfile) {
+        updateData.individualProfile = {
+          update: {
+            housingType: null,
+            surface: null,
+            haveGarden: null,
+            haveAnimals: null,
+            haveChildren: null,
+            availableFamily: null,
+            availableTime: null,
+          },
+        };
+      }
+
+      if (user.shelterProfile) {
+        updateData.shelterProfile = {
+          update: {
+            // Unicité garantie par l'ID utilisateur (max 10 chiffres + 4 de 'DEL-')
+            siret: `DEL-${id}`,
+            shelterName: "COMPTE_SUPPRIME",
+            description: null,
+            logo: null,
+          },
+        };
+      }
+
+      return tx.pfcUser.update({
+        where: { id },
+        data: updateData,
+        select: safeUserSelect,
+      });
     });
   }
 
   async validateUser(email: string, plainPassword: string) {
     const user = await this.findByEmail(email);
-    if (!user) return null;
+    if (!user || user.deletedAt) return null;
 
     const isValid = await argon2.verify(user.password, plainPassword);
     if (!isValid) return null;
@@ -134,7 +220,7 @@ export class UsersService {
 
   async updatePassword(userId: number, dto: UpdatePasswordDto) {
     const user = await this.prisma.pfcUser.findUnique({ where: { id: userId } });
-    if (!user) throw new NotFoundException("Utilisateur introuvable");
+    if (!user || user.deletedAt) throw new NotFoundException("Utilisateur introuvable");
 
     const isValid = await argon2.verify(user.password, dto.oldPassword);
     if (!isValid) throw new BadRequestException("Ancien mot de passe incorrect");
@@ -148,6 +234,14 @@ export class UsersService {
   }
 
   async updateIndividualProfile(id: number, dto: UpdateUserWithIndividualProfileDto) {
+    const user = await this.prisma.pfcUser.findUnique({
+      where: { id },
+    });
+
+    if (!user || user.deletedAt) {
+      throw new NotFoundException("Utilisateur introuvable");
+    }
+
     return this.prisma.pfcUser.update({
       where: { id },
       data: {
@@ -187,7 +281,7 @@ export class UsersService {
       include: { shelterProfile: true },
     });
 
-    if (!user) {
+    if (!user || user.deletedAt) {
       throw new NotFoundException("Utilisateur introuvable");
     }
 
@@ -201,13 +295,13 @@ export class UsersService {
           shelterProfile: {
             upsert: {
               update: {
-                siret: dto.siret ?? user.shelterProfile?.siret,
+                siret: user.shelterProfile?.siret,
                 shelterName: dto.shelterName ?? user.shelterProfile?.shelterName,
                 description: dto.description ?? user.shelterProfile?.description ?? null,
                 logo: dto.logo ?? user.shelterProfile?.logo ?? null,
               },
               create: {
-                siret: dto.siret ?? "00000000000000",
+                siret: "00000000000000",
                 shelterName: dto.shelterName ?? "Nom inconnu",
                 description: dto.description ?? null,
                 logo: dto.logo ?? null,

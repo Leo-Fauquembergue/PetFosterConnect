@@ -1,3 +1,4 @@
+import { UserRole } from "@projet/shared-types";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -27,7 +28,7 @@ vi.mock("react-toastify", () => ({
 // Mock du contexte d'authentification pour forcer un utilisateur connecté ("individual")
 vi.mock("../auth/AuthContext", () => ({
   useAuth: () => ({
-    user: { id: 1, email: "adoptant@test.com", role: "individual" },
+    user: { id: 1, email: "adoptant@test.com", role: UserRole.individual },
     isLoading: false,
   }),
 }));
@@ -100,12 +101,13 @@ describe("AnimalDetail - Formulaire de demande", () => {
     });
   });
 
-  it("doit afficher une erreur si la demande échoue (ex: message manquant rejeté par le backend)", async () => {
+  it("doit afficher une erreur si la demande échoue (ex: erreur serveur)", async () => {
     (animalApi.getAnimalById as Mock).mockResolvedValueOnce(mockAnimal);
 
-    // On simule un rejet de l'API (ex: Zod retourne 400 pour champ vide)
+    // On simule un rejet de l'API avec le flag isAxiosError pour extractErrorMessage
     (applicationApi.createApplication as Mock).mockRejectedValueOnce({
-      response: { data: { message: "Le message de motivation est obligatoire" } },
+      isAxiosError: true,
+      response: { data: { message: "Erreur serveur" } },
     });
 
     renderComponent();
@@ -114,14 +116,20 @@ describe("AnimalDetail - Formulaire de demande", () => {
       expect(screen.getByText("Rex")).toBeInTheDocument();
     });
 
-    // On clique directement sans rien remplir
+    // On remplit le champ avec un message valide (min 20 caractères)
+    const adoptInput = screen.getByLabelText(/Message d'adoption/i);
+    fireEvent.change(adoptInput, {
+      target: { value: "Ceci est un message de motivation de plus de 20 caractères." },
+    });
+
+    // On clique sur le bouton Adopter
     const submitButton = screen.getByRole("button", { name: "Adopter" });
     fireEvent.click(submitButton);
 
     // Vérifier que l'erreur du backend est bien interceptée et affichée dans un Toast
     await waitFor(() => {
       expect(applicationApi.createApplication).toHaveBeenCalled();
-      expect(toast.error).toHaveBeenCalledWith("Le message de motivation est obligatoire");
+      expect(toast.error).toHaveBeenCalledWith("Erreur serveur");
     });
   });
 });

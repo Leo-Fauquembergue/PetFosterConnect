@@ -1,6 +1,5 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import type { RequestWithUser } from "@projet/shared-types";
 import { CreateAnimalDto, UpdateAnimalDto } from "@projet/shared-types";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -14,8 +13,6 @@ type AnimalWithRelations = Prisma.AnimalGetPayload<{
 
 // Animal enrichi avec isBookmarked
 type AnimalWithBookmark = AnimalWithRelations & { isBookmarked: boolean };
-
-type UserPayload = RequestWithUser["user"];
 
 @Injectable()
 export class AnimalsService {
@@ -46,6 +43,8 @@ export class AnimalsService {
       where: {
         // Si includeDeleted est false, on ne veut que deletedAt: null
         deletedAt: includeDeleted ? undefined : null,
+        // Exclut les animaux appartenant à un refuge supprimé (soft delete)
+        shelter: includeDeleted ? undefined : { deletedAt: null },
       },
       take: limit, // On applique la limite si elle est fournie
       orderBy: {
@@ -58,6 +57,7 @@ export class AnimalsService {
             id: true,
             email: true,
             phoneNumber: true,
+            address: true,
             shelterProfile: true, // Sélection explicite et sûre
           },
         },
@@ -75,10 +75,13 @@ export class AnimalsService {
             id: true,
             email: true,
             phoneNumber: true,
+            address: true,
             shelterProfile: true,
           },
         },
         bookmarks: userId ? { where: { pfcUserId: userId } } : false,
+        // ⚡ AJOUT : On récupère aussi le statut de la candidature de l'utilisateur connecté
+        applications: userId ? { where: { pfcUserId: userId, deletedAt: null } } : false,
       },
     });
 
@@ -87,38 +90,27 @@ export class AnimalsService {
     }
 
     const isBookmarked = !!animal.bookmarks?.length;
+    const myApplicationStatus = animal.applications?.[0]?.applicationStatus || null;
 
-    // On supprime bookmarks du retour pour éviter de l’exposer
-    const { bookmarks, ...rest } = animal;
-    return { ...rest, isBookmarked };
+    // On nettoie le retour
+    const { bookmarks, applications, ...rest } = animal;
+    return { ...rest, isBookmarked, myApplicationStatus } as unknown as AnimalWithBookmark;
   }
 
   async findAllByShelter(userId: number) {
     return this.prisma.animal.findMany({
-      where: { pfcUserId: userId },
+      where: { pfcUserId: userId, deletedAt: null }, // 🛡️ FILTRE : Exclut les animaux supprimés
       include: {
         species: true, // "Va chercher le nom de l'espèce"
-        shelter: {
-          // "Va chercher les infos du refuge"
-          select: {
-            id: true,
-            email: true,
-            phoneNumber: true,
-            shelterProfile: true,
-          },
-        },
       },
     });
   }
 
-  async update(id: number, updateAnimalDto: UpdateAnimalDto, user: UserPayload) {
+  async update(id: number, updateAnimalDto: UpdateAnimalDto) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
-
-    // Vérification IDOR : Bloquer si l'utilisateur n'est pas Admin ET n'est pas le propriétaire
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Vous ne pouvez modifier que vos animaux.");
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException("Animal introuvable ou supprimé");
     }
 
     // ⚡ Déstructuration élégante et séparation des champs complexes
@@ -145,19 +137,42 @@ export class AnimalsService {
     return this.prisma.animal.update({ where: { id }, data });
   }
 
-  async remove(id: number, user: UserPayload) {
+  async remove(id: number) {
+    // 1. Vérification préalable hors transaction pour des messages d'erreur clairs
     const animal = await this.prisma.animal.findUnique({ where: { id } });
 
-    if (!animal) throw new NotFoundException("Animal introuvable");
-
-    // Vérification IDOR
-    if (user.role !== "admin" && animal.pfcUserId !== user.id) {
-      throw new ForbiddenException("Action interdite sur cet animal.");
+    if (!animal || animal.deletedAt) {
+      throw new NotFoundException("Animal introuvable ou déjà supprimé");
     }
 
-    return this.prisma.animal.update({
-      where: { id },
-      data: { deletedAt: new Date() },
+    if (animal.animalStatus === "adopted" || animal.animalStatus === "foster_care") {
+      throw new BadRequestException(
+        "Impossible de supprimer un animal déjà adopté ou en famille d'accueil afin de conserver l'historique."
+      );
+    }
+
+    // 2. Transaction pour garantir l'atomicité du soft-delete et du rejet des candidatures
+    // Performance : L'utilisation de updateMany sur animalId est rapide car c'est une clé étrangère indexée.
+    // Verrous : Postgres verrouille uniquement les lignes impactées (animal + ses candidatures).
+    return this.prisma.$transaction(async (tx) => {
+      // Soft-delete de l'animal
+      const updatedAnimal = await tx.animal.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+
+      // Rejet silencieux (sans email) des candidatures en attente
+      await tx.application.updateMany({
+        where: {
+          animalId: id,
+          applicationStatus: "pending",
+        },
+        data: {
+          applicationStatus: "rejected",
+        },
+      });
+
+      return updatedAnimal;
     });
   }
 }

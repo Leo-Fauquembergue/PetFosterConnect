@@ -1,28 +1,14 @@
-import type { ApplicationReceivedResponse } from "@projet/shared-types";
-import { AxiosError } from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../api/api";
 import { applicationApi } from "../../api/applicationApi";
+import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
+import { useApplicationsReceived } from "../../hooks/useApplicationsReceived";
 
 export default function ApplicationsReceived() {
-  const [applications, setApplications] = useState<ApplicationReceivedResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { applications, setApplications, loading } = useApplicationsReceived();
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const data = await applicationApi.getReceivedApplications();
-        setApplications(data);
-      } catch (_err: unknown) {
-        toast.error("Erreur lors du chargement des demandes reçues.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchApplications();
-  }, []);
 
   const handleStatus = async (
     candidateId: number,
@@ -34,14 +20,16 @@ export default function ApplicationsReceived() {
     setActionLoadingId(uniqueId);
 
     try {
+      await applicationApi.updateApplicationStatus(candidateId, animalId, {
+        applicationStatus: status === "approved" ? "approved" : "rejected",
+      });
+
       if (status === "approved") {
-        await applicationApi.acceptApplication(candidateId, animalId);
         toast.success(
           `✅ Candidature acceptée pour ${candidateEmail}. Un email de confirmation a été envoyé !`,
           { autoClose: 4000 }
         );
       } else {
-        await applicationApi.rejectApplication(candidateId, animalId);
         toast.error(
           `❌ Candidature refusée pour ${candidateEmail}. Un email de notification a été envoyé.`,
           { autoClose: 4000 }
@@ -56,10 +44,8 @@ export default function ApplicationsReceived() {
         )
       );
     } catch (err: unknown) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Impossible de mettre à jour la candidature.";
-      toast.error(`⚠️ Erreur: ${errorMessage}`, { autoClose: 5000 });
+      const errorMessage = extractErrorMessage(err, "Impossible de mettre à jour la candidature.");
+      toast.error(errorMessage);
     } finally {
       setActionLoadingId(null);
     }
@@ -137,15 +123,18 @@ export default function ApplicationsReceived() {
                 <span
                   className={` inline-block px-3 py-1 rounded-full text-sm font-medium ${
                     app.applicationStatus === "pending"
-                      ? "bg-yellow-100 text-yellow-700"
+                      ? "bg-warning/10 text-warning"
                       : app.applicationStatus === "approved"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-success/10 text-success"
+                        : app.applicationStatus === "cancelled"
+                          ? "bg-gray-100 text-gray-500"
+                          : "bg-error/10 text-error"
                   } `}
                 >
                   {app.applicationStatus === "pending" && "En attente"}
                   {app.applicationStatus === "approved" && "Acceptée"}
                   {app.applicationStatus === "rejected" && "Refusée"}
+                  {app.applicationStatus === "cancelled" && "Annulée par le candidat"}
                 </span>
               </div>
 
@@ -154,36 +143,32 @@ export default function ApplicationsReceived() {
               <div className="mt-4 flex gap-3">
                 {app.applicationStatus === "pending" && (
                   <>
-                    <button
-                      type="button"
+                    <Button
                       disabled={isProcessing}
                       onClick={() =>
                         handleStatus(app.pfcUserId, app.animalId, "approved", app.user?.email)
                       }
-                      className={`px-4 py-2 bg-green-600 text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"}`}
                     >
                       {isProcessing ? "..." : "Accepter"}
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="danger"
                       disabled={isProcessing}
                       onClick={() =>
                         handleStatus(app.pfcUserId, app.animalId, "rejected", app.user?.email)
                       }
-                      className={`px-4 py-2 bg-red-600 text-white rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-red-700"}`}
                     >
                       {isProcessing ? "..." : "Refuser"}
-                    </button>
+                    </Button>
                   </>
                 )}
-                <button
-                  type="button"
+                <Button
+                  variant="neutral"
                   disabled={isProcessing}
                   onClick={() => handleArchive(app.pfcUserId, app.animalId)}
-                  className={`px-4 py-2 bg-gray-300 text-gray-800 rounded transition ${isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-400"}`}
                 >
                   {isProcessing ? "Traitement..." : "Archiver"}
-                </button>
+                </Button>
               </div>
 
               <p className="mt-2 text-xs text-gray-400">

@@ -1,8 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import * as dotenv from "dotenv";
 import { AnimalsService } from "../animals/animals.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { UsersService } from "../users/users.service";
 import { SheltersController } from "./shelters.controller";
 import { SheltersService } from "./shelters.service";
+
+dotenv.config({ path: ".env.test" });
 
 describe("ShelterController (integration)", () => {
   let controller: SheltersController;
@@ -12,7 +16,7 @@ describe("ShelterController (integration)", () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SheltersController],
-      providers: [SheltersService, AnimalsService, PrismaService],
+      providers: [SheltersService, AnimalsService, UsersService, PrismaService],
     }).compile();
 
     controller = module.get<SheltersController>(SheltersController);
@@ -49,13 +53,13 @@ describe("ShelterController (integration)", () => {
   });
 
   it("1. devrait retourner tous les refuges", async () => {
-    const result = await controller.findAll();
+    const result = await controller.findAll(10);
     expect(result.length).toBe(1);
     expect(result[0].shelterName).toBe("Refuge Test");
   });
 
   it("2. devrait retourner un refuge par id", async () => {
-    const result = await controller.findOne(String(testUserId));
+    const result = await controller.findOne(testUserId);
     expect(result?.shelterName).toBe("Refuge Test");
   });
 
@@ -82,13 +86,16 @@ describe("ShelterController (integration)", () => {
 
   it("4. devrait mettre à jour un refuge", async () => {
     const updates = { shelterName: "Refuge Modifié" };
-    const result = await controller.update(String(testUserId), updates);
+    const result = await controller.update(testUserId, updates);
     expect(result.shelterName).toBe("Refuge Modifié");
   });
 
-  it("5. devrait supprimer un refuge", async () => {
-    await controller.remove(String(testUserId));
-    const shelter = await prisma.shelterProfile.findUnique({ where: { pfcUserId: testUserId } });
-    expect(shelter).toBeNull();
+  it("5. devrait supprimer un refuge (soft-delete via UsersService)", async () => {
+    await controller.remove(testUserId);
+
+    // Le profil utilisateur doit avoir un deletedAt
+    const user = await prisma.pfcUser.findUnique({ where: { id: testUserId } });
+    expect(user?.deletedAt).not.toBeNull();
+    expect(user?.email).toContain("deleted_");
   });
 });

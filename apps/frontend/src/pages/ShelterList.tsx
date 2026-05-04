@@ -1,38 +1,10 @@
-// ⚡ CORRECTION : Import du type depuis le package partagé et de AxiosError pour le catch
-import type { ShelterWithRelations } from "@projet/shared-types";
-import { isAxiosError } from "axios";
 import { Home } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { shelterApi } from "../api/shelterApi";
 import ShelterCard from "../components/cards/ShelterCard";
 import Loader from "../components/ui/Loader";
+import { useShelters } from "../hooks/useShelters";
 
 const SheltersPage = () => {
-  const [shelters, setShelters] = useState<ShelterWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const fetchShelters = async () => {
-      try {
-        const data = await shelterApi.getAllShelters();
-        setShelters(data);
-      } catch (err: unknown) {
-        setError(true);
-        // ⚡ Vrai Type Guard
-        let errorMessage = "Impossible de charger les refuges.";
-        if (isAxiosError(err)) {
-          errorMessage = err.response?.data?.message || errorMessage;
-        }
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchShelters();
-  }, []);
+  const { shelters, loading, error } = useShelters();
 
   // État de chargement
   if (loading) {
@@ -68,7 +40,7 @@ const SheltersPage = () => {
         {/* État vide ou liste */}
         {shelters.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="bg-green-100 p-4 rounded-full mb-4">
+            <div className="bg-secondary/10 p-4 rounded-full mb-4">
               <Home className="w-12 h-12 text-secondary" />
             </div>
             <h3 className="text-xl font-bold text-gray-700">Aucun refuge trouvé</h3>
@@ -79,8 +51,8 @@ const SheltersPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {shelters.map((shelter) => (
-              <div key={shelter.pfcUserId} className="w-full max-w-sm">
-                <ShelterCard {...shelter} />
+              <div key={shelter.id} className="w-full max-w-sm">
+                <ShelterCard shelter={shelter} />
               </div>
             ))}
           </div>

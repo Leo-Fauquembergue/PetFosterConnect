@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
 
 const Forbidden = () => {
   const navigate = useNavigate();
@@ -15,21 +16,13 @@ const Forbidden = () => {
       </p>
 
       <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
-        >
+        <Button variant="neutral" onClick={() => navigate(-1)}>
           Page précédente
-        </button>
+        </Button>
 
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        >
+        <Button variant="info" onClick={() => navigate("/")}>
           Accueil
-        </button>
+        </Button>
       </div>
     </div>
   );

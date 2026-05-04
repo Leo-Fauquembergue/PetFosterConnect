@@ -1,81 +1,12 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
-import { animalApi } from "../api/animalApi";
-import { shelterApi } from "../api/shelterApi";
 import AnimalCard from "../components/cards/AnimalCard";
 import ShelterCard from "../components/cards/ShelterCard";
 import Button from "../components/ui/Button";
 import Loader from "../components/ui/Loader";
-
-// TYPES D'AFFICHAGE (UI) - Les seuls dont ce composant a besoin !
-type DisplayAnimal = {
-  id: number;
-  name: string;
-  species: string;
-  age: string;
-  image: string;
-  location: string;
-};
-
-type DisplayShelter = {
-  id: number;
-  name: string;
-  image: string;
-  location: string;
-};
+import { useHomeData } from "../hooks/useHomeData";
 
 export default function Home() {
-  const [animals, setAnimals] = useState<DisplayAnimal[]>([]);
-  const [shelters, setShelters] = useState<DisplayShelter[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Appels parallèles, le typage est géré nativement par les services !
-        const [animalsData, sheltersData] = await Promise.all([
-          animalApi.getLatestAnimals(),
-          shelterApi.getFeaturedShelters(),
-        ]);
-
-        // MAPPING ANIMAUX
-        const recentAnimals = animalsData.map((a) => {
-          let imageUrl = "https://placehold.co/600x400?text=Pas+de+photo";
-          if (Array.isArray(a.photos) && a.photos.length > 0) {
-            imageUrl = a.photos[0] as string;
-          } else if (typeof a.photos === "string") {
-            imageUrl = a.photos;
-          }
-
-          return {
-            id: a.id,
-            name: a.name,
-            species: a.species?.name || "Espèce inconnue",
-            age: a.age || "Âge non renseigné",
-            image: imageUrl,
-            location: a.shelter?.shelterProfile?.shelterName || "Refuge partenaire",
-          };
-        });
-        setAnimals(recentAnimals);
-
-        // MAPPING REFUGES
-        const featuredShelters = sheltersData.map((s) => ({
-          id: s.pfcUserId,
-          name: s.shelterName,
-          image: s.logo || "https://placehold.co/600x400?text=Refuge",
-          location: s.user?.address || "Localisation non renseignée",
-        }));
-        setShelters(featuredShelters);
-      } catch (_error: unknown) {
-        toast.error("Impossible de charger les dernières annonces.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { animals, shelters, loading } = useHomeData();
 
   if (loading) {
     return (
@@ -95,7 +26,7 @@ export default function Home() {
           <div className="flex-1 text-center md:text-left text-white">
             <h1 className="text-4xl md:text-5xl font-bold font-montserrat mb-6 leading-tight">
               Offrez-leur un foyer, <br />
-              <span className="text-primary-light text-orange-300">même temporaire.</span>
+              <span className="text-primary/70">même temporaire.</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-100 mb-8 max-w-lg mx-auto md:mx-0">
               Pet Foster Connect met en relation les refuges saturés avec des familles d'accueil et
@@ -106,12 +37,7 @@ export default function Home() {
                 <Button variant="primary">Je deviens Famille d'Accueil</Button>
               </Link>
               <Link to="/animaux">
-                <button
-                  type="button"
-                  className="px-6 py-2 rounded-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-secondary transition"
-                >
-                  Voir les animaux
-                </button>
+                <Button variant="outline-white">Voir les animaux</Button>
               </Link>
             </div>
           </div>
@@ -148,8 +74,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {animals.map((animal) => (
                 <div key={animal.id} className="w-full max-w-sm">
-                  {/* AJOUT DE LA PROP variant="home" */}
-                  <AnimalCard {...animal} variant="home" />
+                  <AnimalCard animal={animal} variant="home" />
                 </div>
               ))}
             </div>
@@ -189,8 +114,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
               {shelters.map((shelter) => (
                 <div key={shelter.id} className="w-full max-w-sm">
-                  {/* AJOUT DE LA PROP variant="home" */}
-                  <ShelterCard {...shelter} variant="home" />
+                  <ShelterCard shelter={shelter} variant="home" />
                 </div>
               ))}
             </div>
