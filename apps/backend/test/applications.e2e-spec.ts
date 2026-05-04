@@ -154,4 +154,60 @@ describe("Applications (E2E) - Security & IDOR", () => {
         .expect(200);
     });
   });
+
+  describe("DELETE /applications/:animalId/:candidateId (Suppression/Archivage - IDOR)", () => {
+    it("doit bloquer un refuge qui tente de supprimer une demande d'un AUTRE refuge (403)", async () => {
+      await request(app.getHttpServer())
+        .delete(`/applications/${animalId}/${individualId}`)
+        .set("Authorization", `Bearer ${attackerShelterToken}`)
+        .set("x-csrf-token", csrfToken)
+        .expect(403);
+    });
+
+    it("doit autoriser le refuge propriétaire à archiver la demande (200)", async () => {
+      await request(app.getHttpServer())
+        .delete(`/applications/${animalId}/${individualId}`)
+        .set("Authorization", `Bearer ${legitShelterToken}`)
+        .set("x-csrf-token", csrfToken)
+        .expect(200);
+    });
+  });
+
+  describe("DELETE /applications/me/:animalId (Annuler sa propre demande)", () => {
+    let newAnimalId: number;
+
+    beforeAll(async () => {
+      const species = await prisma.species.findFirst();
+      const animal = await prisma.animal.create({
+        data: {
+          name: "CancelTest",
+          age: "1 an",
+          sex: "female",
+          animalStatus: "available",
+          description: "Test cancel",
+          weight: 4,
+          pfcUserId: legitShelterId,
+          speciesId: species!.id,
+        },
+      });
+      newAnimalId = animal.id;
+
+      await prisma.application.create({
+        data: {
+          pfcUserId: individualId,
+          animalId: newAnimalId,
+          applicationType: "adoption",
+          message: "Test cancel message",
+        }
+      });
+    });
+
+    it("doit autoriser le candidat à annuler sa propre demande (200)", async () => {
+      await request(app.getHttpServer())
+        .delete(`/applications/me/${newAnimalId}`)
+        .set("Authorization", `Bearer ${individualToken}`)
+        .set("x-csrf-token", csrfToken)
+        .expect(200);
+    });
+  });
 });

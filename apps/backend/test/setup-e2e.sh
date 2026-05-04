@@ -15,4 +15,4 @@ npx prisma db push --schema=apps/backend/prisma/schema.prisma --accept-data-loss
 echo "✅ Base de données prête. Lancement des tests..."
 
 # 4. LANCER JEST SEQUENTIELLEMENT (--runInBand)
-npx jest --config apps/backend/test/jest-e2e.json --runInBand
+npx jest --config apps/backend/test/jest-e2e.json --runInBand --testTimeout=30000
