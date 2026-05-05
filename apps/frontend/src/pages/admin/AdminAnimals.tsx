@@ -1,4 +1,4 @@
-import { Eye, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Eye, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
@@ -15,7 +15,6 @@ export default function AdminAnimals() {
 
   // État pour la modale
   const [actionToConfirm, setActionToConfirm] = useState<{
-    type: "delete" | "restore";
     id: number;
   } | null>(null);
 
@@ -27,27 +26,20 @@ export default function AdminAnimals() {
   });
 
   // Ouverture de la modale (au lieu de confirm)
-  const openDeleteModal = (id: number) => setActionToConfirm({ type: "delete", id });
-  const openRestoreModal = (id: number) => setActionToConfirm({ type: "restore", id });
+  const openDeleteModal = (id: number) => setActionToConfirm({ id });
 
   // Exécution de l'action confirmée
   const handleConfirmAction = async () => {
     if (!actionToConfirm) return;
 
-    const { type, id } = actionToConfirm;
+    const { id } = actionToConfirm;
 
     try {
-      if (type === "delete") {
-        await animalApi.deleteAnimalAdmin(id);
-        setAnimals(animals.map((a) => (a.id === id ? { ...a, deletedAt: new Date() } : a)));
-        toast.success("Animal supprimé avec succès");
-      } else {
-        await animalApi.updateAnimalAdmin(id, { deletedAt: null });
-        setAnimals(animals.map((a) => (a.id === id ? { ...a, deletedAt: null } : a)));
-        toast.success("Animal restauré avec succès");
-      }
+      await animalApi.deleteAnimalAdmin(id);
+      setAnimals(animals.map((a) => (a.id === id ? { ...a, deletedAt: new Date() } : a)));
+      toast.success("Animal supprimé avec succès");
     } catch (_error) {
-      toast.error("Une erreur est survenue lors de l'opération");
+      toast.error("Une erreur est survenue lors de la suppression");
     }
     setActionToConfirm(null);
   };
@@ -85,7 +77,7 @@ export default function AdminAnimals() {
           <option value="all">Tous les statuts</option>
           <option value="available">Disponible</option>
           <option value="adopted">Adopté</option>
-          <option value="foster_care">En FA</option>
+          <option value="foster_care">En famille d'accueil</option>
           <option value="unavailable">Indisponible</option>
         </select>
       </div>
@@ -113,21 +105,33 @@ export default function AdminAnimals() {
                   </td>
                   <td className="px-6 py-4">
                     <Badge
-                      label={animal.deletedAt ? "Supprimé" : "Disponible"}
-                      variant={animal.deletedAt ? "error" : "success"}
+                      label={
+                        animal.deletedAt
+                          ? "Supprimé"
+                          : animal.animalStatus === "available"
+                            ? "Disponible"
+                            : animal.animalStatus === "adopted"
+                              ? "Adopté"
+                              : animal.animalStatus === "foster_care"
+                                ? "En famille d'accueil"
+                                : "Indisponible"
+                      }
+                      variant={
+                        animal.deletedAt
+                          ? "error"
+                          : animal.animalStatus === "available"
+                            ? "success"
+                            : animal.animalStatus === "adopted"
+                              ? "info"
+                              : animal.animalStatus === "foster_care"
+                                ? "warning"
+                                : "neutral"
+                      }
                     />
                   </td>
                   <td className="px-6 py-4 text-right flex justify-end gap-2">
-                    {animal.deletedAt ? (
-                      <Button
-                        variant="ghost"
-                        onClick={() => animal.id && openRestoreModal(animal.id)}
-                        className="text-primary hover:text-primary p-2"
-                        title="Restaurer"
-                      >
-                        <RotateCcw className="w-4 h-4" /> Restaurer
-                      </Button>
-                    ) : (
+                    {!animal.deletedAt &&
+                    animal.shelter?.shelterProfile?.shelterName !== "COMPTE_SUPPRIME" ? (
                       <>
                         <a
                           href={`/animaux/${animal.id}`}
@@ -147,6 +151,18 @@ export default function AdminAnimals() {
                           <Trash2 className="w-5 h-5" />
                         </Button>
                       </>
+                    ) : (
+                      !animal.deletedAt && (
+                        <a
+                          href={`/animaux/${animal.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-400 hover:text-primary p-2 rounded-full hover:bg-orange-50 transition-colors"
+                          title="Voir la fiche publique"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </a>
+                      )
                     )}
                   </td>
                 </tr>
@@ -166,13 +182,9 @@ export default function AdminAnimals() {
         isOpen={!!actionToConfirm}
         onClose={() => setActionToConfirm(null)}
         onConfirm={handleConfirmAction}
-        title={actionToConfirm?.type === "delete" ? "Supprimer l'animal ?" : "Restaurer l'animal ?"}
-        message={
-          actionToConfirm?.type === "delete"
-            ? "Cette action placera l'animal dans la corbeille. Il ne sera plus visible du public."
-            : "L'animal sera de nouveau visible publiquement."
-        }
-        variant={actionToConfirm?.type === "delete" ? "danger" : "info"}
+        title="Supprimer l'animal ?"
+        message="Cette action placera l'animal dans la corbeille. Il ne sera plus visible du public. Cette action est considérée comme définitive."
+        variant="danger"
       />
     </div>
   );

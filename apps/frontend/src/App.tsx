@@ -10,6 +10,8 @@ import ProtectedRoute from "./auth/ProtectedRoute.tsx";
 import AdminLayout from "./components/layout/AdminLayout";
 import PublicLayout from "./components/layout/PublicLayout";
 import UserSidebarLayout from "./components/layout/UserSidebarLayout.tsx";
+// Components
+import ScrollToTop from "./components/ui/ScrollToTop";
 // Pages
 import About from "./pages/About";
 import AnimalDetail from "./pages/AnimalDetail";
@@ -59,6 +61,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Routes>
         {/* ZONE PUBLIQUE */}
         <Route element={<PublicLayout />}>
@@ -82,13 +85,24 @@ function App() {
               </ProtectedRoute>
             }
           >
+            {/* Pages communes */}
             <Route path="/utilisateur/:id/profil" element={<UserProfilePage />} />
-            <Route path="/utilisateur/:id/profil/animaux/creer" element={<AnimalForm />} />
-            <Route path="/utilisateur/:id/animaux" element={<ShelterAnimalList />} />
+
+            {/* Pages réservées aux REFUGES */}
+            <Route element={<ProtectedRoute allowedRoles={[UserRole.shelter]} />}>
+              <Route path="/utilisateur/:id/animaux" element={<ShelterAnimalList />} />
+              <Route path="/utilisateur/:id/profil/animaux/creer" element={<AnimalForm />} />
+              <Route path="/utilisateur/:id/demandes-recues" element={<ApplicationsReceived />} />
+            </Route>
+
+            {/* Pages réservées aux PARTICULIERS */}
+            <Route element={<ProtectedRoute allowedRoles={[UserRole.individual]} />}>
+              <Route path="/utilisateur/:id/favoris" element={<BookmarksPage />} />
+              <Route path="/utilisateur/:id/demandes" element={<ApplicationsSent />} />
+            </Route>
+
+            {/* Visualisation animal en contexte utilisateur */}
             <Route path="/utilisateur/:userId/animaux/:id" element={<AnimalDetail />} />
-            <Route path="/utilisateur/:id/demandes" element={<ApplicationsSent />} />
-            <Route path="/utilisateur/:id/demandes-recues" element={<ApplicationsReceived />} />
-            <Route path="/utilisateur/:id/favoris" element={<BookmarksPage />} />
           </Route>
 
           {/* Route 404 & Erreurs */}

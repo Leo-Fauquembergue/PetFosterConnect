@@ -172,7 +172,31 @@ describe("Applications (E2E) - Security & IDOR", () => {
         .expect(403);
     });
 
-    it("doit autoriser le refuge propriétaire à archiver la demande (200)", async () => {
+    it("doit bloquer l'archivage d'une demande en attente (400)", async () => {
+      // On crée une nouvelle demande pour cet animal qui n'a pas encore de statut
+      const otherUser = await prisma.pfcUser.create({
+        data: { email: "other@test.com", password: "hash", role: UserRole.individual },
+      });
+
+      await prisma.application.create({
+        data: {
+          pfcUserId: otherUser.id,
+          animalId: animalId,
+          applicationType: "adoption",
+          message: "En attente",
+          applicationStatus: "pending",
+        },
+      });
+
+      await request(app.getHttpServer())
+        .delete(`/applications/${animalId}/${otherUser.id}`)
+        .set("Authorization", `Bearer ${legitShelterToken}`)
+        .set("x-csrf-token", csrfToken)
+        .expect(400); // Bad Request (Pending restriction)
+    });
+
+    it("doit autoriser le refuge propriétaire à archiver la demande (200) si elle est traitée", async () => {
+      // On utilise la demande qui a été mise à 'approved' dans le test précédent
       await request(app.getHttpServer())
         .delete(`/applications/${animalId}/${individualId}`)
         .set("Authorization", `Bearer ${legitShelterToken}`)

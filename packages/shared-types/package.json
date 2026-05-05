@@ -8,8 +8,8 @@
     "dev": "tsc --watch"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
-    "typescript": "^5.3.3"
+    "@types/express": "^5.0.0",
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "zod": "^4.3.6"

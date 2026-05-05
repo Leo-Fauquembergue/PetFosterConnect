@@ -1,22 +1,26 @@
 import { z } from "zod";
 
 // ENUMS
-export const ApplicationTypeEnum = z.enum(["adoption", "foster"]);
+export const ApplicationTypeEnum = z.enum(["adoption", "foster"], {
+  error: "Type de demande invalide",
+});
 export type ApplicationType = z.infer<typeof ApplicationTypeEnum>;
 
-export const ApplicationStatusEnum = z.enum(["pending", "approved", "rejected", "cancelled"]);
+export const ApplicationStatusEnum = z.enum(["pending", "approved", "rejected", "cancelled"], {
+  error: "Statut de demande invalide",
+});
 export type ApplicationStatus = z.infer<typeof ApplicationStatusEnum>;
 
 // APPLICATION (Demande)
 export const ApplicationSchema = z.object({
   // Clé Primaire Composite (User + Animal)
-  pfcUserId: z.int().positive(), // Le candidat (FK)
-  animalId: z.int().positive(), // L'animal (FK)
+  pfcUserId: z.number().int().positive(), // Le candidat (FK)
+  animalId: z.number().int().positive(), // L'animal (FK)
 
   message: z
     .string()
     .min(20, { error: "La motivation doit faire au moins 20 caractères" })
-    .max(2000), // Limite raisonnable pour la BDD
+    .max(2000, { error: "Message trop long (max 2000 caractères)" }), // Limite raisonnable pour la BDD
 
   applicationType: ApplicationTypeEnum, // Adoption ou FA
   applicationStatus: ApplicationStatusEnum.default("pending"), // En attente par défaut

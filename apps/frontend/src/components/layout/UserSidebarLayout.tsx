@@ -1,15 +1,14 @@
 import { UserRole } from "@projet/shared-types"; // Import de l'Enum
-import { Home, LogOut, PawPrint, UserCircle, X } from "lucide-react";
+import { Home, PawPrint, UserCircle, X } from "lucide-react";
 import { CiFolderOn } from "react-icons/ci";
 import { LuPlus } from "react-icons/lu";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
 import BurgerMenu from "../ui/BurgerMenu";
-import Button from "../ui/Button";
 
 export default function UserSidebarLayout() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   // Remplacement du useState
   const { isOpen, open, close } = useDisclosure();
 
@@ -46,6 +45,7 @@ export default function UserSidebarLayout() {
             {/* Profil */}
             <NavLink
               to={`/utilisateur/${user?.id}/profil`}
+              end
               className={({ isActive }) =>
                 `flex items-center gap-2 px-3 py-2 rounded-lg transition 
                 ${isActive ? "bg-primary text-white" : "text-gray-700 hover:bg-primary/20"}`
@@ -144,18 +144,6 @@ export default function UserSidebarLayout() {
             <Home size={18} />
             <span>Retour au site</span>
           </NavLink>
-
-          <Button
-            variant="ghost"
-            onClick={() => {
-              logout();
-              close();
-            }}
-            className="text-error hover:bg-primary/20 w-full justify-start px-4 py-2 text-sm font-medium"
-          >
-            <LogOut size={18} />
-            <span>Déconnexion</span>
-          </Button>
         </div>
       </aside>
       {/* Overlay (mobile only) */}
@@ -168,7 +156,7 @@ export default function UserSidebarLayout() {
         />
       )}
       {/* Contenu principal */}
-      <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
+      <main className="flex-1 pt-16 p-6 md:pt-6 bg-gray-50 overflow-y-auto">
         <Outlet />
       </main>
     </div>

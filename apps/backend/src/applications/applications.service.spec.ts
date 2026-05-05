@@ -92,21 +92,48 @@ describe("ApplicationsService", () => {
   });
 
   describe("remove", () => {
-    it("doit archiver une demande", async () => {
-      const fakeAnimal = { id: 10, pfcUserId: 42 };
-      mockPrisma.animal.findUnique.mockResolvedValue(fakeAnimal);
-      mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
+    const candidateId = 5;
+    const animalId = 10;
 
-      await service.remove(5, 10);
+    it("doit archiver une demande (soft delete)", async () => {
+      const fakeApp = {
+        pfcUserId: candidateId,
+        animalId: animalId,
+        applicationStatus: "approved",
+        deletedAt: null,
+      };
 
-      expect(mockPrisma.application.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            pfcUserId: 5,
-            animalId: 10,
-            deletedAt: null,
-          },
-        })
+      mockPrisma.application.findUnique.mockResolvedValue(fakeApp);
+      mockPrisma.application.update.mockResolvedValue({ ...fakeApp, deletedAt: new Date() });
+
+      const result = await service.remove(candidateId, animalId);
+
+      expect(mockPrisma.application.findUnique).toHaveBeenCalled();
+      expect(mockPrisma.application.update).toHaveBeenCalledWith({
+        where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+        data: { deletedAt: expect.any(Date) },
+      });
+      expect(result.message).toContain("archivée");
+    });
+
+    it("doit échouer si la demande est toujours en attente (pending)", async () => {
+      mockPrisma.application.findUnique.mockResolvedValue({
+        pfcUserId: candidateId,
+        animalId: animalId,
+        applicationStatus: "pending",
+        deletedAt: null,
+      });
+
+      await expect(service.remove(candidateId, animalId)).rejects.toThrow(
+        "Impossible d'archiver une demande en attente"
+      );
+      expect(mockPrisma.application.update).not.toHaveBeenCalled();
+    });
+
+    it("doit échouer si la demande n'existe pas", async () => {
+      mockPrisma.application.findUnique.mockResolvedValue(null);
+      await expect(service.remove(candidateId, animalId)).rejects.toThrow(
+        "Demande introuvable ou déjà supprimée"
       );
     });
   });

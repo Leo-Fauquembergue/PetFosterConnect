@@ -73,6 +73,20 @@ describe("Auth & CSRF (E2E)", () => {
   });
 
   describe("Login/Logout flow", () => {
+    it("doit rejeter une inscription avec un mot de passe trop faible (400 - Zod)", async () => {
+      const response = await request(app.getHttpServer())
+        .post("/auth/register")
+        .set("x-csrf-token", csrfToken)
+        .send({
+          email: "weak@test.com",
+          password: "123",
+          role: UserRole.individual,
+        })
+        .expect(400);
+
+      expect(response.body.message).toBe("Le mot de passe doit faire au moins 12 caractères");
+    });
+
     it("doit poser les cookies HttpOnly lors du login et valider l'authentification (201)", async () => {
       const response = await request(app.getHttpServer())
         .post("/auth/login")

@@ -1,13 +1,10 @@
-import { Home, LayoutDashboard, LogOut, Menu, PawPrint, Users, X } from "lucide-react";
+import { Home, LayoutDashboard, PawPrint, Users, X } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import logo from "../../assets/Logo.png";
-import { useAuth } from "../../auth/AuthContext";
-import { useDisclosure } from "../../hooks/useDisclosure"; // Import du hook
-import Button from "../ui/Button";
+import { useDisclosure } from "../../hooks/useDisclosure";
+import BurgerMenu from "../ui/BurgerMenu";
 
 export default function AdminLayout() {
-  const { logout } = useAuth();
-  // Remplacement du useState par le hook
   const { isOpen, open, close } = useDisclosure();
 
   // Style des liens de navigation
@@ -24,14 +21,14 @@ export default function AdminLayout() {
       {/* En-tête */}
       <div className="p-6 flex items-center gap-2 border-b border-gray-100">
         <img src={logo} alt="Pet Foster Connect Logo" className="w-8 h-8 object-contain" />
-        <span className="font-montserrat font-bold text-lg text-secondary">Admin Panel</span>
+        <span className="font-montserrat font-bold text-lg text-secondary">Administration</span>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         <NavLink to="/admin" end className={getLinkClass} onClick={close}>
           <LayoutDashboard size={20} />
-          <span>Dashboard</span>
+          <span>Tableau de bord</span>
         </NavLink>
 
         <NavLink to="/admin/utilisateurs" className={getLinkClass} onClick={close}>
@@ -55,83 +52,52 @@ export default function AdminLayout() {
           <Home size={18} />
           <span>Retour au site</span>
         </NavLink>
-
-        <Button
-          variant="ghost"
-          onClick={() => logout()}
-          className="text-error hover:bg-error/10 w-full justify-start px-4 py-2 text-sm font-medium"
-        >
-          <LogOut size={18} />
-          <span>Déconnexion</span>
-        </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 font-openSans overflow-hidden">
-      {/* SIDEBAR DESKTOP */}
-      <aside className="w-64 border-r border-gray-200 hidden md:flex flex-col shadow-sm z-10">
-        <SidebarContent />
-      </aside>
+    <div className="flex h-screen bg-gray-50 font-openSans overflow-hidden relative">
+      {/* Burger menu (mobile only) */}
+      <BurgerMenu onOpen={open} />
 
-      {/* SIDEBAR MOBILE */}
-      {isOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity cursor-pointer w-full h-full border-none"
-          onClick={close}
-        />
-      )}
-
-      {/* Menu glissant */}
+      {/* SIDEBAR RESPONSIVE */}
       <aside
-        className={`fixed top-0 right-0 h-full w-72 bg-white z-50 transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl flex flex-col ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`
+          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 
+          flex flex-col shadow-sm
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:static md:translate-x-0
+        `}
       >
-        {/* Bouton Fermer */}
+        {/* Bouton Fermer (mobile only) */}
         <button
           type="button"
           onClick={close}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition z-50"
+          className="md:hidden absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
           aria-label="Fermer le menu"
         >
           <X size={28} />
         </button>
 
-        {/* Contenu du menu */}
-        <div className="h-full pt-12">
-          <SidebarContent />
-        </div>
+        <SidebarContent />
       </aside>
 
+      {/* Overlay (mobile only) */}
+      {isOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/40 z-40 md:hidden w-full h-full border-none cursor-default backdrop-blur-sm transition-opacity"
+          onClick={close}
+          aria-label="Fermer le menu"
+        />
+      )}
+
       {/* ZONE PRINCIPALE */}
-      <div className="flex-1 flex flex-col h-full w-full relative">
-        {/* HEADER MOBILE */}
-        <header className="md:hidden bg-white h-16 border-b flex items-center justify-between px-4 shadow-sm z-20 flex-shrink-0">
-          {/* Logo + Titre */}
-          <div className="flex items-center gap-2">
-            <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
-            <span className="font-montserrat font-bold text-lg text-secondary">Admin Panel</span>
-          </div>
-
-          {/* Bouton Burger */}
-          <button
-            type="button"
-            onClick={open}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
-            aria-label="Ouvrir le menu"
-          >
-            <Menu size={28} />
-          </button>
-        </header>
-
-        {/* CONTENU DE LA PAGE */}
-        <main className="flex-1 overflow-auto p-4 md:p-8 relative">
-          <Outlet />
-        </main>
-      </div>
+      <main className="flex-1 overflow-auto p-4 md:p-8 pt-16 md:pt-8 relative">
+        <Outlet />
+      </main>
     </div>
   );
 }

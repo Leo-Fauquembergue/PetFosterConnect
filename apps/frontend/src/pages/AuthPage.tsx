@@ -87,12 +87,17 @@ function LoginForm() {
 
   const onSubmit = async (data: LoginDto) => {
     try {
-      await login(data);
+      const { user } = await login(data);
       toast.success("Connexion réussie !", {
         position: "top-right",
         autoClose: 2000,
       });
-      navigate("/");
+
+      if (user?.role === UserRole.admin) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error, "Erreur serveur. Veuillez réessayer.");
 
@@ -149,12 +154,16 @@ function RegisterForm() {
 
   const onSubmit = async (data: RegisterDto) => {
     try {
-      await registerUser(data);
+      const { user } = await registerUser(data);
       toast.success("Compte créé avec succès 🎉", {
         position: "top-right",
         autoClose: 2000,
       });
-      navigate("/");
+      if (user?.role === UserRole.admin) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (err: unknown) {
       const errorMessage = extractErrorMessage(
         err,

@@ -181,4 +181,19 @@ describe("AuthPage - RegisterForm", () => {
     expect(screen.getByLabelText("Siret")).toBeInTheDocument();
     expect(screen.getByLabelText("Nom du refuge")).toBeInTheDocument();
   });
+
+  it("doit afficher une erreur de validation si le mot de passe est trop court (Zod Client-side)", async () => {
+    await renderRegisterPage();
+
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "test@test.com" } });
+    fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "short" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "Créer mon compte" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Le mot de passe doit faire au moins 12 caractères")
+      ).toBeInTheDocument();
+    });
+  });
 });

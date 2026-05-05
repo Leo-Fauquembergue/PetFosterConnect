@@ -35,7 +35,7 @@ export default function ApplicationsSent() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Mes demandes envoyées</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Mes demandes envoyées</h1>
 
       {applications.length === 0 && (
         <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-lg shadow-sm border border-gray-100 mt-6">

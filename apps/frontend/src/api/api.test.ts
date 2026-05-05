@@ -25,6 +25,16 @@ describe("extractErrorMessage", () => {
     expect(extractErrorMessage(error, "Default")).toBe("Zod validation failed");
   });
 
+  it("extrait le message direct renvoyé par le nouveau ZodPipe", () => {
+    const error = {
+      isAxiosError: true,
+      response: { data: { message: "Le mot de passe doit faire au moins 12 caractères" } },
+    };
+    expect(extractErrorMessage(error, "Default")).toBe(
+      "Le mot de passe doit faire au moins 12 caractères"
+    );
+  });
+
   it("extrait la propriété 'error' si 'message' n'est pas présent", () => {
     const error = {
       isAxiosError: true,

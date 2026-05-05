@@ -28,7 +28,7 @@ export const UserSchema = z
     phoneNumber: z
       .string()
       .max(20)
-      .regex(/^[0-9]*$/, { message: "Le numéro de téléphone ne doit contenir que des chiffres" })
+      .regex(/^[0-9]*$/, { error: "Le numéro de téléphone ne doit contenir que des chiffres" })
       .nullable()
       .optional(),
     address: z.string().max(255).nullable().optional(),
@@ -58,7 +58,12 @@ export const RegisterSchema = UserSchema.pick({
     role: z.enum([UserRole.individual, UserRole.shelter], {
       error: "Escalade de privilèges interdite",
     }),
-    siret: z.string().length(14).optional().or(z.literal("")),
+    siret: z
+      .string()
+      .length(14, { error: "Le SIRET doit faire exactement 14 chiffres" })
+      .regex(/^[0-9]+$/, { error: "Le SIRET ne doit contenir que des chiffres" })
+      .optional()
+      .or(z.literal("")),
     shelterName: z.string().min(2).optional().or(z.literal("")),
   })
   .strict();

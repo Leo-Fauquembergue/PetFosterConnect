@@ -28,7 +28,16 @@ export default function UserCard({ user }: UserCardProps) {
           <h4 className="text-md font-bold text-success mb-2">Profil particulier</h4>
           {user.individualProfile ? (
             <ul className="text-sm text-gray-700 space-y-1">
-              <li>Logement : {user.individualProfile.housingType ?? "Non renseigné"}</li>
+              <li>
+                Logement :{" "}
+                {user.individualProfile.housingType === "house"
+                  ? "Maison"
+                  : user.individualProfile.housingType === "apartment"
+                    ? "Appartement"
+                    : user.individualProfile.housingType === "other"
+                      ? "Autre"
+                      : "Non renseigné"}
+              </li>
               <li>Surface : {user.individualProfile.surface ?? "?"} m²</li>
               <li>Jardin : {user.individualProfile.haveGarden ? "Oui" : "Non"}</li>
               <li>Animaux : {user.individualProfile.haveAnimals ? "Oui" : "Non"}</li>

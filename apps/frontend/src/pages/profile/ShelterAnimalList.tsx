@@ -1,8 +1,9 @@
-import { Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { animalApi } from "../../api/animalApi";
+import { extractErrorMessage } from "../../api/api";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
@@ -22,26 +23,20 @@ export default function ShelterAnimalList() {
   const { animals, setAnimals, loading } = useShelterAnimals(id);
 
   const [actionToConfirm, setActionToConfirm] = useState<{
-    type: "delete" | "restore";
     id: number;
   } | null>(null);
 
   const handleConfirmAction = async () => {
     if (!actionToConfirm) return;
-    const { type, id: animalId } = actionToConfirm;
+    const { id: animalId } = actionToConfirm;
 
     try {
-      if (type === "delete") {
-        await animalApi.deleteAnimal(animalId);
-        setAnimals(animals.map((a) => (a.id === animalId ? { ...a, deletedAt: new Date() } : a)));
-        toast.success("Animal supprimé");
-      } else {
-        await animalApi.updateAnimal(animalId, { deletedAt: null });
-        setAnimals(animals.map((a) => (a.id === animalId ? { ...a, deletedAt: null } : a)));
-        toast.success("Animal restauré");
-      }
-    } catch (_error) {
-      toast.error("Erreur lors de l'opération");
+      await animalApi.deleteAnimal(animalId);
+      setAnimals(animals.map((a) => (a.id === animalId ? { ...a, deletedAt: new Date() } : a)));
+      toast.success("Animal supprimé");
+    } catch (error: unknown) {
+      const message = extractErrorMessage(error, "Erreur lors de la suppression");
+      toast.error(message);
     }
     setActionToConfirm(null);
   };
@@ -51,7 +46,7 @@ export default function ShelterAnimalList() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800 font-montserrat">Gestion des Animaux</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Gestion des Animaux</h1>
       </div>
 
       {/* Tableau */}
@@ -102,29 +97,18 @@ export default function ShelterAnimalList() {
                       <Pencil className="w-5 h-5" />
                     </Link>
 
-                    {animal.deletedAt ? (
-                      <Button
-                        variant="ghost"
-                        onClick={() =>
-                          animal.id && setActionToConfirm({ type: "restore", id: animal.id })
-                        }
-                        className="text-primary hover:text-primary p-2"
-                        title="Restaurer"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        onClick={() =>
-                          animal.id && setActionToConfirm({ type: "delete", id: animal.id })
-                        }
-                        className="text-gray-400 hover:text-error p-2"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </Button>
-                    )}
+                    {!animal.deletedAt &&
+                      animal.animalStatus !== "adopted" &&
+                      animal.animalStatus !== "foster_care" && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => animal.id && setActionToConfirm({ id: animal.id })}
+                          className="text-gray-400 hover:text-error p-2"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      )}
                   </td>
                 </tr>
               ))
@@ -143,13 +127,9 @@ export default function ShelterAnimalList() {
         isOpen={!!actionToConfirm}
         onClose={() => setActionToConfirm(null)}
         onConfirm={handleConfirmAction}
-        title={actionToConfirm?.type === "delete" ? "Supprimer l'animal ?" : "Restaurer l'animal ?"}
-        message={
-          actionToConfirm?.type === "delete"
-            ? "Cette action placera l'animal dans la corbeille."
-            : "L'animal sera de nouveau visible."
-        }
-        variant={actionToConfirm?.type === "delete" ? "danger" : "info"}
+        title="Supprimer l'animal ?"
+        message="Cette action est définitive. L'animal ne sera plus visible publiquement et toutes les candidatures en attente seront automatiquement refusées."
+        variant="danger"
       />
     </div>
   );
