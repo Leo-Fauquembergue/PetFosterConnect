@@ -58,13 +58,23 @@ cp apps/backend/.env.example apps/backend/.env
 # Éditer apps/backend/.env si nécessaire
 ```
 
-Exemple de configuration minimale dans `apps/backend/.env` :
+Exemple de configuration dans `apps/backend/.env` :
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/petfosterconnect?schema=public"
 PORT=3001
 JWT_SECRET="votre_secret_jwt_a_changer"
 FRONTEND_URL="http://localhost:5173"
+
+# Emails (Configurable via SMTP)
+SMTP_HOST=smtp.ethereal.email
+SMTP_PORT=587
+SMTP_USER=votre_utilisateur
+SMTP_PASS=votre_mot_de_passe
+SMTP_FROM="PetFosterConnect <no-reply@petfosterconnect.com>"
+
+# Sécurité Cookies
+COOKIE_DOMAIN=".petfosterconnect.com" # Optionnel
 ```
 
 ### 5. Initialiser Prisma
@@ -121,6 +131,7 @@ npm run lint             # Vérifier le linting avec Biome
 npm run test             # Lancer tous les tests (BE & FE)
 npm run test:backend     # Lancer les tests backend
 npm run test:frontend    # Lancer les tests frontend
+npm run test:e2e         # Lancer les tests de bout en bout (Backend)
 ```
 
 ### Scripts Docker
