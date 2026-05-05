@@ -36,15 +36,12 @@ export default function BookmarksPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Mes favoris</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Mes favoris</h1>
       {bookmarks.length === 0 && (
-        <div className="flex flex-col items-center justify-center min-h-[300px] bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center mt-6">
+        <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-lg shadow-sm border border-gray-100 mt-6">
           <span className="text-4xl mb-4">❤️</span>
-          <p className="text-gray-600 text-lg font-medium">
+          <p className="text-gray-500 text-lg font-medium">
             Vous n'avez aucun favori pour le moment.
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            Parcourez les animaux à l'adoption pour trouver votre futur compagnon !
           </p>
         </div>
       )}

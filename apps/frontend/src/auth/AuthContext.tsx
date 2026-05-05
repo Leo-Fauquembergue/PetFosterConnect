@@ -7,8 +7,16 @@ interface AuthContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
   logout: () => Promise<void>;
-  login: (credentials: LoginDto) => Promise<void>;
-  register: (data: RegisterDto) => Promise<void>;
+  login: (credentials: LoginDto) => Promise<{
+    access_token: string;
+    user: UserWithProfiles;
+    csrfToken: string;
+  }>;
+  register: (data: RegisterDto) => Promise<{
+    access_token: string;
+    user: UserWithProfiles;
+    csrfToken: string;
+  }>;
   user: UserWithProfiles | null; // ⚡ Utilisation du type étendu
   setUser: (user: UserWithProfiles | null) => void;
   isLoading: boolean;
@@ -42,12 +50,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const res = await authApi.login(credentials);
     setUser(res.user);
     setIsLoggedIn(true);
+    return res;
   };
 
   const register = async (data: RegisterDto) => {
     const res = await authApi.register(data);
     setUser(res.user);
     setIsLoggedIn(true);
+    return res;
   };
 
   const logout = async () => {

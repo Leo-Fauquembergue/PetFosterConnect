@@ -11,22 +11,43 @@ export const api = axios.create({
 export function extractErrorMessage(error: unknown, defaultMessage: string): string {
   if (axios.isAxiosError(error)) {
     const errorData = error.response?.data as Record<string, unknown> | undefined;
+
+    // 1. Message direct (priorité)
     const message = errorData?.message;
+    if (typeof message === "string" && message !== "Validation failed") return message;
 
-    if (typeof message === "string") return message;
-
+    // 2. Erreurs Zod imbriquées
     if (message && typeof message === "object" && "errors" in message) {
-      const errObj = message as { errors?: { message?: string } };
-      if (errObj.errors?.message) {
+      const errObj = message as { errors?: string | { message?: string }[] | { message?: string } };
+      let rawErrors = errObj.errors;
+
+      // Cas spécifique : errors.message (utilisé dans certains tests)
+      if (
+        rawErrors &&
+        typeof rawErrors === "object" &&
+        !Array.isArray(rawErrors) &&
+        "message" in rawErrors
+      ) {
+        rawErrors = rawErrors.message;
+      }
+
+      if (typeof rawErrors === "string") {
         try {
-          const parsedZodError = JSON.parse(errObj.errors.message);
-          if (Array.isArray(parsedZodError) && parsedZodError[0]?.message) {
-            return parsedZodError[0].message;
-          }
+          const parsed = JSON.parse(rawErrors) as { message?: string }[];
+          if (Array.isArray(parsed) && parsed[0]?.message) return parsed[0].message;
         } catch (_e) {}
+      } else if (Array.isArray(rawErrors) && rawErrors[0]?.message) {
+        return rawErrors[0].message;
       }
     }
 
+    // 3. Erreurs Zod directement dans 'errors'
+    const errors = errorData?.errors;
+    if (Array.isArray(errors) && (errors[0] as { message?: string })?.message) {
+      return (errors[0] as { message?: string }).message as string;
+    }
+
+    // 4. Propriété 'error' alternative
     if (typeof errorData?.error === "string") {
       return errorData.error;
     }

@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  type UpdateUserDto,
+  UpdateUserSchema,
   type UpdateUserWithIndividualProfileDto,
   UpdateUserWithIndividualProfileSchema,
   type UpdateUserWithShelterProfileDto,
@@ -15,6 +17,7 @@ import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
 import { useAuth } from "../../auth/AuthContext";
 import UserCard from "../../components/cards/UserCard";
+import AdminProfileForm from "../../components/profile/AdminProfileForm";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
@@ -29,12 +32,14 @@ export default function UserProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getResolver = () => {
+    if (user?.role === UserRole.individual) return UpdateUserWithIndividualProfileSchema;
+    if (user?.role === UserRole.shelter) return UpdateUserWithShelterProfileSchema;
+    return UpdateUserSchema;
+  };
+
   const methods = useForm({
-    resolver: zodResolver(
-      user?.role === UserRole.individual
-        ? UpdateUserWithIndividualProfileSchema
-        : UpdateUserWithShelterProfileSchema
-    ),
+    resolver: zodResolver(getResolver()),
     defaultValues: formData,
   });
 
@@ -51,7 +56,7 @@ export default function UserProfilePage() {
   if (!user) return <p>Utilisateur introuvable</p>;
 
   const onSubmit = async (
-    data: UpdateUserWithIndividualProfileDto | UpdateUserWithShelterProfileDto
+    data: UpdateUserWithIndividualProfileDto | UpdateUserWithShelterProfileDto | UpdateUserDto
   ) => {
     setIsSubmitting(true);
 
@@ -63,10 +68,16 @@ export default function UserProfilePage() {
           user.id as number,
           data as UpdateUserWithIndividualProfileDto
         )) as UserWithProfiles;
-      } else {
+      } else if (user.role === UserRole.shelter) {
         updatedUser = (await userApi.updateShelterProfile(
           user.id as number,
           data as UpdateUserWithShelterProfileDto
+        )) as UserWithProfiles;
+      } else {
+        // Pour Admin, on utilise une mise à jour utilisateur simple (email, tel, adresse)
+        updatedUser = (await userApi.updateIndividualProfile(
+          user.id as number,
+          data as UpdateUserWithIndividualProfileDto
         )) as UserWithProfiles;
       }
 
@@ -89,34 +100,44 @@ export default function UserProfilePage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg">
+    <div className="max-w-3xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Mon Profil</h1>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         {!isEditing ? (
           <>
             <UserCard user={user} />
-            <Button variant="primary" onClick={() => setIsEditing(true)} className="mt-4">
-              Modifier
+            <Button variant="primary" onClick={() => setIsEditing(true)} className="mt-6">
+              Modifier mes informations
             </Button>
 
-            <div className="mt-6 border-t pt-4">
-              <h2 className="text-lg font-semibold">Modifier le mot de passe</h2>
+            <div className="mt-8 pt-8 border-t border-gray-100">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Sécurité</h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Modifier votre mot de passe pour sécuriser votre compte.
+              </p>
               <PasswordForm userId={user.id as number} />
             </div>
           </>
         ) : (
           <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Modifier le profil</h2>
+              </div>
               {user.role === UserRole.individual ? (
                 <IndividualProfileForm />
-              ) : (
+              ) : user.role === UserRole.shelter ? (
                 <ShelterProfileForm siret={user.shelterProfile?.siret} />
+              ) : (
+                <AdminProfileForm />
               )}
-              <div className="flex justify-between gap-4">
+              <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">
                 <Button variant="neutral" onClick={() => setIsEditing(false)}>
                   Annuler
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="flex-grow">
-                  {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
+                <Button type="submit" disabled={isSubmitting} className="px-8">
+                  {isSubmitting ? "Enregistrement..." : "Sauvegarder les modifications"}
                 </Button>
               </div>
             </form>

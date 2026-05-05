@@ -21,6 +21,13 @@ vi.mock("./api/animalApi", () => ({
   },
 }));
 
+vi.mock("./api/applicationApi", () => ({
+  applicationApi: {
+    getReceivedApplications: vi.fn().mockResolvedValue([]),
+    getSentApplications: vi.fn().mockResolvedValue([]),
+  },
+}));
+
 describe("App - Routing & Security", () => {
   it("doit rediriger vers /connexion si l'utilisateur n'est pas authentifié sur une route protégée", async () => {
     vi.mocked(authApi.getMe).mockRejectedValueOnce(new Error("Unauthorized"));
@@ -60,7 +67,7 @@ describe("App - Routing & Security", () => {
   });
 
   it("doit autoriser l'accès à /admin pour un administrateur", async () => {
-    vi.mocked(authApi.getMe).mockResolvedValueOnce({
+    vi.mocked(authApi.getMe).mockResolvedValue({
       id: 1,
       role: UserRole.admin,
       email: "admin@test.com",
@@ -75,7 +82,51 @@ describe("App - Routing & Security", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Tableau de Bord/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /Tableau de Bord/i, level: 1 })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("doit bloquer l'accès aux demandes reçues pour un utilisateur 'individual'", async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue({
+      id: 1,
+      role: UserRole.individual,
+      email: "user@test.com",
+    } as unknown as import("@projet/shared-types").UserWithProfiles);
+
+    render(
+      <MemoryRouter initialEntries={["/utilisateur/1/demandes-recues"]}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Accès interdit/i)).toBeInTheDocument();
+    });
+  });
+
+  it("doit autoriser l'accès aux demandes reçues pour un refuge", async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue({
+      id: 2,
+      role: UserRole.shelter,
+      email: "shelter@test.com",
+    } as unknown as import("@projet/shared-types").UserWithProfiles);
+
+    render(
+      <MemoryRouter initialEntries={["/utilisateur/2/demandes-recues"]}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /Demandes reçues/i, level: 1 })
+      ).toBeInTheDocument();
     });
   });
 

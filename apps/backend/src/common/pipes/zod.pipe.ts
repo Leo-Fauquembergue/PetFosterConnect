@@ -1,5 +1,5 @@
 import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from "@nestjs/common";
-import { ZodType } from "zod";
+import { ZodError, ZodType } from "zod";
 
 @Injectable()
 export class ZodPipe implements PipeTransform {
@@ -15,6 +15,14 @@ export class ZodPipe implements PipeTransform {
     try {
       return this.schema.parse(value);
     } catch (error) {
+      if (error instanceof ZodError) {
+        // On extrait le premier message pour une erreur claire côté client
+        const firstMessage = error.issues[0]?.message || "Validation failed";
+        throw new BadRequestException({
+          message: firstMessage,
+          errors: error.issues,
+        });
+      }
       throw new BadRequestException({
         message: "Validation failed",
         errors: error,

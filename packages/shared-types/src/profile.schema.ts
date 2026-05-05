@@ -1,16 +1,23 @@
 import { z } from "zod";
 
 // ENUM
-export const HousingTypeEnum = z.enum(["house", "apartment", "other"]);
+export const HousingTypeEnum = z.enum(["house", "apartment", "other"], {
+  error: "Type de logement invalide",
+});
 export type HousingType = z.infer<typeof HousingTypeEnum>;
 
 // PROFIL PARTICULIER (Individual)
 export const IndividualProfileSchema = z.object({
-  pfcUserId: z.int().positive(), // Clé étrangère = Clé Primaire (1-1)
+  pfcUserId: z.number().int().positive(), // Clé étrangère = Clé Primaire (1-1)
 
   // Critères de logement
   housingType: HousingTypeEnum.nullable().optional(),
-  surface: z.int().positive().nullable().optional(), // En m²
+  surface: z
+    .number({ error: "La surface doit être un nombre" })
+    .int()
+    .positive({ error: "La surface doit être positive" })
+    .nullable()
+    .optional(), // En m²
 
   // Critères de matching (Booléens)
   haveGarden: z.boolean().default(false),
@@ -38,17 +45,19 @@ export type UpdateIndividualProfileDto = z.infer<typeof UpdateIndividualProfileS
 
 // PROFIL REFUGE (Shelter)
 export const ShelterProfileSchema = z.object({
-  pfcUserId: z.int().positive(), // Clé étrangère = Clé Primaire (1-1)
+  pfcUserId: z.number().int().positive(), // Clé étrangère = Clé Primaire (1-1)
 
-  siret: z.string().length(14, { error: "Le SIRET doit faire exactement 14 caractères" }),
-  shelterName: z.string().min(2).max(100),
+  siret: z
+    .string()
+    .length(14, { error: "Le SIRET doit faire exactement 14 chiffres" })
+    .regex(/^[0-9]+$/, { error: "Le SIRET ne doit contenir que des chiffres" }),
+  shelterName: z.string().min(2, { error: "Le nom du refuge est trop court" }).max(100),
   description: z.string().nullable().optional(),
-  logo: z.url().nullable().optional(),
+  logo: z.url({ error: "URL du logo invalide" }).nullable().optional(),
 
   createdAt: z.date(),
   updatedAt: z.date().nullable().optional(),
 });
-
 export type ShelterProfile = z.infer<typeof ShelterProfileSchema>;
 
 // DTO : Création (Front -> Back)

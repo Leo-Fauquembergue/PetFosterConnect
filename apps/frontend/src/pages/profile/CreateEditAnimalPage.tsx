@@ -102,50 +102,56 @@ export default function AnimalForm() {
   };
 
   return (
-    <div className="bg-bgapp font-openSans text-gray-800">
-      <main className="container mx-auto px-4 py-8 flex-grow">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
-        >
-          {/* SECTION PHOTOS */}
-          <div className="space-y-4">
-            <AnimalPreview control={control} />
-            <div>
-              <Input
-                label="Photos (URLs séparées par des virgules)"
-                {...register("photos", {
-                  setValueAs: (v: string | string[]) => {
-                    if (Array.isArray(v)) return v;
-                    return v
-                      .split(",")
-                      .map((url) => url.trim())
-                      .filter(Boolean);
-                  },
-                })}
-                defaultValue={animal?.photos?.join(", ") ?? ""}
-                error={errors.photos?.message}
-                className="w-full"
-              />
-            </div>
+    <div className="max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800">
+        {animal ? "Modifier l'animal" : "Ajouter un nouvel animal"}
+      </h1>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
+      >
+        {/* SECTION PHOTOS */}
+        <div className="space-y-6">
+          <AnimalPreview control={control} />
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Photos</h2>
+            <Input
+              label="Photos (URLs séparées par des virgules)"
+              {...register("photos", {
+                setValueAs: (v: string | string[]) => {
+                  if (Array.isArray(v)) return v;
+                  return v
+                    .split(",")
+                    .map((url) => url.trim())
+                    .filter(Boolean);
+                },
+              })}
+              defaultValue={animal?.photos?.join(", ") ?? ""}
+              error={errors.photos?.message}
+              className="w-full"
+            />
           </div>
+        </div>
 
-          {/* SECTION INFORMATIONS */}
-          <div className="bg-gray-100 p-8 rounded-lg shadow-sm text-left flex flex-col items-start h-full">
-            {/* Infos générales */}
-            <div className="mb-6 w-full space-y-4">
-              <h2 className="text-xl font-bold text-success mb-2">
-                {animal ? "Modifier l'animal" : "Créer un nouvel animal"}
-              </h2>
+        {/* SECTION INFORMATIONS */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 flex flex-col items-start">
+          {/* Infos générales */}
+          <div className="mb-8 w-full space-y-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">
+              {" "}
+              Informations générales
+            </h2>
 
-              <Input
-                label="Nom de l'animal"
-                type="text"
-                placeholder="Ex: Rex"
-                {...register("name")}
-                error={errors.name?.message}
-              />
+            <Input
+              label="Nom de l'animal"
+              type="text"
+              placeholder="Ex: Rex"
+              {...register("name")}
+              error={errors.name?.message}
+            />
 
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Âge"
                 type="text"
@@ -159,13 +165,15 @@ export default function AnimalForm() {
                 <option value="female">Femelle</option>
                 <option value="unknown">Inconnu</option>
               </Select>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <Select
                 label="Espèce"
                 {...register("speciesId", { valueAsNumber: true })}
                 error={errors.speciesId?.message}
               >
-                <option value="">-- Sélectionner une espèce --</option>
+                <option value="">-- Sélectionner --</option>
                 {species.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -180,14 +188,18 @@ export default function AnimalForm() {
               >
                 <option value="available">Disponible</option>
                 <option value="adopted">Adopté</option>
-                <option value="foster_care">Famille d'accueil</option>
+                <option value="foster_care">En famille d'accueil</option>
                 <option value="unavailable">Indisponible</option>
               </Select>
             </div>
+          </div>
 
-            {/* Caractéristiques physiques */}
-            <div className="mb-6 w-full space-y-4">
-              <h2 className="text-xl font-bold text-success mb-2">Caractéristiques physiques</h2>
+          {/* Caractéristiques physiques */}
+          <div className="mb-8 w-full space-y-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">
+              Caractéristiques physiques
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Poids (kg)"
                 type="number"
@@ -209,63 +221,70 @@ export default function AnimalForm() {
                 error={errors.height?.message}
               />
             </div>
+          </div>
 
-            {/* Compatibilité */}
-            <div className="mb-6 w-full">
-              <h2 className="text-xl font-bold text-success mb-2">Compatibilité</h2>
-              <div className="flex flex-wrap gap-4 mt-2">
-                <Checkbox
-                  label="Ok enfants"
-                  {...register("acceptChildren")}
-                  error={errors.acceptChildren?.message}
-                />
-                <Checkbox
-                  label="Ok autres animaux"
-                  {...register("acceptOtherAnimals")}
-                  error={errors.acceptOtherAnimals?.message}
-                />
-                <Checkbox
-                  label="Besoin de jardin"
-                  {...register("needGarden")}
-                  error={errors.needGarden?.message}
-                />
-              </div>
-            </div>
-
-            {/* Santé */}
-            <div className="mb-6 w-full space-y-4">
-              <h2 className="text-xl font-bold text-success mb-2">Soins & Traitements</h2>
-              <Input
-                label="Traitement médical"
-                type="text"
-                placeholder="Ex: Aucun ou nom du traitement"
-                {...register("treatment")}
-                error={errors.treatment?.message}
+          {/* Compatibilité */}
+          <div className="mb-8 w-full">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">
+              Compatibilité
+            </h2>
+            <div className="flex flex-wrap gap-6 mt-2">
+              <Checkbox
+                label="Ok enfants"
+                {...register("acceptChildren")}
+                error={errors.acceptChildren?.message}
               />
-            </div>
-
-            {/* Description */}
-            <div className="mb-6 w-full space-y-4">
-              <h2 className="text-xl font-bold text-success mb-2">Description</h2>
-              <Textarea
-                label="Description détaillée"
-                {...register("description")}
-                error={errors.description?.message}
+              <Checkbox
+                label="Ok autres animaux"
+                {...register("acceptOtherAnimals")}
+                error={errors.acceptOtherAnimals?.message}
               />
-            </div>
-
-            {/* Boutons */}
-            <div className="border-t-2 border-gray-300 pt-6 flex justify-between w-full mt-auto">
-              <Button type="button" variant="neutral" onClick={() => navigate(-1)}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-              </Button>
+              <Checkbox
+                label="Besoin de jardin"
+                {...register("needGarden")}
+                error={errors.needGarden?.message}
+              />
             </div>
           </div>
-        </form>
-      </main>
+
+          {/* Santé */}
+          <div className="mb-8 w-full space-y-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">
+              Soins & Traitements
+            </h2>
+            <Input
+              label="Traitement médical"
+              type="text"
+              placeholder="Ex: Aucun ou nom du traitement"
+              {...register("treatment")}
+              error={errors.treatment?.message}
+            />
+          </div>
+
+          {/* Description */}
+          <div className="mb-8 w-full space-y-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">
+              Description
+            </h2>
+            <Textarea
+              label="Description détaillée"
+              rows={4}
+              {...register("description")}
+              error={errors.description?.message}
+            />
+          </div>
+
+          {/* Boutons */}
+          <div className="pt-8 flex justify-between gap-4 w-full mt-auto border-t border-gray-100">
+            <Button type="button" variant="neutral" onClick={() => navigate(-1)}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="px-10">
+              {isSubmitting ? "Enregistrement..." : "Enregistrer l'animal"}
+            </Button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 }

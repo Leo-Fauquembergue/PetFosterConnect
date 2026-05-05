@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { UIAnimal } from "../../api/mappers/animalMapper";
 import Badge from "../ui/Badge";
@@ -43,7 +44,7 @@ const AnimalCard = ({ animal, variant = "default" }: AnimalCardProps) => {
             <span className="text-primary font-semibold text-sm group-hover:underline decoration-2 underline-offset-4">
               Voir le profil
             </span>
-            <span className="text-gray-300">→</span>
+            <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </div>
       </Link>
@@ -84,7 +85,7 @@ const AnimalCard = ({ animal, variant = "default" }: AnimalCardProps) => {
           <span className="text-primary font-semibold text-sm group-hover:underline decoration-2 underline-offset-4">
             Plus d'infos
           </span>
-          <span className="text-gray-300">→</span>
+          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
         </div>
       </div>
     </Link>

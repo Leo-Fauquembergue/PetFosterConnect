@@ -1,10 +1,19 @@
-import { Body, Controller, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Post, UseGuards, UsePipes } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "@prisma/client";
+import { z } from "zod";
 import { Roles } from "../auth/decorators/roles.decorators";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { ZodPipe } from "../common/pipes/zod.pipe";
 import { EmailsService } from "./emails.service";
+
+const SendEmailSchema = z.object({
+  to: z.string().email(),
+  subject: z.string().min(1),
+  text: z.string().min(1),
+  html: z.string().min(1),
+});
 
 @ApiTags("emails")
 @Controller("emails")
@@ -49,6 +58,7 @@ export class EmailsController {
     status: 500,
     description: "Erreur lors de l'envoi de l'email",
   })
+  @UsePipes(new ZodPipe(SendEmailSchema))
   async sendTestEmail(@Body() body: { to: string; subject: string; text: string; html: string }) {
     const result = await this.emailsService.sendMail(body.to, body.subject, body.text, body.html);
 

@@ -1,4 +1,4 @@
-import { UnauthorizedException, ValidationPipe } from "@nestjs/common";
+import { UnauthorizedException } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
@@ -62,15 +62,6 @@ async function bootstrap() {
 
   // 🛡️ SÉCURITÉ : Application du filtre global d'exceptions
   app.useGlobalFilters(new AllExceptionsFilter());
-
-  // VALIDATION DES DONNÉES
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // Nettoie les champs non prévus
-      forbidNonWhitelisted: true, // Rejette si des champs inconnus sont envoyés
-      transform: true, // Convertit les types automatiquement (ex: id string -> number)
-    })
-  );
 
   await app.listen(process.env.PORT ?? 3001);
 }

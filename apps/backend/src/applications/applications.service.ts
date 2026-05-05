@@ -1,4 +1,10 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import {
   ApplicationStatus,
@@ -187,22 +193,24 @@ export class ApplicationsService {
   }
 
   async remove(candidateId: number, animalId: number) {
-    const animal = await this.prisma.animal.findUnique({ where: { id: animalId } });
-
-    if (!animal || animal.deletedAt) throw new NotFoundException("Animal introuvable ou supprimé");
-
-    const updateResult = await this.prisma.application.updateMany({
-      where: {
-        pfcUserId: candidateId,
-        animalId: animalId,
-        deletedAt: null,
-      },
-      data: { deletedAt: new Date() },
+    const application = await this.prisma.application.findUnique({
+      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
     });
 
-    if (updateResult.count === 0) {
+    if (!application || application.deletedAt) {
       throw new NotFoundException("Demande introuvable ou déjà supprimée.");
     }
+
+    if (application.applicationStatus === "pending") {
+      throw new BadRequestException(
+        "Impossible d'archiver une demande en attente. Veuillez l'accepter ou la refuser d'abord."
+      );
+    }
+
+    await this.prisma.application.update({
+      where: { pfcUserId_animalId: { pfcUserId: candidateId, animalId: animalId } },
+      data: { deletedAt: new Date() },
+    });
 
     return { message: "Demande archivée/supprimée avec succès" };
   }

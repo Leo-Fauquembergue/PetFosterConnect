@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { applicationApi } from "../../api/applicationApi";
 import Button from "../../components/ui/Button";
+import CompatibilityBadge from "../../components/ui/CompatibilityBadge";
 import Loader from "../../components/ui/Loader";
 import { useApplicationsReceived } from "../../hooks/useApplicationsReceived";
 
@@ -26,12 +27,12 @@ export default function ApplicationsReceived() {
 
       if (status === "approved") {
         toast.success(
-          `✅ Candidature acceptée pour ${candidateEmail}. Un email de confirmation a été envoyé !`,
+          `Candidature acceptée pour ${candidateEmail}. Un email de confirmation a été envoyé !`,
           { autoClose: 4000 }
         );
       } else {
         toast.error(
-          `❌ Candidature refusée pour ${candidateEmail}. Un email de notification a été envoyé.`,
+          `Candidature refusée pour ${candidateEmail}. Un email de notification a été envoyé.`,
           { autoClose: 4000 }
         );
       }
@@ -76,7 +77,7 @@ export default function ApplicationsReceived() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Demandes reçues</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Demandes reçues</h1>
 
       {applications.length === 0 && (
         <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-lg shadow-sm border border-gray-100 mt-6">
@@ -111,11 +112,45 @@ export default function ApplicationsReceived() {
               </div>
 
               <div className="mt-4 bg-gray-50 p-3 rounded">
-                <h3 className="font-semibold">Candidat</h3>
-                {/* ⚡ CORRECTION : Utilisation de l'email car firstname/lastname n'existent pas dans Prisma */}
+                <h3 className="font-semibold mb-2">Candidat</h3>
                 <p>{app.user?.email}</p>
                 {app.user?.phoneNumber && (
-                  <p className="text-sm text-gray-500">{app.user.phoneNumber}</p>
+                  <p className="text-sm text-gray-500 mb-2">{app.user.phoneNumber}</p>
+                )}
+
+                {/* Badges de profil du candidat (uniquement si en attente) */}
+                {app.applicationStatus === "pending" && app.user?.individualProfile && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <CompatibilityBadge
+                      label={
+                        app.user.individualProfile.housingType === "house"
+                          ? "Maison"
+                          : app.user.individualProfile.housingType === "apartment"
+                            ? "Appartement"
+                            : "Autre"
+                      }
+                      isCompatible={true}
+                    />
+                    <CompatibilityBadge
+                      label={app.user.individualProfile.haveGarden ? "Jardin" : "Pas de jardin"}
+                      isCompatible={app.user.individualProfile.haveGarden}
+                    />
+                    <CompatibilityBadge
+                      label={
+                        app.user.individualProfile.haveAnimals ? "A des animaux" : "Pas d'animaux"
+                      }
+                      isCompatible={!app.user.individualProfile.haveAnimals} // On met en rouge si a déjà des animaux (attention requise)
+                    />
+                    <CompatibilityBadge
+                      label={
+                        app.user.individualProfile.haveChildren ? "A des enfants" : "Pas d'enfants"
+                      }
+                      isCompatible={!app.user.individualProfile.haveChildren} // On met en rouge si a des enfants (attention requise)
+                    />
+                  </div>
+                )}
+                {app.applicationStatus === "pending" && !app.user?.individualProfile && (
+                  <p className="text-xs text-gray-400 italic mt-2">Profil non renseigné</p>
                 )}
               </div>
 
@@ -164,8 +199,13 @@ export default function ApplicationsReceived() {
                 )}
                 <Button
                   variant="neutral"
-                  disabled={isProcessing}
+                  disabled={isProcessing || app.applicationStatus === "pending"}
                   onClick={() => handleArchive(app.pfcUserId, app.animalId)}
+                  title={
+                    app.applicationStatus === "pending"
+                      ? "Veuillez accepter ou refuser avant d'archiver"
+                      : "Archiver la demande"
+                  }
                 >
                   {isProcessing ? "Traitement..." : "Archiver"}
                 </Button>

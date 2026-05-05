@@ -1,9 +1,10 @@
-import { type UpdateUserDto, UserRole } from "@projet/shared-types";
-import { RotateCcw, Search, Trash2 } from "lucide-react";
+import { UserRole } from "@projet/shared-types";
+import { Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
+import { useAuth } from "../../auth/AuthContext";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
@@ -11,15 +12,13 @@ import Loader from "../../components/ui/Loader";
 import { useAdminUsers } from "../../hooks/useAdminUsers";
 
 export default function AdminUsers() {
+  const { user: currentUser } = useAuth();
   const { users, setUsers, loading } = useAdminUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
   // État modale
-  const [actionToConfirm, setActionToConfirm] = useState<{
-    type: "delete" | "restore";
-    id: number;
-  } | null>(null);
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
   // LOGIQUE DE FILTRAGE
   const filteredUsers = users.filter((user) => {
@@ -29,30 +28,21 @@ export default function AdminUsers() {
   });
 
   // Action
-  const handleConfirmAction = async () => {
-    if (!actionToConfirm) return;
-    const { type, id } = actionToConfirm;
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
 
     try {
-      if (type === "delete") {
-        await userApi.deleteUser(id);
-        setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: new Date() } : u)));
-        toast.success("Utilisateur supprimé et anonymisé");
-      } else {
-        await userApi.updateUser(id, { deletedAt: null } as Partial<UpdateUserDto> & {
-          deletedAt: null;
-        });
-        setUsers(users.map((u) => (u.id === id ? { ...u, deletedAt: null } : u)));
-        toast.success("Utilisateur restauré");
-      }
+      await userApi.deleteUser(userToDelete);
+      setUsers(users.map((u) => (u.id === userToDelete ? { ...u, deletedAt: new Date() } : u)));
+      toast.success("Compte supprimé et anonymisé avec succès");
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(
         error,
-        "Une erreur est survenue lors de l'opération."
+        "Une erreur est survenue lors de la suppression."
       );
       toast.error(errorMessage);
     } finally {
-      setActionToConfirm(null);
+      setUserToDelete(null);
     }
   };
 
@@ -116,7 +106,13 @@ export default function AdminUsers() {
                   <td className="px-6 py-4 font-medium text-gray-900">{user.email}</td>
                   <td className="px-6 py-4">
                     <Badge
-                      label={user.role}
+                      label={
+                        user.role === UserRole.admin
+                          ? "Administrateur"
+                          : user.role === UserRole.shelter
+                            ? "Refuge"
+                            : "Particulier"
+                      }
                       className={
                         user.role === UserRole.admin
                           ? "text-admin"
@@ -131,34 +127,23 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-6 py-4">
                     <Badge
-                      label={user.deletedAt ? "Banni" : "Actif"}
+                      label={user.deletedAt ? "Supprimé" : "Actif"}
                       variant={user.deletedAt ? "error" : "success"}
                     />
                   </td>
                   <td className="px-6 py-4 text-right flex justify-end gap-2">
-                    {user.deletedAt ? (
+                    {user.id !== currentUser?.id && !user.deletedAt ? (
                       <Button
                         variant="ghost"
-                        onClick={() =>
-                          user.id && setActionToConfirm({ type: "restore", id: user.id })
-                        }
-                        className="text-primary hover:text-primary p-2"
-                        title="Restaurer l'utilisateur"
-                      >
-                        <RotateCcw className="w-4 h-4" /> Restaurer
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        onClick={() =>
-                          user.id && setActionToConfirm({ type: "delete", id: user.id })
-                        }
+                        onClick={() => user.id && setUserToDelete(user.id)}
                         className="text-gray-400 hover:text-error p-2"
-                        title="Bannir l'utilisateur"
+                        title="Supprimer l'utilisateur"
                       >
                         <Trash2 className="w-5 h-5" />
                       </Button>
-                    )}
+                    ) : user.id === currentUser?.id ? (
+                      <span className="text-xs text-gray-400 italic px-2">Vous-même</span>
+                    ) : null}
                   </td>
                 </tr>
               ))
@@ -174,19 +159,11 @@ export default function AdminUsers() {
       </div>
 
       <ConfirmationModal
-        isOpen={!!actionToConfirm}
-        onClose={() => setActionToConfirm(null)}
-        onConfirm={handleConfirmAction}
-        title={
-          actionToConfirm?.type === "delete"
-            ? "Supprimer et anonymiser l'utilisateur ?"
-            : "Restaurer l'utilisateur ?"
-        }
-        message={
-          actionToConfirm?.type === "delete"
-            ? "Cette action est irréversible et conforme au RGPD. Les données personnelles seront effacées."
-            : "L'utilisateur retrouvera l'accès à son compte."
-        }
+        isOpen={userToDelete !== null}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleDeleteUser}
+        title="Supprimer et anonymiser l'utilisateur ?"
+        message="Cette action est irréversible et conforme au RGPD. Les données personnelles seront effacées définitivement."
       />
     </div>
   );

@@ -167,16 +167,18 @@ export default function AnimalDetail() {
                 alt={animal.name}
                 className="w-full h-full object-cover transition-all duration-500"
               />
-              <button
-                className="absolute top-4 right-4 bg-white/90 p-3 rounded-full hover:bg-white transition shadow-md group no-print"
-                type="button"
-                onClick={handleToggleFavorite}
-                aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-              >
-                <Heart
-                  className={`w-7 h-7 transition-all duration-300 ${isFavorite ? "fill-error text-error scale-110" : "text-gray-400 group-hover:text-error"}`}
-                />
-              </button>
+              {user?.role === UserRole.individual && (
+                <button
+                  className="absolute top-4 right-4 bg-white/90 p-3 rounded-full hover:bg-white transition shadow-md group no-print"
+                  type="button"
+                  onClick={handleToggleFavorite}
+                  aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                >
+                  <Heart
+                    className={`w-7 h-7 transition-all duration-300 ${isFavorite ? "fill-error text-error scale-110" : "text-gray-400 group-hover:text-error"}`}
+                  />
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-4 gap-4 no-print">
@@ -207,7 +209,7 @@ export default function AnimalDetail() {
               ) : animal.animalStatus === "foster_care" ? (
                 <Badge label="En famille d'accueil" variant="warning" />
               ) : (
-                <Badge label="Non disponible" variant="error" />
+                <Badge label="Indisponible" variant="error" />
               )}
             </div>
 
@@ -221,7 +223,7 @@ export default function AnimalDetail() {
                 </li>
                 <li>
                   <span className="font-semibold">Sexe :</span>{" "}
-                  {animal.sex === "male" ? "Mâle" : "Femelle"}
+                  {animal.sex === "male" ? "Mâle" : animal.sex === "female" ? "Femelle" : "Inconnu"}
                 </li>
                 <li>
                   <span className="font-semibold">Taille :</span> {animal.height} cm
@@ -297,7 +299,17 @@ export default function AnimalDetail() {
               ) : animal.animalStatus === "available" ? (
                 (effectiveStatus === "cancelled" || !effectiveStatus) && (
                   <>
-                    {matchingResult.shouldWarn && (
+                    {!user && (
+                      <div className="mb-4 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center space-y-4">
+                        <p className="text-gray-700 font-medium">
+                          Vous souhaitez offrir un foyer à {animal.name} ?
+                        </p>
+                        <Button variant="primary" fullWidth onClick={() => navigate("/connexion")}>
+                          Connectez-vous pour postuler
+                        </Button>
+                      </div>
+                    )}
+                    {user?.role === UserRole.individual && matchingResult.shouldWarn && (
                       <div className="mb-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-lg shadow-sm">
                         <div className="flex items-center gap-2 text-orange-700 mb-2">
                           <Info size={20} />
@@ -320,54 +332,58 @@ export default function AnimalDetail() {
                         nouvelle.
                       </p>
                     )}
-                    <form
-                      onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
-                      className="flex items-start gap-4"
-                    >
-                      <div className="flex-grow">
-                        <Input
-                          label="Message d'adoption"
-                          placeholder="Pourquoi souhaitez-vous adopter ?"
-                          className="bg-white"
-                          {...adoptForm.register("message")}
-                          error={adoptForm.formState.errors.message?.message}
-                        />
-                      </div>
-                      <div className="w-40 mt-[26px]">
-                        <Button
-                          variant="primary"
-                          fullWidth
-                          type="submit"
-                          disabled={adoptForm.formState.isSubmitting}
+                    {user?.role === UserRole.individual && (
+                      <>
+                        <form
+                          onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
+                          className="flex items-start gap-4"
                         >
-                          {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
-                        </Button>
-                      </div>
-                    </form>
-                    <form
-                      onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
-                      className="flex items-start gap-4"
-                    >
-                      <div className="flex-grow">
-                        <Input
-                          label="Message pour l'accueil"
-                          placeholder="Vos disponibilités et motivations..."
-                          className="bg-white"
-                          {...fosterForm.register("message")}
-                          error={fosterForm.formState.errors.message?.message}
-                        />
-                      </div>
-                      <div className="w-40 mt-[26px]">
-                        <Button
-                          variant="primary"
-                          fullWidth
-                          type="submit"
-                          disabled={fosterForm.formState.isSubmitting}
+                          <div className="flex-grow">
+                            <Input
+                              label="Message d'adoption"
+                              placeholder="Pourquoi souhaitez-vous adopter ?"
+                              className="bg-white"
+                              {...adoptForm.register("message")}
+                              error={adoptForm.formState.errors.message?.message}
+                            />
+                          </div>
+                          <div className="w-40 mt-[26px]">
+                            <Button
+                              variant="primary"
+                              fullWidth
+                              type="submit"
+                              disabled={adoptForm.formState.isSubmitting}
+                            >
+                              {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
+                            </Button>
+                          </div>
+                        </form>
+                        <form
+                          onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
+                          className="flex items-start gap-4"
                         >
-                          {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
-                        </Button>
-                      </div>
-                    </form>
+                          <div className="flex-grow">
+                            <Input
+                              label="Message pour l'accueil"
+                              placeholder="Vos disponibilités et motivations..."
+                              className="bg-white"
+                              {...fosterForm.register("message")}
+                              error={fosterForm.formState.errors.message?.message}
+                            />
+                          </div>
+                          <div className="w-40 mt-[26px]">
+                            <Button
+                              variant="primary"
+                              fullWidth
+                              type="submit"
+                              disabled={fosterForm.formState.isSubmitting}
+                            >
+                              {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
+                            </Button>
+                          </div>
+                        </form>
+                      </>
+                    )}
                   </>
                 )
               ) : (
