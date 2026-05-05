@@ -13,6 +13,7 @@ import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
+import { useAuth } from "../../auth/AuthContext";
 import UserCard from "../../components/cards/UserCard";
 import IndividualProfileForm from "../../components/profile/IndividualProfileForm";
 import PasswordForm from "../../components/profile/PasswordForm";
@@ -22,6 +23,7 @@ import { useUserProfile } from "../../hooks/useUserProfile";
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const { user: authUser, setUser: setAuthUser } = useAuth();
 
   const { user, setUser, loading, formData } = useUserProfile(id);
   const [isEditing, setIsEditing] = useState(false);
@@ -68,7 +70,14 @@ export default function UserProfilePage() {
         )) as UserWithProfiles;
       }
 
+      // ⚡ SYNC : Mise à jour de l'état local
       setUser({ ...user, ...updatedUser });
+
+      // ⚡ SYNC : Mise à jour de l'état global si c'est le profil de l'utilisateur connecté
+      if (authUser && Number(authUser.id) === Number(user.id)) {
+        setAuthUser({ ...authUser, ...updatedUser });
+      }
+
       setIsEditing(false);
       toast.success("Profil mis à jour avec succès !");
     } catch (err: unknown) {

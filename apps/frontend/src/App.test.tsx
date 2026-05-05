@@ -14,6 +14,13 @@ vi.mock("./api/authApi", () => ({
   },
 }));
 
+vi.mock("./api/animalApi", () => ({
+  animalApi: {
+    getAllAnimals: vi.fn().mockResolvedValue([]),
+    getAnimalById: vi.fn(),
+  },
+}));
+
 describe("App - Routing & Security", () => {
   it("doit rediriger vers /connexion si l'utilisateur n'est pas authentifié sur une route protégée", async () => {
     vi.mocked(authApi.getMe).mockRejectedValueOnce(new Error("Unauthorized"));
