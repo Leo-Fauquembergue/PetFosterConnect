@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type CreateApplicationDto, CreateApplicationSchema, UserRole } from "@projet/shared-types";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { AlertCircle, Heart } from "lucide-react";
+import { AlertCircle, Heart, Info } from "lucide-react";
 import QRCode from "qrcode";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -20,6 +20,7 @@ import CompatibilityBadge from "../components/ui/CompatibilityBadge";
 import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
 import { useAnimal } from "../hooks/useAnimal";
+import { checkMatchingWarnings } from "../utils/matching";
 
 export default function AnimalDetail() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +42,11 @@ export default function AnimalDetail() {
 
   // Détermination de l'état d'affichage
   const effectiveStatus = hasAppliedLocally ? "pending" : myApplicationStatus;
+
+  // Calcul du matching (uniquement pour les particuliers)
+  const matchingResult = animal
+    ? checkMatchingWarnings(animal, user?.individualProfile)
+    : { shouldWarn: false, warningMessages: [] };
 
   // Formulaire d'adoption
   const adoptForm = useForm<CreateApplicationDto>({
@@ -242,7 +248,7 @@ export default function AnimalDetail() {
                   isCompatible={animal.acceptOtherAnimals}
                 />
                 <CompatibilityBadge
-                  label={animal.needGarden ? "Jardin requis" : "Appartement OK"}
+                  label={animal.needGarden ? "Jardin requis" : "Appartement possible"}
                   isCompatible={!animal.needGarden}
                 />
               </div>
@@ -291,6 +297,23 @@ export default function AnimalDetail() {
               ) : animal.animalStatus === "available" ? (
                 (effectiveStatus === "cancelled" || !effectiveStatus) && (
                   <>
+                    {matchingResult.shouldWarn && (
+                      <div className="mb-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-lg shadow-sm">
+                        <div className="flex items-center gap-2 text-orange-700 mb-2">
+                          <Info size={20} />
+                          <span className="font-bold">Information de compatibilité</span>
+                        </div>
+                        <ul className="text-sm text-orange-800 space-y-1 list-disc list-inside">
+                          {matchingResult.warningMessages.map((msg) => (
+                            <li key={msg}>{msg}</li>
+                          ))}
+                        </ul>
+                        <p className="text-xs text-orange-600 mt-2 italic">
+                          Vous pouvez tout de même postuler et expliquer votre situation dans votre
+                          message.
+                        </p>
+                      </div>
+                    )}
                     {effectiveStatus === "cancelled" && (
                       <p className="text-xs text-gray-500 mb-2 italic">
                         Vous aviez annulé votre précédente demande. Vous pouvez en soumettre une
