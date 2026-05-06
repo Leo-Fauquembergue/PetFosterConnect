@@ -7,14 +7,20 @@ type BadgeProps = {
 
 export default function Badge({ label, variant = "neutral", className = "" }: BadgeProps) {
   const styles = {
-    default: "bg-gray-200 text-gray-800",
-    success: "bg-success text-white font-bold px-4 py-1",
-    error: "bg-error text-white font-bold px-4 py-1",
-    neutral: "bg-gray-100 text-gray-800 px-3 py-1",
+    default: "bg-gray-200 text-gray-800 px-3",
+    success: "bg-success text-white font-bold px-4",
+    error: "bg-error text-white font-bold px-4",
+    neutral: "bg-gray-100 text-gray-800 px-3",
     // ⚡ AJOUT : On définit les styles visuels pour ces nouvelles variantes
-    info: "bg-info text-white font-bold px-4 py-1",
-    warning: "bg-warning text-white font-bold px-4 py-1",
+    info: "bg-info text-white font-bold px-4",
+    warning: "bg-warning text-white font-bold px-4",
   };
 
-  return <span className={`rounded-full text-sm ${styles[variant]} ${className}`}>{label}</span>;
+  return (
+    <span
+      className={`inline-flex items-center justify-center rounded-full text-sm min-h-[1.75rem] leading-none ${styles[variant]} ${className}`}
+    >
+      {label}
+    </span>
+  );
 }

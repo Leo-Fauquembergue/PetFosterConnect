@@ -6,7 +6,7 @@ type CompatibilityBadgeProps = {
 export default function CompatibilityBadge({ label, isCompatible }: CompatibilityBadgeProps) {
   return (
     <span
-      className={`px-4 py-2 rounded-lg text-white text-sm font-medium shadow-sm
+      className={`inline-flex items-center justify-center px-4 min-h-[2.25rem] rounded-lg text-white text-sm font-medium shadow-sm leading-none
       ${isCompatible ? "bg-success" : "bg-error"}`}
     >
       {label}

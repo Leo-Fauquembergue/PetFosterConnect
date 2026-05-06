@@ -1,9 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type CreateApplicationDto, CreateApplicationSchema, UserRole } from "@projet/shared-types";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { AlertCircle, Heart, HeartHandshake, Home, Info } from "lucide-react";
-import QRCode from "qrcode";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,6 +18,7 @@ import Input from "../components/ui/Input";
 import Loader from "../components/ui/Loader";
 import { useAnimal } from "../hooks/useAnimal";
 import { checkMatchingWarnings } from "../utils/matching";
+import { exportElementToPDF } from "../utils/pdfExport";
 
 export default function AnimalDetail() {
   const { id } = useParams<{ id: string }>();
@@ -101,37 +99,14 @@ export default function AnimalDetail() {
   };
 
   const exportToPDF = async () => {
-    const pdf = new jsPDF("p", "mm", "a4");
-    const logoWidth = 40;
-    const logoX = (pdf.internal.pageSize.getWidth() - logoWidth) / 2;
+    if (!animal) return;
 
-    pdf.addImage(SiteLogo, "PNG", logoX, 10, logoWidth, 40);
-    const element = document.getElementById("animal-detail");
-    if (!element || !animal) return;
-
-    const buttons = document.querySelectorAll(".no-print");
-
-    buttons.forEach((btn) => {
-      (btn as HTMLElement).style.display = "none";
+    await exportElementToPDF({
+      elementId: "animal-detail",
+      fileName: `animal-${animal.name}`,
+      logoUrl: SiteLogo,
+      qrCodeUrl: `${window.location.origin}/animaux/${animal.id}`,
     });
-
-    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-
-    buttons.forEach((btn) => {
-      (btn as HTMLElement).style.display = "";
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const animalUrl = `${window.location.origin}/animaux/${animal.id}`;
-    const qrData = await QRCode.toDataURL(animalUrl);
-
-    pdf.addImage(qrData, "PNG", pageWidth - 40 - 10, 250, 40, 40);
-    const imgWidth = pageWidth * 0.9;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const x = (pageWidth - imgWidth) / 2;
-    pdf.addImage(imgData, "PNG", x, 60, imgWidth, imgHeight);
-    pdf.save(`animal-${animal.name}.pdf`);
   };
 
   if (loading)
