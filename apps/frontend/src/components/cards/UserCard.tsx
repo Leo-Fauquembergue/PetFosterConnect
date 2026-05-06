@@ -6,18 +6,18 @@ interface UserCardProps {
 
 export default function UserCard({ user }: UserCardProps) {
   return (
-    <div className="w-full max-w-sm bg-white rounded-xl shadow-md p-6">
+    <div className="w-full max-w-sm bg-white rounded-xl shadow-md p-6 overflow-hidden">
       {/* Header */}
-      <h3 className="text-xl font-bold text-gray-800 mb-2">{user.email}</h3>
+      <h3 className="text-xl font-bold text-gray-800 mb-2 break-all">{user.email}</h3>
 
       {/* Infos générales */}
       {user.phoneNumber && (
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-gray-700 break-words">
           <span className="font-semibold">Téléphone :</span> {user.phoneNumber}
         </p>
       )}
       {user.address && (
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-gray-700 break-words">
           <span className="font-semibold">Adresse :</span> {user.address}
         </p>
       )}
