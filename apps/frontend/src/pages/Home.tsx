@@ -34,10 +34,10 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link to="/animaux">
-                <Button variant="primary">Je deviens Famille d'Accueil</Button>
+                <Button variant="primary">Découvrir les animaux</Button>
               </Link>
-              <Link to="/animaux">
-                <Button variant="outline-white">Voir les animaux</Button>
+              <Link to="/refuges">
+                <Button variant="outline-white">Découvrir les refuges</Button>
               </Link>
             </div>
           </div>

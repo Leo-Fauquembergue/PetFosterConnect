@@ -10,6 +10,7 @@ import ProtectedRoute from "./auth/ProtectedRoute.tsx";
 import AdminLayout from "./components/layout/AdminLayout";
 import PublicLayout from "./components/layout/PublicLayout";
 import UserSidebarLayout from "./components/layout/UserSidebarLayout.tsx";
+import CookieBanner from "./components/ui/CookieBanner";
 // Components
 import ScrollToTop from "./components/ui/ScrollToTop";
 // Pages
@@ -127,6 +128,7 @@ function App() {
         </Route>
       </Routes>
 
+      <CookieBanner />
       <ToastContainer
         position="top-right"
         autoClose={3000}

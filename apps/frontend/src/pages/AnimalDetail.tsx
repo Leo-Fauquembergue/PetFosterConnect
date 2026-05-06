@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type CreateApplicationDto, CreateApplicationSchema, UserRole } from "@projet/shared-types";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { AlertCircle, Heart, Info } from "lucide-react";
+import { AlertCircle, Heart, HeartHandshake, Home, Info } from "lucide-react";
 import QRCode from "qrcode";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -28,6 +28,8 @@ export default function AnimalDetail() {
   const { user } = useAuth();
 
   const [hasAppliedLocally, setHasAppliedLocally] = useState(false);
+  const [appMode, setAppMode] = useState<"adoption" | "foster">("adoption");
+
   const {
     animal,
     loading,
@@ -334,54 +336,95 @@ export default function AnimalDetail() {
                     )}
                     {user?.role === UserRole.individual && (
                       <>
-                        <form
-                          onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
-                          className="flex items-start gap-4"
-                        >
-                          <div className="flex-grow">
-                            <Input
-                              label="Message d'adoption"
-                              placeholder="Pourquoi souhaitez-vous adopter ?"
-                              className="bg-white"
-                              {...adoptForm.register("message")}
-                              error={adoptForm.formState.errors.message?.message}
-                            />
-                          </div>
-                          <div className="w-40 mt-[26px]">
-                            <Button
-                              variant="primary"
-                              fullWidth
-                              type="submit"
-                              disabled={adoptForm.formState.isSubmitting}
-                            >
-                              {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
-                            </Button>
-                          </div>
-                        </form>
-                        <form
-                          onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
-                          className="flex items-start gap-4"
-                        >
-                          <div className="flex-grow">
-                            <Input
-                              label="Message pour l'accueil"
-                              placeholder="Vos disponibilités et motivations..."
-                              className="bg-white"
-                              {...fosterForm.register("message")}
-                              error={fosterForm.formState.errors.message?.message}
-                            />
-                          </div>
-                          <div className="w-40 mt-[26px]">
-                            <Button
-                              variant="primary"
-                              fullWidth
-                              type="submit"
-                              disabled={fosterForm.formState.isSubmitting}
-                            >
-                              {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
-                            </Button>
-                          </div>
-                        </form>
+                        {/* Sélecteur de mode visuel */}
+                        <div className="flex gap-2 p-1 bg-gray-200/50 rounded-xl mb-6">
+                          <button
+                            type="button"
+                            onClick={() => setAppMode("adoption")}
+                            className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-lg transition-all ${
+                              appMode === "adoption"
+                                ? "bg-white shadow-sm text-primary"
+                                : "text-gray-500 hover:text-gray-700"
+                            }`}
+                          >
+                            <Home size={20} />
+                            <span className="font-bold text-sm">Adoption</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAppMode("foster")}
+                            className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-lg transition-all ${
+                              appMode === "foster"
+                                ? "bg-white shadow-sm text-primary"
+                                : "text-gray-500 hover:text-gray-700"
+                            }`}
+                          >
+                            <HeartHandshake size={20} />
+                            <span className="font-bold text-sm">Accueil</span>
+                          </button>
+                        </div>
+
+                        {appMode === "adoption" ? (
+                          <form
+                            onSubmit={adoptForm.handleSubmit(onApplicationSubmit)}
+                            className="space-y-4 animate-in fade-in duration-300"
+                          >
+                            <p className="text-sm text-gray-500 italic">
+                              Engagement long terme pour une vie entière.
+                            </p>
+                            <div className="flex items-start gap-4">
+                              <div className="flex-grow">
+                                <Input
+                                  label="Message d'adoption"
+                                  placeholder="Pourquoi souhaitez-vous adopter ?"
+                                  className="bg-white"
+                                  {...adoptForm.register("message")}
+                                  error={adoptForm.formState.errors.message?.message}
+                                />
+                              </div>
+                              <div className="w-40 mt-[26px]">
+                                <Button
+                                  variant="primary"
+                                  fullWidth
+                                  type="submit"
+                                  disabled={adoptForm.formState.isSubmitting}
+                                >
+                                  {adoptForm.formState.isSubmitting ? "Envoi..." : "Adopter"}
+                                </Button>
+                              </div>
+                            </div>
+                          </form>
+                        ) : (
+                          <form
+                            onSubmit={fosterForm.handleSubmit(onApplicationSubmit)}
+                            className="space-y-4 animate-in fade-in duration-300"
+                          >
+                            <p className="text-sm text-gray-500 italic">
+                              Aide temporaire en attendant sa famille définitive.
+                            </p>
+                            <div className="flex items-start gap-4">
+                              <div className="flex-grow">
+                                <Input
+                                  label="Message pour l'accueil"
+                                  placeholder="Vos disponibilités et motivations..."
+                                  className="bg-white"
+                                  {...fosterForm.register("message")}
+                                  error={fosterForm.formState.errors.message?.message}
+                                />
+                              </div>
+                              <div className="w-40 mt-[26px]">
+                                <Button
+                                  variant="primary"
+                                  fullWidth
+                                  type="submit"
+                                  disabled={fosterForm.formState.isSubmitting}
+                                >
+                                  {fosterForm.formState.isSubmitting ? "Envoi..." : "Accueillir"}
+                                </Button>
+                              </div>
+                            </div>
+                          </form>
+                        )}
                       </>
                     )}
                   </>
