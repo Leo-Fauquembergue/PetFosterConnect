@@ -81,7 +81,7 @@ export class AnimalsService {
         },
         bookmarks: userId ? { where: { pfcUserId: userId } } : false,
         // ⚡ AJOUT : On récupère aussi le statut de la candidature de l'utilisateur connecté
-        applications: userId ? { where: { pfcUserId: userId, deletedAt: null } } : false,
+        applications: userId ? { where: { pfcUserId: userId } } : false,
       },
     });
 
