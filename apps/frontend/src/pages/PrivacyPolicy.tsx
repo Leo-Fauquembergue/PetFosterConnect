@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
             décrit les informations collectées par Pet Foster Connect lorsque vous visitez ou
             utilisez notre plateforme.
           </p>
-          <p className="mt-4 text-sm text-gray-600">Dernière mise à jour : 14 décembre 2022.</p>
+          <p className="mt-4 text-sm text-gray-600">Dernière mise à jour : 6 mai 2026.</p>
         </section>
 
         <div className="grid grid-cols-1 gap-12 px-4">

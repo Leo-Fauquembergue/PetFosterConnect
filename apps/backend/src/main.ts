@@ -24,11 +24,8 @@ async function bootstrap() {
         process.env.FRONTEND_URL, // Prod stricte Vercel (à définir dans ton .env de production sur Render)
       ].filter(Boolean);
 
-      // 🛡️ SÉCURITÉ : Tolère l'absence d'origine en dev, mais stricte en prod
-      if (
-        allowedOrigins.includes(origin as string) ||
-        (!origin && process.env.NODE_ENV !== "production")
-      ) {
+      // 🛡️ SÉCURITÉ : Autorise l'absence d'origine (accès direct/Swagger) ou les domaines listés
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
