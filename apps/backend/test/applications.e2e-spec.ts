@@ -1,7 +1,7 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
-import { UserRole } from "@prisma/client";
+import { Application, UserRole } from "@prisma/client";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
@@ -202,6 +202,27 @@ describe("Applications (E2E) - Security & IDOR", () => {
         .set("Authorization", `Bearer ${legitShelterToken}`)
         .set("x-csrf-token", csrfToken)
         .expect(200);
+
+      // ⚡ VÉRIFICATION ASYMÉTRIQUE
+      // 1. Le refuge ne doit plus la voir
+      const shelterApps = await request(app.getHttpServer())
+        .get("/applications/received")
+        .set("Authorization", `Bearer ${legitShelterToken}`)
+        .expect(200);
+      const isStillInShelterList = shelterApps.body.some(
+        (app: Application) => app.pfcUserId === individualId && app.animalId === animalId
+      );
+      expect(isStillInShelterList).toBe(false);
+
+      // 2. Le particulier doit toujours la voir
+      const individualApps = await request(app.getHttpServer())
+        .get("/applications/sent")
+        .set("Authorization", `Bearer ${individualToken}`)
+        .expect(200);
+      const isStillInUserList = individualApps.body.some(
+        (app: Application) => app.pfcUserId === individualId && app.animalId === animalId
+      );
+      expect(isStillInUserList).toBe(true);
     });
   });
 

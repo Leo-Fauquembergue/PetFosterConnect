@@ -72,7 +72,7 @@ export class ApplicationsService {
 
   findAllSent(userId: number) {
     return this.prisma.application.findMany({
-      where: { pfcUserId: userId, deletedAt: null },
+      where: { pfcUserId: userId }, // On ne filtre plus par deletedAt: null ici
       include: {
         animal: {
           include: {
@@ -121,7 +121,7 @@ export class ApplicationsService {
   // Route Admin restaurée précédemment
   findAll() {
     return this.prisma.application.findMany({
-      where: { deletedAt: null },
+      // On ne filtre plus par deletedAt pour que l'Admin voie tout l'historique
       include: {
         animal: {
           include: {
@@ -272,7 +272,7 @@ export class ApplicationsService {
             animalId: animalId,
             pfcUserId: { not: candidateId },
             applicationStatus: "pending",
-            deletedAt: null,
+            // On ne filtre pas par deletedAt ici pour être sûr de tout traiter
           },
           include: {
             user: { select: { email: true, individualProfile: true } },
@@ -286,7 +286,6 @@ export class ApplicationsService {
             animalId: animalId,
             pfcUserId: { not: candidateId },
             applicationStatus: "pending",
-            deletedAt: null,
           },
           data: { applicationStatus: "rejected" },
         });
