@@ -4,8 +4,11 @@ Ce projet utilise désormais **GitHub Actions** pour garantir la qualité du cod
 
 ## 🛠️ Fonctionnement
 La pipeline s'exécute automatiquement dans les cas suivants :
-- **Push** sur n'importe quelle branche.
+- **Push** sur **toutes les branches** (permet de valider votre travail avant même la fusion).
 - **Pull Request / Merge Request** vers la branche `main`.
+
+## 🔑 Variables d'environnement
+La CI utilise des variables factices (ex: `DATABASE_URL`) pour permettre la compilation et les tests sans compromettre vos secrets de production. Pour les tests d'intégration, un conteneur PostgreSQL éphémère est automatiquement provisionné.
 
 ## 📋 Étapes de validation
 À chaque exécution, les étapes suivantes sont réalisées dans l'ordre :

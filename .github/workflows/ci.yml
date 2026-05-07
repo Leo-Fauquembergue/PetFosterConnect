@@ -56,7 +56,7 @@ jobs:
 
       # ⚡ Synchronisation du schéma avec la base de données de test
       - name: Prepare Test Database
-        run: npx prisma db push --workspace=backend --accept-data-loss
+        run: npm run prisma --workspace=backend -- db push --accept-data-loss
 
       - name: Type-check (Monorepo)
         run: npm run type-check
