@@ -4,10 +4,12 @@ import Button from "./Button";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   message: string;
   variant?: "danger" | "warning" | "info";
+  confirmLabel?: string;
+  cancelLabel?: string;
 };
 
 export default function ConfirmationModal({
@@ -17,6 +19,8 @@ export default function ConfirmationModal({
   title,
   message,
   variant = "danger",
+  confirmLabel = "Confirmer",
+  cancelLabel = "Annuler",
 }: Props) {
   if (!isOpen) return null;
 
@@ -62,16 +66,16 @@ export default function ConfirmationModal({
         {/* Footer (Boutons) */}
         <div className="bg-gray-50 p-4 flex justify-end gap-3">
           <Button variant="ghost" onClick={onClose}>
-            Annuler
+            {cancelLabel}
           </Button>
           <Button
             variant={variant === "danger" ? "danger" : "primary"}
-            onClick={() => {
-              onConfirm();
+            onClick={async () => {
+              await onConfirm();
               onClose();
             }}
           >
-            Confirmer
+            {confirmLabel}
           </Button>
         </div>
       </div>

@@ -11,7 +11,7 @@ import {
 } from "@projet/shared-types";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { extractErrorMessage } from "../../api/api";
 import { userApi } from "../../api/userApi";
@@ -22,15 +22,22 @@ import IndividualProfileForm from "../../components/profile/IndividualProfileFor
 import PasswordForm from "../../components/profile/PasswordForm";
 import ShelterProfileForm from "../../components/profile/ShelterProfileForm";
 import Button from "../../components/ui/Button";
+import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import { useUserProfile } from "../../hooks/useUserProfile";
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
-  const { user: authUser, setUser: setAuthUser } = useAuth();
+  const navigate = useNavigate();
+  const { user: authUser, setUser: setAuthUser, logout } = useAuth();
 
   const { user, setUser, loading, formData } = useUserProfile(id);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const isOwnProfile = authUser && Number(authUser.id) === Number(id);
+  const isAdmin = authUser?.role === UserRole.admin;
+  const canEdit = isOwnProfile || isAdmin;
 
   const getResolver = () => {
     if (user?.role === UserRole.individual) return UpdateUserWithIndividualProfileSchema;
@@ -99,6 +106,21 @@ export default function UserProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    try {
+      await userApi.deleteUser(user.id as number);
+      toast.success("Votre compte a été supprimé avec succès.");
+      await logout();
+      navigate("/");
+    } catch (err: unknown) {
+      const errorMessage = extractErrorMessage(err, "Impossible de supprimer le compte.");
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Mon Profil</h1>
@@ -107,17 +129,39 @@ export default function UserProfilePage() {
         {!isEditing ? (
           <>
             <UserCard user={user} />
-            <Button variant="primary" onClick={() => setIsEditing(true)} className="mt-6">
-              Modifier mes informations
-            </Button>
+            {canEdit && (
+              <Button variant="primary" onClick={() => setIsEditing(true)} className="mt-6">
+                Modifier mes informations
+              </Button>
+            )}
 
-            <div className="mt-8 pt-8 border-t border-gray-100">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Sécurité</h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Modifier votre mot de passe pour sécuriser votre compte.
-              </p>
-              <PasswordForm userId={user.id as number} />
-            </div>
+            {isOwnProfile && (
+              <div className="mt-8 pt-8 border-t border-gray-100">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Sécurité</h2>
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">
+                      Changer le mot de passe
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Modifier votre mot de passe pour sécuriser votre compte.
+                    </p>
+                    <PasswordForm userId={user.id as number} />
+                  </div>
+
+                  <div className="pt-8 border-t border-gray-100">
+                    <h3 className="text-lg font-medium text-red-600 mb-2">Zone de danger</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      La suppression de votre compte est irréversible. Toutes vos données
+                      personnelles seront anonymisées conformément au RGPD.
+                    </p>
+                    <Button variant="danger" onClick={() => setIsDeleteModalOpen(true)}>
+                      Supprimer mon compte
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <FormProvider {...methods}>
@@ -144,6 +188,16 @@ export default function UserProfilePage() {
           </FormProvider>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        title="Supprimer définitivement votre compte ?"
+        message="Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et vos données seront anonymisées."
+        confirmLabel="Oui, supprimer"
+        cancelLabel="Annuler"
+      />
     </div>
   );
 }

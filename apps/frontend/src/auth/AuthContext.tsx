@@ -61,9 +61,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await authApi.logout();
-    setIsLoggedIn(false);
-    setUser(null);
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.warn("Échec de la déconnexion API (déjà déconnecté ?)", err);
+    } finally {
+      setIsLoggedIn(false);
+      setUser(null);
+    }
   };
 
   return (
