@@ -12,6 +12,11 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    env:
+      # Empêche Prisma de planter s'il ne trouve pas la variable
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petfosterconnect?schema=public
+      # Force les test runners (Vitest, Jest) à quitter après une seule exécution
+      CI: true
 
     steps:
       - name: Checkout code
@@ -39,7 +44,7 @@ jobs:
         run: npm run type-check
 
       - name: Run Unit Tests
-        run: npm run test
+        run: npm run test -- --run
 
       - name: Build Backend
         run: npm run build:backend
