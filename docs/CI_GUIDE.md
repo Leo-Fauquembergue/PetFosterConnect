@@ -11,10 +11,11 @@ La pipeline s'exécute automatiquement dans les cas suivants :
 À chaque exécution, les étapes suivantes sont réalisées dans l'ordre :
 1. **Linting & Formatting :** Vérification via Biome pour un code propre.
 2. **Types Partagés :** Build de `@projet/shared-types`.
-3. **Prisma :** Génération du client Prisma pour le typage backend.
-4. **Type-check :** Validation TypeScript sur l'ensemble du monorepo.
-5. **Tests :** Exécution des tests unitaires Frontend (Vitest) et Backend (Jest).
-6. **Build :** Compilation finale du Backend et du Frontend.
+3. **Prisma Client :** Génération du client Prisma pour le typage backend.
+4. **Base de données de Test :** Lancement d'un service **PostgreSQL 15** et synchronisation du schéma via `prisma db push`.
+5. **Type-check :** Validation TypeScript sur l'ensemble du monorepo.
+6. **Tests :** Exécution des tests unitaires et d'intégration (Backend : Jest, Frontend : Vitest).
+7. **Build :** Compilation finale du Backend et du Frontend pour valider la readiness de production.
 
 ## 🚦 Interpréter les résultats
 - ✅ **Vert :** Le code est stable et prêt à être mergé/déployé.

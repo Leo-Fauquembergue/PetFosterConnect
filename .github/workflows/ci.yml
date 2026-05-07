@@ -2,20 +2,34 @@ name: CI
 
 on:
   push:
-    # Déclenche la CI sur n'importe quel push (main ou branche de feature)
     branches: [ "**" ]
   pull_request:
-    # Déclenche la CI lors d'une Merge Request vers main
     branches: [ main ]
 
 jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+
+    # 🐘 Service PostgreSQL pour les tests d'intégration (Prisma)
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: petfosterconnect_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
-      # Empêche Prisma de planter s'il ne trouve pas la variable
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petfosterconnect?schema=public
-      # Force les test runners (Vitest, Jest) à quitter après une seule exécution
+      # URL pointant vers le service ci-dessus
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petfosterconnect_test?schema=public
       CI: true
 
     steps:
@@ -40,10 +54,14 @@ jobs:
       - name: Generate Prisma Client (Backend)
         run: npm run prisma:generate
 
+      # ⚡ Synchronisation du schéma avec la base de données de test
+      - name: Prepare Test Database
+        run: npx prisma db push --workspace=backend --accept-data-loss
+
       - name: Type-check (Monorepo)
         run: npm run type-check
 
-      - name: Run Unit Tests
+      - name: Run Unit & Integration Tests
         run: npm run test -- --run
 
       - name: Build Backend
