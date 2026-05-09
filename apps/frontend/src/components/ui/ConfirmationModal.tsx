@@ -51,10 +51,11 @@ export default function ConfirmationModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition p-1"
+            className="text-gray-400 hover:text-gray-600 transition p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Fermer"
           >
             <X className="w-5 h-5" />
+            <span className="sr-only">Fermer la modale</span>
           </button>
         </div>
 

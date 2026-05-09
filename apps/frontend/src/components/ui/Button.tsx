@@ -26,7 +26,7 @@ export default function Button({
   // On revient à un style plus proche du standard du projet : px-4 par défaut au lieu de px-6
   // Et font-medium au lieu de font-semibold pour être moins agressif visuellement
   const baseStyles =
-    "px-4 py-2 rounded-lg font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2";
+    "px-4 py-2 rounded-lg font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary";
 
   const variants = {
     primary: "bg-primary text-white hover:bg-primary/90 shadow-sm",
